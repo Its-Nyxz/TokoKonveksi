@@ -175,11 +175,20 @@ CREATE TABLE `pengguna` (
 -- Dumping data for table `pengguna`
 --
 
-INSERT INTO `pengguna` (`id`, `nama`, `email`, `password`, `telepon`, `alamat`, `fotoprofil`, `level`, `tgl_lahir`, `tempat_lahir`, `jekel`, `provinsi`, `kota`, `kec`, `kode_pos`) VALUES
+INSERT INTO `pengguna` 
+(`id`, `nama`, `email`, `password`, `telepon`, `alamat`, `fotoprofil`, `level`, 
+ `tgl_lahir`, `tempat_lahir`, `jekel`, `provinsi`, `kota`, `kec`, `kode_pos`) 
+VALUES
 (1, 'Fahrul Adib', 'fahruladib9@gmail.com', '123', '082282076702', 'Jl. Prapanca Raya No. 9', 'Untitled.png', 'Pelanggan', '2002-07-08', 'Jakarta', 'Laki-laki', 'DKI Jakarta', 'Jakarta Selatan', 'Ciganjur', '12170'),
-(2, 'Administrator', 'admin@gmail.com', 'admin', '081293827383', 'Palembang', '', 'Admin', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-(8, 'Produksi', 'produksi@gmail.com', '123', '082282076702', 'Banyuasin', '', 'Tim Produksi', '2000-11-11', 'Banyuasin', 'Laki-laki', NULL, NULL, NULL, NULL),
-(9, 'Owner', 'owner@gmail.com', '123', '082282076702', 'Jl. Prapanca Raya No. 9', 'Untitled.png', 'Owner', '2002-07-08', 'Jakarta', 'Laki-laki', 'DKI Jakarta', 'Jakarta Selatan', 'Ciganjur', '12170');
+
+(2, 'Administrator', 'admin@gmail.com', 'admin', '081293827383', 'Palembang', '', 'Admin',
+ NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+
+(8, 'Produksi', 'produksi@gmail.com', '123', '082282076702', 'Banyuasin', '', 'Tim Produksi',
+ '2000-11-11', 'Banyuasin', 'Laki-laki', NULL, NULL, NULL, NULL),
+
+(9, 'Owner', 'owner@gmail.com', '123', '082282076702', 'Jl. Prapanca Raya No. 9', 'Untitled.png', 'Owner',
+ '2002-07-08', 'Jakarta', 'Laki-laki', 'DKI Jakarta', 'Jakarta Selatan', 'Ciganjur', '12170');
 
 -- --------------------------------------------------------
 
@@ -188,15 +197,21 @@ INSERT INTO `pengguna` (`id`, `nama`, `email`, `password`, `telepon`, `alamat`, 
 --
 
 CREATE TABLE `produk` (
-  `idproduk` int(11) NOT NULL,
+  `idproduk` int(11) NOT NULL AUTO_INCREMENT,
   `idkategori` int(11) NOT NULL,
   `nama` text NOT NULL,
-  `harga` text NOT NULL,
+  `harga` int(11) NOT NULL,
   `deskripsi` text NOT NULL,
   `foto` text NOT NULL,
-  `stok` varchar(250) NOT NULL DEFAULT '0',
-  `tanggal` date NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+  `stok` int(11) NOT NULL DEFAULT 0,
+  `tanggal` date NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`idproduk`),
+  KEY `idkategori` (`idkategori`),
+  CONSTRAINT `fk_produk_kategori`
+    FOREIGN KEY (`idkategori`) REFERENCES `kategori` (`idkategori`)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 --
 -- Dumping data for table `produk`

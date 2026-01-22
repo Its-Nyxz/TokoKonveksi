@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class HomeController extends Controller
@@ -214,7 +215,7 @@ class HomeController extends Controller
             DB::table('pengguna')->insert([
                 'nama' => $nama,
                 'email' => $email,
-                'password' => $password,
+                'password' => Hash::make($password),
                 'alamat' => $alamat,
                 'telepon' => $telepon,
                 'jekel' => $jekel,
@@ -237,24 +238,29 @@ class HomeController extends Controller
     {
         $email = $request->input('email');
         $password = $request->input('password');
+
         $akun = DB::table('pengguna')
             ->where('email', $email)
-            ->where('password', $password)
             ->first();
 
-        if ($akun) {
-            if ($akun->level == "Pelanggan") {
-                session(['pengguna' => $akun]);
-                return redirect('home')->with('alert', 'Anda sukses login');
-            } elseif ($akun->level == "Admin") {
-                session(['admin' => $akun]);
-                return redirect('admin')->with('alert', 'Anda sukses login');
-            }
-
-            return redirect()->back()->with('error', 'Role Anda tidak diizinkan login');
+        if (!$akun) {
+            return back()->with('error', 'Email tidak ditemukan');
         }
 
-        return redirect()->back()->with('error', 'Email atau Password anda salah');
+        if (!Hash::check($password, $akun->password)) {
+            return back()->with('error', 'Password salah');
+        }
+
+        // LOGIN BERHASIL
+        if ($akun->level == "Pelanggan") {
+            session(['pengguna' => $akun]);
+            return redirect('home')->with('alert', 'Anda sukses login');
+        } elseif ($akun->level == "Admin") {
+            session(['admin' => $akun]);
+            return redirect('admin')->with('alert', 'Anda sukses login');
+        }
+
+        return back()->with('error', 'Role tidak diizinkan');
     }
 
     public function logout()
