@@ -57,25 +57,27 @@
                 <div class="login-form">
                     <h2 class="text-center">Login</h2>
                     <p class="text-center">Silahkan melakukan login dengan menggunakan data Anda yang valid</p>
-                    @if (Session::has('error'))
+                    {{-- @if (Session::has('error'))
                         <div class="alert alert-danger">
                             {{ Session::get('error') }}
                         </div>
-                    @endif
+                    @endif --}}
                     <form method="post" action="{{ url('home/dologin') }}">
                         @csrf
                         <div class="form-group">
                             <label for="email">Email*</label>
-                            <input type="text" class="form-control" id="email" name="email" required>
+                            <input type="text" class="form-control" id="email" name="email">
                         </div>
                         <div class="form-group">
                             <label for="password">Password*</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            <input type="password" class="form-control" id="password" name="password">
                         </div>
-                        {{-- <div class="form-group text-right">
-                            <a href="#" class="forgot-password text-right" style="color: #ffbf0f;">Lupa
-                                Password?</a>
-                        </div> --}}
+                        <div class="form-group text-right">
+                            <a href="{{ url('home/lupa-password') }}" class="forgot-password text-right"
+                                style="color: #ffbf0f;">
+                                Lupa Password?
+                            </a>
+                        </div>
                         <button type="submit" class="btn btn-login btn-block">Masuk</button>
                         <a href="/home/daftar" class="register-link" style="color: black;">Belum punya akun? <span
                                 style="color: #ffbf0f;">Registrasi</span></a>
@@ -88,6 +90,8 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <x-sweetalert />
 </body>
 
 </html>

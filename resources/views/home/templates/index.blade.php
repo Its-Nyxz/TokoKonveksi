@@ -17,14 +17,15 @@
     <link rel="stylesheet" href="{{ asset('assets/home/css/style.css') }}">
     {{-- <link rel="icon" type="image/x-icon" href="{{ asset('foto/logonya.jpeg') }}"> --}}
     <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+
 </head>
 
 <body>
-    @if (session('alert'))
+    {{-- @if (session('alert'))
         <script>
             alert("{{ session('alert') }}");
         </script>
-    @endif
+    @endif --}}
 
     <nav class="navbar navbar-expand-lg navbar-danger ftco_navbar bg-white ftco-navbar-light" id="ftco-navbar"">
         <div class="container">
@@ -233,6 +234,8 @@
     </script>
 
     @yield('script')
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <x-sweetalert />
 </body>
 
 </html>

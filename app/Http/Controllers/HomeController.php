@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class HomeController extends Controller
@@ -199,34 +201,45 @@ class HomeController extends Controller
 
     public function dodaftar(Request $request)
     {
-        $nama = $request->input('nama');
-        $email = $request->input('email');
-        $password = $request->input('password');
-        $alamat = $request->input('alamat');
-        $telepon = $request->input('telepon');
-        $jekel = $request->input('jekel');
-        $tgl_lahir = $request->input('tgl_lahir');
-        $tempat_lahir = $request->input('tempat_lahir');
-        $existingUser = DB::table('pengguna')->where('email', $email)->count();
+        $request->validate([
+            'nama'                 => 'required|string|max:255',
+            'email'                => 'required|email|unique:pengguna,email',
+            'password'             => 'required|min:6|confirmed',
+            'telepon'              => 'required',
+            'jekel'                => 'required',
+            'tgl_lahir'            => 'required|date',
+            'tempat_lahir'         => 'required',
+        ], [
+            'nama.required'        => 'Nama wajib diisi',
+            'email.required'       => 'Email wajib diisi',
+            'email.email'          => 'Format email tidak valid',
+            'email.unique'         => 'Email sudah terdaftar',
+            'password.required'    => 'Password wajib diisi',
+            'password.min'         => 'Password minimal 6 karakter',
+            'password.confirmed'   => 'Konfirmasi password tidak sama',
+            'telepon.required'     => 'No. telepon wajib diisi',
+            'jekel.required'       => 'Jenis kelamin wajib dipilih',
+            'tgl_lahir.required'   => 'Tanggal lahir wajib diisi',
+            'tempat_lahir.required' => 'Tempat lahir wajib diisi',
+        ]);
 
-        if ($existingUser == 1) {
-            return redirect()->back()->with('alert', 'Pendaftaran Gagal, email sudah ada');
-        } else {
-            DB::table('pengguna')->insert([
-                'nama' => $nama,
-                'email' => $email,
-                'password' => Hash::make($password),
-                'alamat' => $alamat,
-                'telepon' => $telepon,
-                'jekel' => $jekel,
-                'tgl_lahir' => $tgl_lahir,
-                'tempat_lahir' => $tempat_lahir,
-                'fotoprofil' => 'Untitled.png',
-                'level' => 'Pelanggan'
-            ]);
+        DB::table('pengguna')->insert([
+            'nama'          => $request->nama,
+            'email'         => $request->email,
+            'password'      => Hash::make($request->password),
+            'telepon'       => $request->telepon,
+            'jekel'         => $request->jekel,
+            'tgl_lahir'     => $request->tgl_lahir,
+            'tempat_lahir'  => $request->tempat_lahir,
+            'fotoprofil'    => 'Untitled.png',
+            'level'         => 'Pelanggan'
+        ]);
 
-            return redirect('home/login')->with('alert', 'Pendaftaran Berhasil');
-        }
+        return redirect('home/login')->with([
+            'swal_type'  => 'success',
+            'swal_title' => 'Registrasi Berhasil',
+            'swal_text'  => 'Silakan login menggunakan akun Anda'
+        ]);
     }
 
     public function login()
@@ -243,38 +256,223 @@ class HomeController extends Controller
             ->where('email', $email)
             ->first();
 
+        // EMAIL TIDAK DITEMUKAN
         if (!$akun) {
-            return back()->with('error', 'Email tidak ditemukan');
+            return back()->with([
+                'swal_type'  => 'error',
+                'swal_title' => 'Login Gagal',
+                'swal_text'  => 'Email tidak ditemukan'
+            ]);
         }
 
+        // PASSWORD SALAH
         if (!Hash::check($password, $akun->password)) {
-            return back()->with('error', 'Password salah');
+            return back()->with([
+                'swal_type'  => 'error',
+                'swal_title' => 'Login Gagal',
+                'swal_text'  => 'Password salah'
+            ]);
         }
 
-        // LOGIN BERHASIL
-        if ($akun->level == "Pelanggan") {
+        // LOGIN BERHASIL - PELANGGAN
+        if ($akun->level === 'Pelanggan') {
             session(['pengguna' => $akun]);
-            return redirect('home')->with('alert', 'Anda sukses login');
-        } elseif ($akun->level == "Admin") {
-            session(['admin' => $akun]);
-            return redirect('admin')->with('alert', 'Anda sukses login');
+
+            return redirect('home')->with([
+                'swal_type'  => 'success',
+                'swal_title' => 'Login Berhasil',
+                'swal_text'  => 'Selamat datang kembali'
+            ]);
         }
 
-        return back()->with('error', 'Role tidak diizinkan');
+        // LOGIN BERHASIL - ADMIN
+        if ($akun->level === 'Admin') {
+            session(['admin' => $akun]);
+
+            return redirect('admin')->with([
+                'swal_type'  => 'success',
+                'swal_title' => 'Login Berhasil',
+                'swal_text'  => 'Selamat datang kembali'
+            ]);
+        }
+
+        // ROLE TIDAK VALID
+        return back()->with([
+            'swal_type'  => 'error',
+            'swal_title' => 'Akses Ditolak',
+            'swal_text'  => 'Role tidak diizinkan'
+        ]);
+    }
+
+    public function lupaPassword()
+    {
+        return view('home.lupa-password');
+    }
+
+    public function kirimOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        $user = DB::table('pengguna')->where('email', $request->email)->first();
+
+        if (!$user) {
+            return back()->with([
+                'swal_type' => 'error',
+                'swal_title' => 'Gagal',
+                'swal_text' => 'Email tidak terdaftar'
+            ]);
+        }
+
+        $otp = rand(100000, 999999);
+
+        DB::table('pengguna')->where('id', $user->id)->update([
+            'otp_code' => $otp,
+            'otp_expired_at' => Carbon::now()->addMinutes(5)
+        ]);
+
+        Mail::raw("Kode OTP Anda: $otp\nBerlaku 5 menit.", function ($message) use ($user) {
+            $message->to($user->email)
+                ->subject('Kode OTP Reset Password');
+        });
+
+        session(['reset_email' => $user->email]);
+
+        return redirect('home/verifikasi-otp')->with([
+            'swal_type' => 'success',
+            'swal_title' => 'OTP Terkirim',
+            'swal_text' => 'Silakan cek email Anda'
+        ]);
+    }
+
+    public function formOtp()
+    {
+        return view('home.verifikasi-otp');
+    }
+
+    public function verifikasiOtp(Request $request)
+    {
+        $request->validate([
+            'otp' => 'required'
+        ]);
+
+        $email = session('reset_email');
+
+        $user = DB::table('pengguna')
+            ->where('email', $email)
+            ->where('otp_code', $request->otp)
+            ->where('otp_expired_at', '>=', now())
+            ->first();
+
+        if (!$user) {
+            return back()->with([
+                'swal_type' => 'error',
+                'swal_title' => 'OTP Salah',
+                'swal_text' => 'OTP tidak valid atau kadaluarsa'
+            ]);
+        }
+
+        if (!session('reset_email')) {
+            return redirect('home/lupa-password')->with([
+                'swal_type' => 'error',
+                'swal_title' => 'Sesi Habis',
+                'swal_text' => 'Silakan ulangi proses reset password'
+            ]);
+        }
+
+        session(['otp_verified' => true]);
+
+        return redirect('home/reset-password')->with([
+            'swal_type' => 'success',
+            'swal_title' => 'OTP Valid',
+            'swal_text' => 'Silakan buat password baru'
+        ]);
+    }
+
+    public function resendOtp()
+    {
+        $email = session('reset_email');
+
+        if (!$email) {
+            return redirect('home/lupa-password');
+        }
+
+        $otp = rand(100000, 999999);
+
+        DB::table('pengguna')->where('email', $email)->update([
+            'otp_code' => $otp,
+            'otp_expired_at' => now()->addMinutes(5)
+        ]);
+
+        Mail::raw("Kode OTP baru Anda: $otp", function ($msg) use ($email) {
+            $msg->to($email)->subject('OTP Reset Password');
+        });
+
+        return back()->with([
+            'swal_type' => 'success',
+            'swal_title' => 'OTP Dikirim Ulang',
+            'swal_text' => 'Silakan cek email Anda'
+        ]);
+    }
+
+
+    public function formResetPassword()
+    {
+        if (!session('otp_verified')) {
+            return redirect('home/login');
+        }
+
+        return view('home.reset-password');
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|min:6|confirmed',
+        ], [
+            'password.required'  => 'Password wajib diisi',
+            'password.min'       => 'Password minimal 6 karakter',
+            'password.confirmed' => 'Konfirmasi password tidak sama',
+        ]);
+
+        $email = session('reset_email');
+
+        DB::table('pengguna')->where('email', $email)->update([
+            'password' => Hash::make($request->password),
+            'otp_code' => null,
+            'otp_expired_at' => null
+        ]);
+
+        session()->forget(['reset_email', 'otp_verified']);
+
+        return redirect('home/login')->with([
+            'swal_type'  => 'success',
+            'swal_title' => 'Berhasil',
+            'swal_text'  => 'Password berhasil diubah, silakan login'
+        ]);
     }
 
     public function logout()
     {
         session()->flush();
-        return redirect('home')->with('alert', 'Anda Telah Logout');
+
+        return redirect('home')->with([
+            'swal_type'  => 'success',
+            'swal_title' => 'Logout Berhasil',
+            'swal_text'  => 'Anda telah keluar dari akun'
+        ]);
     }
 
     public function akun()
     {
         if (!session('pengguna')) {
 
-            session()->flash('alert', 'Anda belum login. Silakan login terlebih dahulu.');
-            return redirect('home/login');
+            return redirect('home/login')->with([
+                'swal_type'  => 'warning',
+                'swal_title' => 'Akses Ditolak',
+                'swal_text'  => 'Anda belum login, silakan login terlebih dahulu'
+            ]);
         }
 
         $idpengguna = session('pengguna')->id;
@@ -315,8 +513,11 @@ class HomeController extends Controller
     public function pesan(Request $request)
     {
         if (!session('pengguna')) {
-            session()->flash('alert', 'Anda belum login. Silakan login terlebih dahulu.');
-            return redirect('home/login');
+            return redirect('home/login')->with([
+                'swal_type'  => 'warning',
+                'swal_title' => 'Akses Ditolak',
+                'swal_text'  => 'Anda belum login, silakan login terlebih dahulu'
+            ]);
         }
 
         $idproduk = $request->input('idproduk');
@@ -326,8 +527,11 @@ class HomeController extends Controller
         $produk = DB::table('produk')->where('idproduk', $idproduk)->first();
 
         if (!$produk) {
-            session()->flash('alert', 'Produk tidak ditemukan.');
-            return back();
+            return back()->with([
+                'swal_type'  => 'error',
+                'swal_title' => 'Gagal',
+                'swal_text'  => 'Produk tidak ditemukan'
+            ]);
         }
 
         $keranjang = session()->get('keranjang', []);
@@ -338,8 +542,11 @@ class HomeController extends Controller
         }
 
         if ($jumlahTotal > $produk->stok) {
-            session()->flash('alert', 'Jumlah yang diminta melebihi stok yang tersedia.');
-            return back();
+            return back()->with([
+                'swal_type'  => 'error',
+                'swal_title' => 'Gagal',
+                'swal_text'  => 'Jumlah yang diminta melebihi stok yang tersedia.'
+            ]);
         }
 
         if (isset($keranjang[$idproduk])) {
@@ -354,16 +561,22 @@ class HomeController extends Controller
         }
 
         session(['keranjang' => $keranjang]);
-        session()->flash('alert', 'Berhasil menambahkan data ke keranjang');
-        return redirect('home/keranjang');
+        return redirect('home/keranjang')->with([
+            'swal_type'  => 'success',
+            'swal_title' => 'Berhasil',
+            'swal_text'  => 'Produk berhasil ditambahkan ke keranjang'
+        ]);
     }
 
 
     public function keranjang()
     {
         if (!session('pengguna')) {
-            session()->flash('alert', 'Anda belum login. Silakan login terlebih dahulu.');
-            return redirect('home/login');
+            return redirect('home/login')->with([
+                'swal_type'  => 'warning',
+                'swal_title' => 'Akses Ditolak',
+                'swal_text'  => 'Anda belum login, silakan login terlebih dahulu'
+            ]);
         }
 
         $keranjang = session()->get('keranjang', []);
@@ -396,8 +609,11 @@ class HomeController extends Controller
     {
         if (!session('pengguna')) {
 
-            session()->flash('alert', 'Anda belum login. Silakan login terlebih dahulu.');
-            return redirect('home/login');
+            return redirect('home/login')->with([
+                'swal_type'  => 'warning',
+                'swal_title' => 'Akses Ditolak',
+                'swal_text'  => 'Anda belum login, silakan login terlebih dahulu'
+            ]);
         }
         $keranjang = session()->get('keranjang');
         $data['keranjang'] = $keranjang;
@@ -533,16 +749,22 @@ class HomeController extends Controller
 
         // Bersihkan keranjang
         session()->forget('keranjang');
-        session()->flash('alert', 'Checkout berhasil!');
 
-        return redirect('home/riwayat');
+        return redirect('home/riwayat')->with([
+            'swal_type'  => 'success',
+            'swal_title' => 'Checkout Berhasil',
+            'swal_text'  => 'Pesanan Anda berhasil diproses'
+        ]);
     }
 
     public function riwayat()
     {
         if (!session('pengguna')) {
-            session()->flash('alert', 'Anda belum login. Silakan login terlebih dahulu.');
-            return redirect('home/login');
+            return redirect('home/login')->with([
+                'swal_type'  => 'warning',
+                'swal_title' => 'Akses Ditolak',
+                'swal_text'  => 'Anda belum login, silakan login terlebih dahulu'
+            ]);
         }
 
         $idpengguna = session('pengguna')->id;
@@ -610,8 +832,11 @@ class HomeController extends Controller
     {
         if (!session('pengguna')) {
 
-            session()->flash('alert', 'Anda belum login. Silakan login terlebih dahulu.');
-            return redirect('home/login');
+            return redirect('home/login')->with([
+                'swal_type'  => 'warning',
+                'swal_title' => 'Akses Ditolak',
+                'swal_text'  => 'Anda belum login, silakan login terlebih dahulu'
+            ]);
         }
         $datapembelian = DB::table('pembelian')->where('pembelian.idpembelian', $id)->first();
         $dataproduk = DB::table('pembelianproduk')
@@ -631,8 +856,11 @@ class HomeController extends Controller
     {
         if (!session('pengguna')) {
 
-            session()->flash('alert', 'Anda belum login. Silakan login terlebih dahulu.');
-            return redirect('home/login');
+            return redirect('home/login')->with([
+                'swal_type'  => 'warning',
+                'swal_title' => 'Akses Ditolak',
+                'swal_text'  => 'Anda belum login, silakan login terlebih dahulu'
+            ]);
         }
         $datapembelian = DB::table('pembelian')->join('pengguna', 'pengguna.id', '=', 'pembelian.id')
             ->where('pembelian.idpembelian', $id)->first();
@@ -653,8 +881,11 @@ class HomeController extends Controller
     {
         if (!session('pengguna')) {
 
-            session()->flash('alert', 'Anda belum login. Silakan login terlebih dahulu.');
-            return redirect('home/login');
+            return redirect('home/login')->with([
+                'swal_type'  => 'warning',
+                'swal_title' => 'Akses Ditolak',
+                'swal_text'  => 'Anda belum login, silakan login terlebih dahulu'
+            ]);
         }
         $datapembelian = DB::table('pembelian')->join('pengguna', 'pengguna.id', '=', 'pembelian.id')
             ->where('pembelian.idpembelian', $id)->first();
@@ -717,8 +948,11 @@ class HomeController extends Controller
     public function pelunasan($id)
     {
         if (!session('pengguna')) {
-            session()->flash('alert', 'Anda belum login. Silakan login terlebih dahulu.');
-            return redirect('home/login');
+            return redirect('home/login')->with([
+                'swal_type'  => 'warning',
+                'swal_title' => 'Akses Ditolak',
+                'swal_text'  => 'Anda belum login, silakan login terlebih dahulu'
+            ]);
         }
 
         // DATA PEMBELIAN

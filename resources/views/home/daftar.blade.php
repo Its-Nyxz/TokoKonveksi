@@ -60,47 +60,81 @@
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label for="nama">Nama Lengkap*</label>
-                                <input type="text" class="form-control" id="nama" name="nama" required>
+                                <input type="text" class="form-control @error('nama') is-invalid @enderror"
+                                    id="nama" name="nama" value="{{ old('nama') }}">
+
+                                @error('nama')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="form-group col-md-6">
                                 <label for="telepon">No. Telephone*</label>
-                                <input type="text" class="form-control" id="telepon" name="telepon" required>
+                                <input type="text" class="form-control @error('telepon') is-invalid @enderror"
+                                    id="telepon" name="telepon" value="{{ old('telepon') }}">
+
+                                @error('telepon')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label for="email">Email*</label>
-                                <input type="email" class="form-control" id="email" name="email" required>
+                                <input type="email" class="form-control @error('email') is-invalid @enderror"
+                                    id="email" name="email" value="{{ old('email') }}">
+
+                                @error('email')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="form-group col-md-6">
                                 <label for="tempatLahir">Tempat Lahir*</label>
-                                <input type="text" class="form-control" id="tempatLahir" name="tempat_lahir"
-                                    required>
+                                <input type="text" class="form-control @error('tempat_lahir') is-invalid @enderror"
+                                    id="tempatLahir" name="tempat_lahir" value="{{ old('tempat_lahir') }}">
+
+                                @error('tempat_lahir')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label for="tanggalLahir">Tanggal Lahir*</label>
-                                <input type="date" class="form-control" id="tanggalLahir" name="tgl_lahir" required>
+                                <input type="date" class="form-control" id="tanggalLahir" name="tgl_lahir">
                             </div>
                             <div class="form-group col-md-6">
                                 <label for="jenisKelamin">Jenis Kelamin*</label>
-                                <select class="form-control" id="jenisKelamin" name="jekel" required>
+                                <select class="form-control @error('jekel') is-invalid @enderror" id="jenisKelamin"
+                                    name="jekel">
                                     <option value="">Pilih</option>
-                                    <option value="Laki-laki">Laki-laki</option>
-                                    <option value="Perempuan">Perempuan</option>
+                                    <option value="Laki-laki" {{ old('jekel') == 'Laki-laki' ? 'selected' : '' }}>
+                                        Laki-laki
+                                    </option>
+                                    <option value="Perempuan" {{ old('jekel') == 'Perempuan' ? 'selected' : '' }}>
+                                        Perempuan
+                                    </option>
                                 </select>
+
+                                @error('jekel')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label for="password">Password*</label>
-                                <input type="password" class="form-control" id="password" name="password" required>
+                                <input type="password" class="form-control @error('password') is-invalid @enderror"
+                                    id="password" name="password">
+
+                                @error('password')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+
                             </div>
                             <div class="form-group col-md-6">
                                 <label for="confirmPassword">Konfirmasi Password*</label>
-                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword"
-                                    required>
+                                <input type="password" class="form-control" id="confirmPassword"
+                                    name="password_confirmation">
                             </div>
                         </div>
                         <button type="submit" class="btn btn-register btn-block">Registrasi</button>
@@ -110,11 +144,11 @@
                 </div>
             </div>
         </div>
-    </div>
-
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <x-sweetalert />
 </body>
 
 </html>

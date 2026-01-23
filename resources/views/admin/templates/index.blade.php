@@ -1,9 +1,9 @@
-@if (!session('admin'))
+{{-- @if (!session('admin'))
     <script>
         alert('Anda Harus Login');
         location = '{{ url('home/login') }}';
     </script>
-@endif
+@endif --}}
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 
@@ -214,7 +214,7 @@
                 </nav>
                 <div class="container-fluid">
                     <div id="page-inner">
-                        @if (Session::has('alert'))
+                        {{-- @if (Session::has('alert'))
                             <div class="alert alert-primary">
                                 {{ Session::get('alert') }}
                             </div>
@@ -223,7 +223,7 @@
                             <div class="alert alert-danger">
                                 {{ Session::get('error') }}
                             </div>
-                        @endif
+                        @endif --}}
                         @yield('page-content')
                     </div>
                 </div>
@@ -272,6 +272,8 @@
                     }
                 });
             </script>
+            @vite(['resources/css/app.css', 'resources/js/app.js'])
+            <x-sweetalert />
 </body>
 
 </html>

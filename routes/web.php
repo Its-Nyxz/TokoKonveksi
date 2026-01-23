@@ -96,8 +96,17 @@ Route::controller(HomeController::class)->group(function () {
     Route::post('home/dologin', 'dologin');
     Route::get('home/daftar', 'daftar');
     Route::post('home/dodaftar', 'dodaftar');
-    Route::get('home/tentang', 'tentang');
+    Route::get('home/lupa-password', [HomeController::class, 'lupaPassword']);
+    Route::post('home/lupa-password', [HomeController::class, 'kirimOtp']);
 
+    Route::get('home/verifikasi-otp', [HomeController::class, 'formOtp']);
+    Route::post('home/verifikasi-otp', [HomeController::class, 'verifikasiOtp']);
+    Route::post('home/resend-otp', [HomeController::class, 'resendOtp']);
+    
+    Route::get('home/reset-password', [HomeController::class, 'formResetPassword']);
+    Route::post('home/reset-password', [HomeController::class, 'resetPassword']);
+
+    Route::get('home/tentang', 'tentang');
     Route::get('home/akun', 'akun');
     Route::post('home/ubahakun/{id}', 'ubahakun');
 
