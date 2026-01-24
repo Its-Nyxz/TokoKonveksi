@@ -101,22 +101,30 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-12">
-                                    @if ($datapembelian->metodepembayaran == 'Transfer')
+                                    @if ($pembayaran->count() > 0)
+                                        @php $firstPay = $pembayaran->first(); @endphp
                                         <table class="table">
                                             <tr>
                                                 <th>Nama</th>
-                                                <th>{{ $pembayaran->nama }}</th>
+                                                <th>{{ $firstPay->nama }}</th>
                                             </tr>
                                             <tr>
                                                 <th>Tanggal Transfer</th>
-                                                <th>{{ tanggal(date('Y-m-d', strtotime($pembayaran->tanggaltransfer))) }}
+                                                <th>
+                                                    {{ tanggal(date('Y-m-d', strtotime($firstPay->tanggaltransfer))) }}
                                                 </th>
                                             </tr>
                                             <tr>
                                                 <th>Tanggal Upload Bukti Pembayaran</th>
-                                                <th><?= tanggal(date('Y-m-d', strtotime($pembayaran->tanggal))) ?></th>
+                                                <th>
+                                                    {{ tanggal(date('Y-m-d', strtotime($firstPay->tanggal))) }}
+                                                </th>
                                             </tr>
                                         </table>
+                                    @else
+                                        <div class="alert alert-warning">
+                                            Data rincian pembayaran belum tersedia.
+                                        </div>
                                     @endif
                                     <form method="post"
                                         action="{{ url('admin/simpanpembayaran/' . $datapembelian->idpembelian) }}"
@@ -188,7 +196,7 @@
                             </div>
                         </div>
                     </div>
-                </div> 
+                </div>
             @endif
             @if ($datapembelian->metodepembayaran == 'Transfer')
                 <div class="col-md-6 mb-4">
