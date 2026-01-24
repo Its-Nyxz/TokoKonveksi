@@ -417,7 +417,6 @@ class AdminController extends Controller
             ->get();
 
 
-
         $data = [
             'datapembelian' => $datapembelian,
             'dataproduk' => $dataproduk,
