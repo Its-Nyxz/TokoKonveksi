@@ -51,11 +51,17 @@
                                     <td>{{ $p->metodepembayaran }}</td>
                                     <td>{{ $p->statusbeli }}</td>
                                     <td>
-                                        <a href="{{ url('admin/pembayaran/' . $p->idpembelian) }}"
-                                            class="btn btn-primary">Detail</a>
-                                        <a href="{{ url('admin/invoice/' . $p->idpembelian) }}"
-                                            class="btn btn-success">Cetak
-                                            Invoice</a>
+                                        <div class="d-flex justify-content-center align-items-center gap-2">
+                                            <a href="{{ url('admin/pembayaran/' . $p->idpembelian) }}"
+                                                class="btn btn-primary btn-sm">
+                                                <i class="fa-regular fa-eye"></i>
+                                            </a>
+
+                                            <a href="{{ url('admin/invoice/' . $p->idpembelian) }}"
+                                                class="btn btn-success btn-sm">
+                                                <i class="fa-solid fa-print"></i>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                                 <?php $nomor++; ?>
