@@ -98,7 +98,7 @@
                 </div>
                 <div class="col-lg-6 product-details pl-md-5 ftco-animate">
                     <h3 style="color: black;">{{ $produk->nama }}</h3>
-                    <p style="color: black;">Kota Asal Pengiriman : Kabupaten Jepara</p>
+                    <p style="color: black;">Kota Asal Pengiriman : Kabupaten Wonogiri</p>
                     <hr>
                     <div class="price-wrapper">
                         <p class="price"><span style="color: white">Rp. {{ number_format($produk->harga) }}</span></p>
