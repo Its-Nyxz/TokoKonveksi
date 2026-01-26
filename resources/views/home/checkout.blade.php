@@ -69,7 +69,7 @@
                                     $totalharga = $produk->harga * $item['jumlah'];
                                 @endphp
                                 <h3 style="color: black;">{{ $produk->nama }}</h3>
-                                Kota Asal Pengiriman : Kabupaten Jepara
+                                Kota Asal Pengiriman : Kabupaten Wonogiri
                                 <img src="{{ asset('foto/' . $produk->foto) }}" height="250px" alt="">
                             @break
                         @endforeach
