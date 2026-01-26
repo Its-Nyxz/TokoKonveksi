@@ -605,9 +605,13 @@ class AdminController extends Controller
             ->where('idpembelian', $id)
             ->get();
 
+        // Ambil semua record pembayaran terkait (bisa ada DP dan pelunasan)
+        $pembayaran = DB::table('pembayaran')->where('idpembelian', $id)->get();
+
         $data = [
             'datapembelian' => $datapembelian,
             'dataproduk' => $dataproduk,
+            'pembayaran' => $pembayaran,
         ];
 
         return view('home.invoice', $data);
