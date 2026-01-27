@@ -51,6 +51,10 @@
                                     <td>Alamat</td>
                                     <td>{{ $datapembelian->alamat }}</td>
                                 </tr>
+                                <tr>
+                                    <td>Catatan Pembeli</td>
+                                    <td>{{ $datapembelian->catatan_pembeli }}</td>
+                                </tr>
                             </table>
                         </div>
                     </div>
