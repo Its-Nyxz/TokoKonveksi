@@ -261,6 +261,8 @@ class AdminController extends Controller
             return back();
         }
 
+
+        
         DB::table('pengguna')->where('id', $id)->delete();
         session()->flash('alert', 'Berhasil menghapus data!');
         return redirect('admin/pengguna');
