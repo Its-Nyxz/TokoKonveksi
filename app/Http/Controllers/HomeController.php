@@ -507,7 +507,7 @@ class HomeController extends Controller
                 'kode_pos' => $request->input('kode_pos'),
             ]);
 
-        return redirect('home/akun');
+        return redirect('home/akun')->with('success','Data akun berhasil diubah');
     }
 
     public function pesan(Request $request)

@@ -2,7 +2,7 @@
 
 @section('page-content')
     <section id="home-section" class="ftco-section">
-        <form method="post" enctype="multipart/form-data" action="{{ url('home/ubahakun/' . $pengguna->id) }}">
+        <form method="post" enctype="multipart/form-data" action="{{ url('home/ubahakun/' . $pengguna->id) }}" id="formAkun">
             @csrf
             <div class="container mt-4">
                 <h1 style="color: black; font-weight:bold;">My Account</h1>
@@ -74,10 +74,58 @@
                             <input value="{{ $pengguna->kode_pos }}" type="text" class="form-control" name="kode_pos">
                         </div>
                     </div>
-                    <button class="btn ml-3" name="ubah" style="background-color: #55acce"><i
-                            class="glyphicon glyphicon-saved"></i>Simpan Perubahan</a></button>
+                    <button type="button" class="btn ml-3" id="btnSimpan" style="background-color: #55acce">
+                        <i class="glyphicon glyphicon-saved"></i> Simpan Perubahan
+                    </button>
                 </div>
             </div>
         </form>
     </section>
+
+    {{-- Sweet Alert CDN --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Konfirmasi sebelum submit
+        document.getElementById('btnSimpan').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            Swal.fire({
+                title: 'Konfirmasi Perubahan',
+                text: "Apakah Anda yakin ingin menyimpan perubahan data akun?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ffbf0f',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Simpan!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('formAkun').submit();
+                }
+            });
+        });
+
+        // Notifikasi berhasil setelah update (dari session)
+        @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: '{{ session("success") }}',
+                confirmButtonColor: ' #ffbf0f',
+                timer: 3000,
+                timerProgressBar: true
+            });
+        @endif
+
+        // Notifikasi error jika ada
+        @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: '{{ session("error") }}',
+                confirmButtonColor: '  #ffbf0f'
+            });
+        @endif
+    </script>
 @endsection
