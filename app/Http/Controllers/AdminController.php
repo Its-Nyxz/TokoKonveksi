@@ -262,7 +262,7 @@ class AdminController extends Controller
         }
 
 
-        
+
         DB::table('pengguna')->where('id', $id)->delete();
         session()->flash('alert', 'Berhasil menghapus data!');
         return redirect('admin/pengguna');
@@ -390,7 +390,7 @@ class AdminController extends Controller
             ->join('produk', 'pembelianproduk.idproduk', '=', 'produk.idproduk')
             ->where('idpembelian', $id)
             ->get();
-        $pembelianFoto = DB::table('pembelian_foto')->where('id_pembelian', $datapembelian->idpembelian)->get();
+        $pemabelianFoto = DB::table('pembelian_foto')->where('id_pembelian', $datapembelian->idpembelian)->get();
         $pembayaran = DB::table('pembayaran')->where('idpembelian', $id)->first();
 
         $kurir = DB::table('pengguna')->where('level', 'Kurir')->get();
