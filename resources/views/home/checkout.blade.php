@@ -53,6 +53,13 @@
                                         <textarea class="form-control" name="alamat" placeholder="Masukkan Alamat" required>{{ $pengguna->alamat }}</textarea>
                                     </div>
                                 </div>
+                                
+                            </div>
+                            <div>
+                                <div class="form-group">
+                                    <label>Catatan untuk Penjual (opsional)</label>
+                                    <textarea class="form-control" name="catatan_pembeli" placeholder="Contoh: Pesan Ukuran XL & Varian Warna Biru">{{ old('catatan_pembeli') }}</textarea>
+                                </div>
                             </div>
                         </div>
                         <div class="card py-2 px-2 text-justify mt-5">
