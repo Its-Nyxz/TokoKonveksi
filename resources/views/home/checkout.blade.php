@@ -34,25 +34,37 @@
                                     <div class="form-group">
                                         <label>Nama Pelanggan</label>
                                         <input type="text" value="{{ $pengguna->nama }}" name="nama" required
-                                            class="form-control">
+                                            class="form-control" id="inputNama" readonly>
                                     </div>
                                     <div class="form-group">
                                         <label>Alamat Email</label>
                                         <input type="text" value="{{ $pengguna->email }}" name="email" required
-                                            class="form-control">
+                                            class="form-control" id="inputEmail" readonly>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>No. Telepon</label>
                                         <input type="text" value="{{ $pengguna->telepon }}" name="telepon" required
-                                            class="form-control">
+                                            class="form-control" id="inputTelepon" readonly>
                                     </div>
                                     <div class="form-group">
                                         <label>Alamat Lengkap</label>
-                                        <textarea class="form-control" name="alamat" placeholder="Masukkan Alamat" required>{{ $pengguna->alamat }}</textarea>
+                                        <textarea class="form-control" name="alamat" placeholder="Masukkan Alamat" required id="inputAlamat" readonly>{{ $pengguna->alamat }}</textarea>
                                     </div>
                                 </div>
+                                
+                            </div>
+                            <div>
+                                <div class="form-group">
+                                    <label>Catatan untuk Penjual (opsional)</label>
+                                    <textarea class="form-control" name="catatan_pembeli" placeholder="Contoh: Pesan Ukuran XL & Varian Warna Biru" id="inputCatatan" readonly>{{ old('catatan_pembeli') }}</textarea>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <button type="button" id="btnEdit" class="btn btn-sm text-white" style="background-color: #ffbf0f;">Edit</button>
+                                <button type="button" id="btnSimpan" class="btn btn-sm text-white" style="background-color: #ffbf0f; display: none;">Simpan</button>
+                                <button type="button" id="btnBatal" class="btn btn-sm text-white" style="background-color: #d33; display: none;">Batal</button>
                             </div>
                         </div>
                         <div class="card py-2 px-2 text-justify mt-5">
@@ -69,7 +81,7 @@
                                     $totalharga = $produk->harga * $item['jumlah'];
                                 @endphp
                                 <h3 style="color: black;">{{ $produk->nama }}</h3>
-                                Kota Asal Pengiriman : Kabupaten Jepara
+                                Kota Asal Pengiriman : Kabupaten Wonogiri
                                 <img src="{{ asset('foto/' . $produk->foto) }}" height="250px" alt="">
                             @break
                         @endforeach
@@ -207,6 +219,69 @@
 @section('script')
 <script>
     const totalBelanja = {{ $totalbelanja ?? 0 }};
+
+    // Simpan nilai awal untuk fitur batal
+    let originalValues = {
+        nama: $('#inputNama').val(),
+        email: $('#inputEmail').val(),
+        telepon: $('#inputTelepon').val(),
+        alamat: $('#inputAlamat').val(),
+        catatan: $('#inputCatatan').val()
+    };
+
+    // Tombol Edit
+    $('#btnEdit').click(function() {
+        // Simpan nilai awal sebelum edit
+        originalValues = {
+            nama: $('#inputNama').val(),
+            email: $('#inputEmail').val(),
+            telepon: $('#inputTelepon').val(),
+            alamat: $('#inputAlamat').val(),
+            catatan: $('#inputCatatan').val()
+        };
+
+        // Hilangkan readonly
+        $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan').prop('readonly', false);
+        
+        // Toggle tombol
+        $('#btnEdit').hide();
+        $('#btnSimpan, #btnBatal').show();
+    });
+
+    // Tombol Simpan
+    $('#btnSimpan').click(function() {
+        // Set readonly kembali
+        $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan').prop('readonly', true);
+        
+        // Toggle tombol
+        $('#btnSimpan, #btnBatal').hide();
+        $('#btnEdit').show();
+
+        // Tampilkan sweet alert
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: 'Berhasil menyimpan perubahan',
+            confirmButtonColor: '#ffbf0f'
+        });
+    });
+
+    // Tombol Batal
+    $('#btnBatal').click(function() {
+        // Kembalikan nilai ke nilai awal
+        $('#inputNama').val(originalValues.nama);
+        $('#inputEmail').val(originalValues.email);
+        $('#inputTelepon').val(originalValues.telepon);
+        $('#inputAlamat').val(originalValues.alamat);
+        $('#inputCatatan').val(originalValues.catatan);
+
+        // Set readonly kembali
+        $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan').prop('readonly', true);
+        
+        // Toggle tombol
+        $('#btnSimpan, #btnBatal').hide();
+        $('#btnEdit').show();
+    });
 
     $('#metode').on('change', function() {
         const metode = $(this).val();

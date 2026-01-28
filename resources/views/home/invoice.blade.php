@@ -81,10 +81,66 @@
         <table width="625">
             <tr style="float: right; border-collapse: collapse; box-shadow: 0 0 2px #DFE4EA;">
                 <td colspan="2">
-                    <p>SUBTOTAL: Rp {{ number_format($totalbelanja) }}</p>
-                    <p>ONGKIR: Rp {{ number_format($datapembelian->ongkir) }}</p>
-                    <p>PENGIRIMAN : {{ $datapembelian->alamat }}</p>
-                    <p>TOTAL : Rp {{ number_format($totalbelanja + $datapembelian->ongkir) }}</p>
+                    @php
+                        $grandTotal = $totalbelanja + (int)$datapembelian->ongkir;
+                        $dpAmount = 0;
+                        $lunasAmount = 0;
+                        $hasDpProof = false;
+                        if (isset($pembayaran)) {
+                            foreach ($pembayaran as $p) {
+                                $tipe = strtolower(trim($p->tipe));
+                                $jumlah = (int) $p->jumlah;
+                                if ($tipe == 'dp') {
+                                    $dpAmount += $jumlah;
+                                    if (!empty(trim($p->bukti))) {
+                                        $hasDpProof = true;
+                                    }
+                                } else {
+                                    $lunasAmount += $jumlah;
+                                }
+                            }
+                        }
+                        $calculatedDp50 = (int) round($grandTotal * 0.5);
+                    @endphp
+
+                    {{-- 1) Jika belum ada pembayaran dan status 'Belum Bayar' -> tunjukkan DP 50% dan sisa --}}
+                    @if($dpAmount == 0 && $lunasAmount == 0 && isset($datapembelian->statusbeli) && strtolower($datapembelian->statusbeli) == strtolower('Belum Bayar'))
+                        @php
+                            $remaining = $grandTotal - $calculatedDp50;
+                        @endphp
+                        <p>DP (50%): Rp {{ number_format($calculatedDp50) }}</p>
+                        <p>Sisa yang harus dibayar: Rp {{ number_format($remaining) }}</p>
+                        <p>PENGIRIMAN : {{ $datapembelian->alamat }}</p>
+
+                    {{-- 2) Jika ada bukti DP tetapi belum pelunasan -> tampilkan DP, Pelunasan (sisa), Ongkir, Total --}}
+                    @elseif($hasDpProof && $lunasAmount == 0)
+                        @php
+                            $remaining = max(0, $grandTotal - $dpAmount);
+                            $totalTerbayar = min($grandTotal, $dpAmount + $lunasAmount);
+                        @endphp
+                        <p>DP: Rp {{ number_format($dpAmount) }}</p>
+                        <p>Pelunasan (sisa): Rp {{ number_format($remaining) }}</p>
+                        <p>ONGKIR: Rp {{ number_format((int)$datapembelian->ongkir) }}</p>
+                        <p>TOTAL (Subtotal + Ongkir): Rp {{ number_format($grandTotal) }}</p>
+
+                    {{-- 3) Jika sudah ada DP dan pelunasan tercatat --}}
+                    @elseif($dpAmount > 0 && $lunasAmount > 0)
+                        @php
+                            $totalPaid = min($grandTotal, $dpAmount + $lunasAmount);
+                        @endphp
+                        <p>DP: Rp {{ number_format($dpAmount) }}</p>
+                        <p>Pelunasan: Rp {{ number_format($lunasAmount) }}</p>
+                        <p>ONGKIR: Rp {{ number_format((int)$datapembelian->ongkir) }}</p>
+                        <p>TOTAL (Subtotal + Ongkir): Rp {{ number_format($grandTotal) }}</p>
+
+                    {{-- 4) Default: tampilkan subtotal dan total penuh --}}
+                    @else
+                        <p>SUBTOTAL: Rp {{ number_format($totalbelanja) }}</p>
+                        <p>ONGKIR: Rp {{ number_format($datapembelian->ongkir) }}</p>
+                        <p>PENGIRIMAN : {{ $datapembelian->alamat }}</p>
+                        <p>TOTAL : Rp {{ number_format($grandTotal) }}</p>
+                    @endif
+
                 </td>
             </tr>
         </table>

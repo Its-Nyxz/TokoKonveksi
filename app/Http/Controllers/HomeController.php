@@ -507,7 +507,7 @@ class HomeController extends Controller
                 'kode_pos' => $request->input('kode_pos'),
             ]);
 
-        return redirect('home/akun');
+        return redirect('home/akun')->with('success','Data akun berhasil diubah');
     }
 
     public function pesan(Request $request)
@@ -689,11 +689,12 @@ class HomeController extends Controller
 
         $totalbeli = $request->input('total_belanja');
         $ongkir = $request->input('ongkir') ?? 0;
-
+     
         $nama = $request->input('nama');
         $telepon = $request->input('telepon');
         $email = $request->input('email');
         $alamatpengirim = $request->input('alamat');
+        $catatanpembeli = $request->input('catatan_pembeli');
 
         $lokasi = $request->input('destination_id');
         $tipe = $request->input('tipe'); // DP atau Lunas
@@ -711,6 +712,7 @@ class HomeController extends Controller
             'email' => $email,
             'telepon' => $telepon,
             'totalbeli' => $totalbeli,
+            'catatan_pembeli' => $catatanpembeli,
             'alamat' => $alamatpengirim,
             'statusbeli' => $status,
             'lokasi' => $lokasi,

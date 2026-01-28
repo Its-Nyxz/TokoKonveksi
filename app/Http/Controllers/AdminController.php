@@ -261,6 +261,8 @@ class AdminController extends Controller
             return back();
         }
 
+
+
         DB::table('pengguna')->where('id', $id)->delete();
         session()->flash('alert', 'Berhasil menghapus data!');
         return redirect('admin/pengguna');
@@ -388,7 +390,7 @@ class AdminController extends Controller
             ->join('produk', 'pembelianproduk.idproduk', '=', 'produk.idproduk')
             ->where('idpembelian', $id)
             ->get();
-        $pembelianFoto = DB::table('pembelian_foto')->where('id_pembelian', $datapembelian->idpembelian)->get();
+        $pemabelianFoto = DB::table('pembelian_foto')->where('id_pembelian', $datapembelian->idpembelian)->get();
         $pembayaran = DB::table('pembayaran')->where('idpembelian', $id)->first();
 
         $kurir = DB::table('pengguna')->where('level', 'Kurir')->get();
@@ -605,9 +607,13 @@ class AdminController extends Controller
             ->where('idpembelian', $id)
             ->get();
 
+        // Ambil semua record pembayaran terkait (bisa ada DP dan pelunasan)
+        $pembayaran = DB::table('pembayaran')->where('idpembelian', $id)->get();
+
         $data = [
             'datapembelian' => $datapembelian,
             'dataproduk' => $dataproduk,
+            'pembayaran' => $pembayaran,
         ];
 
         return view('home.invoice', $data);

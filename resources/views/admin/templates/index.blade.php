@@ -24,6 +24,7 @@
         type="text/css">
     <script src="{{ asset('assets/admin/assets/ckeditor/ckeditor.js') }}"></script>
     <link rel="icon" type="image/x-icon" href="{{ asset('foto/logo.jpeg') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         .btn-secondary {
@@ -85,14 +86,19 @@
             <hr class="sidebar-divider">
 
             <!-- Profile Section -->
-            <div class="sidebar-profile d-flex align-items-center">
-                <img class="img-profile rounded-circle mr-2" src="{{ asset('foto/avatar.png') }}" alt="Avatar"
-                    width="80">
-                <div>
-                    <span class="text-white">{{ session('admin')->nama }}</span>
-                    <br>
-                    <span class="badge badge-success">Online</span>
+            <div class="sidebar-profile d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center flex-grow-1">
+                    <img class="img-profile rounded-circle mr-2" src="{{ asset('foto/avatar.png') }}" alt="Avatar"
+                        width="80">
+                    <div>
+                        <span class="text-white">{{ session('admin')->nama }}</span>
+                        <br>
+                        <span class="badge badge-success">Online</span>
+                    </div>
                 </div>
+                <a href="#" class="logout-btn text-white ml-2" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
             </div>
             <hr class="sidebar-divider">
 
@@ -203,8 +209,7 @@
                             <!-- Dropdown - User Information -->
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
                                 aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="{{ url('admin/logout') }}"
-                                    onclick="return confirm('Apakah Anda Yakin Ingin Keluar ?');">
+                                <a class="dropdown-item" href="#" id="logoutBtn">
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Logout
                                 </a>
@@ -272,6 +277,58 @@
                     }
                 });
             </script>
+            <script>
+                // SweetAlert Logout Confirmation
+                function handleLogout(e) {
+                    e.preventDefault();
+                    
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Konfirmasi Logout',
+                        html: '<p style="color: #222D32; font-size: 16px;">Apakah Anda yakin ingin keluar?</p>',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ffbf0f',
+                        confirmButtonTextColor: '#222D32',
+                        cancelButtonColor: '#d33',
+                        cancelButtonTextColor: '#fff',
+                        confirmButtonText: '<i class="fas fa-sign-out-alt"></i> Ya, Keluar',
+                        cancelButtonText: 'Batal',
+                        didOpen: function() {
+                            const titleElement = document.querySelector('.swal2-title');
+                            if (titleElement) {
+                                titleElement.style.color = '#ffbf0f';
+                                titleElement.style.fontWeight = 'bold';
+                            }
+                            const confirmBtn = document.querySelector('.swal2-confirm');
+                            if (confirmBtn) {
+                                confirmBtn.style.fontWeight = 'bold';
+                            }
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '{{ url('admin/logout') }}';
+                        }
+                    });
+                }
+                
+                document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+                
+                document.querySelectorAll('.logout-btn').forEach(function(btn) {
+                    btn.addEventListener('click', handleLogout);
+                });
+            </script>
+            @if (session()->has('swal_type'))
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            icon: @json(session('swal_type')),
+                            title: @json(session('swal_title')),
+                            text: @json(session('swal_text')),
+                            confirmButtonColor: '#ffbf0f'
+                        });
+                    });
+                </script>
+            @endif
             @vite(['resources/css/app.css', 'resources/js/app.js'])
             <x-sweetalert />
 </body>
