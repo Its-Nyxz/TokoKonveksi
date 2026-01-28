@@ -7,6 +7,8 @@
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            table-layout: auto;
         }
 
         .transaction-table thead {
@@ -14,7 +16,7 @@
         }
 
         .transaction-table thead th {
-            padding: 18px 8px !important;
+            padding: 18px 15px !important;
             vertical-align: middle;
             color: #000 !important;
             font-weight: 700;
@@ -22,6 +24,8 @@
             text-transform: uppercase;
             letter-spacing: 0.3px;
             border: none;
+            white-space: nowrap;
+            min-width: 80px;
         }
 
         .transaction-table tbody tr {
@@ -38,11 +42,71 @@
         }
 
         .transaction-table tbody td {
-            padding: 20px 8px !important;
+            padding: 20px 15px !important;
             vertical-align: middle !important;
             font-size: 13px;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
+            white-space: nowrap;
+        }
+
+        /* Kolom No */
+        .transaction-table thead th:nth-child(1),
+        .transaction-table tbody td:nth-child(1) {
+            min-width: 60px;
+        }
+
+        /* Kolom ID Transaksi */
+        .transaction-table thead th:nth-child(2),
+        .transaction-table tbody td:nth-child(2) {
+            min-width: 180px;
+        }
+
+        /* Kolom Daftar Produk */
+        .transaction-table thead th:nth-child(3),
+        .transaction-table tbody td:nth-child(3) {
+            min-width: 220px;
+            white-space: normal;
+        }
+
+        /* Kolom Tanggal Order */
+        .transaction-table thead th:nth-child(4),
+        .transaction-table tbody td:nth-child(4) {
+            min-width: 160px;
+        }
+
+        /* Kolom Total */
+        .transaction-table thead th:nth-child(5),
+        .transaction-table tbody td:nth-child(5) {
+            min-width: 140px;
+        }
+
+        /* Kolom Metode */
+        .transaction-table thead th:nth-child(6),
+        .transaction-table tbody td:nth-child(6) {
+            min-width: 120px;
+        }
+
+        /* Kolom Bukti Bayar */
+        .transaction-table thead th:nth-child(7),
+        .transaction-table tbody td:nth-child(7) {
+            min-width: 200px;
+        }
+
+        /* Kolom QR Code */
+        .transaction-table thead th:nth-child(8),
+        .transaction-table tbody td:nth-child(8) {
+            min-width: 120px;
+        }
+
+        /* Kolom Status */
+        .transaction-table thead th:nth-child(9),
+        .transaction-table tbody td:nth-child(9) {
+            min-width: 160px;
+        }
+
+        /* Kolom Aksi */
+        .transaction-table thead th:nth-child(10),
+        .transaction-table tbody td:nth-child(10) {
+            min-width: 100px;
         }
 
         .transaction-id {
@@ -54,7 +118,6 @@
             border-radius: 5px;
             display: inline-block;
             font-size: 11px;
-            word-break: break-all;
         }
 
         .product-list {
@@ -67,7 +130,7 @@
             padding: 4px 0;
             position: relative;
             padding-left: 15px;
-            line-height: 1.4;
+            line-height: 1.6;
             font-size: 12px;
         }
 
@@ -124,7 +187,7 @@
             display: flex;
             flex-direction: row;
             gap: 10px;
-            align-items: flex-start;
+            align-items: center;
             justify-content: center;
         }
 
@@ -182,8 +245,43 @@
             transform: scale(1.1);
         }
 
-        .status-cell {
-            min-width: 140px;
+        .status-badge {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .status-belum-bayar {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-upload {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-diterima {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-dikirim {
+            background-color: #cfe2ff;
+            color: #084298;
+        }
+
+        .status-selesai {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status-ditolak {
+            background-color: #dc3545;
+            color: white;
         }
 
         .btn {
@@ -199,6 +297,7 @@
             display: inline-block;
             text-align: center;
             line-height: 1.3;
+            white-space: nowrap;
         }
 
         .btn:hover {
@@ -206,55 +305,21 @@
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
         }
 
-        .btn-warning {
-            background-color: #ff7f00 !important;
-            border-color: #ff7f00 !important;
+        .btn-detail {
+            background-color: #667eea !important;
+            border-color: #667eea !important;
+            color: white !important;
         }
 
-        .btn-warning:hover {
-            background-color: #e67300 !important;
-            border-color: #e67300 !important;
-        }
-
-        .btn-upload {
-            background-color: #ffbf0f !important;
-            border-color: #ffbf0f !important;
-        }
-
-        .btn-upload:hover {
-            background-color: #e6ac00 !important;
-            border-color: #e6ac00 !important;
-        }
-
-        .btn-pending {
-            background-color: #17a2b8 !important;
-            border-color: #17a2b8 !important;
-            cursor: default;
-        }
-
-        .btn-success {
-            background-color: #28a745 !important;
-            border-color: #28a745 !important;
-        }
-
-        .btn-success:hover {
-            background-color: #218838 !important;
-            border-color: #218838 !important;
-        }
-
-        .btn-danger {
-            background-color: #dc3545 !important;
-            border-color: #dc3545 !important;
-        }
-
-        .btn-danger:hover {
-            background-color: #c82333 !important;
-            border-color: #c82333 !important;
+        .btn-detail:hover {
+            background-color: #5568d3 !important;
+            border-color: #5568d3 !important;
         }
 
         .table-responsive {
             border-radius: 10px;
-            overflow: hidden;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .page-title {
@@ -267,12 +332,12 @@
 
         @media (max-width: 768px) {
             .transaction-table thead th {
-                padding: 12px 8px !important;
+                padding: 12px 10px !important;
                 font-size: 10px;
             }
 
             .transaction-table tbody td {
-                padding: 15px 8px !important;
+                padding: 15px 10px !important;
                 font-size: 11px;
             }
 
@@ -302,12 +367,8 @@
             }
 
             .payment-proof-container {
-                flex-direction: column;
+                flex-direction: row;
                 gap: 8px;
-            }
-
-            .table-responsive {
-                overflow-x: auto;
             }
         }
     </style>
@@ -322,15 +383,16 @@
                             <table class="table transaction-table">
                                 <thead>
                                     <tr class="text-center">
-                                        <th width="3%">No</th>
-                                        <th width="12%">ID Transaksi</th>
-                                        <th width="15%">Daftar Produk</th>
-                                        <th width="11%">Tanggal Order</th>
-                                        <th width="10%">Total</th>
-                                        <th width="9%">Metode</th>
-                                        <th width="13%">Bukti Bayar</th>
-                                        <th width="8%">QR Code</th>
-                                        <th width="19%">Status</th>
+                                        <th>No</th>
+                                        <th>ID Transaksi</th>
+                                        <th>Daftar Produk</th>
+                                        <th>Tanggal Order</th>
+                                        <th>Total</th>
+                                        <th>Metode</th>
+                                        <th>Bukti Bayar</th>
+                                        <th>QR Code</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -394,49 +456,28 @@
                                                 </div>
                                             </td>
 
-                                            <td class="text-center status-cell">
-                                                @if ($db->bukti_dp && !$db->bukti_lunas && $db->statusbeli != 'Belum Bayar')
-                                                    <a href="{{ url('home/pelunasan/' . $db->idpembelianreal) }}"
-                                                        class="btn btn-warning text-white"
-                                                        style="background-color: #ff7f00;">
-                                                        Lanjutkan Pelunasan
-                                                    </a>
-                                                @endif
-
+                                            <td class="text-center">
                                                 @if ($db->statusbeli == 'Belum Bayar')
-                                                    <?php
-                                                    $deadline = date('Y-m-d H:i', strtotime($db->waktu . ' +1 day'));
-                                                    $harideadline = date('Y-m-d', strtotime($db->waktu . ' +1 day'));
-                                                    $jamdeadline = date('H:i', strtotime($db->waktu . ' +1 day'));
-                                                    ?>
-
-                                                    @if (date('Y-m-d H:i') >= $deadline)
-                                                        <span style="color: #e74c3c; font-weight: 600;">
-                                                            Waktu pembayaran<br>telah habis
-                                                        </span>
-                                                    @else
-                                                        <a href="{{ url('home/detailtransaksi/' . $db->idpembelianreal) }}"
-                                                            class="btn btn-upload text-white">
-                                                            Upload Bukti<br>Pembayaran Sebelum<br>
-                                                            <?= tanggal($harideadline) . ' - Jam ' . $jamdeadline ?>
-                                                        </a>
-                                                    @endif
+                                                    <span class="status-badge status-belum-bayar">Belum Bayar</span>
                                                 @elseif ($db->statusbeli == 'Sudah Upload Bukti Pembayaran' || $db->statusbeli == 'Menunggu Konfirmasi')
-                                                    <button class="btn btn-pending text-white">
-                                                        Menunggu Konfirmasi Admin
-                                                    </button>
+                                                    <span class="status-badge status-upload">Menunggu Konfirmasi</span>
                                                 @elseif ($db->statusbeli == 'Pesanan Di Terima')
-                                                    <a href="{{ url('home/detailtransaksi/' . $db->idpembelianreal) }}"
-                                                        class="btn btn-upload text-white">
-                                                        Pesanan Di Terima
-                                                    </a>
+                                                    <span class="status-badge status-diterima">Pesanan Diterima</span>
+                                                @elseif ($db->statusbeli == 'Sedang Dikirim' || $db->statusbeli == 'Pesanan Sedang Dikirim')
+                                                    <span class="status-badge status-dikirim">Sedang Dikirim</span>
                                                 @elseif ($db->statusbeli == 'Selesai')
-                                                    <button class="btn btn-success text-white">Selesai ✓</button>
+                                                    <span class="status-badge status-selesai">Selesai</span>
                                                 @elseif ($db->statusbeli == 'Pesanan Di Tolak')
-                                                    <button class="btn btn-danger text-white">Pesanan Anda Di Tolak</button>
+                                                    <span class="status-badge status-ditolak">Pesanan Ditolak</span>
                                                 @else
-                                                    <button class="btn btn-success text-white">{{ $db->statusbeli }}</button>
+                                                    <span class="status-badge">{{ $db->statusbeli }}</span>
                                                 @endif
+                                            </td>
+
+                                            <td class="text-center">
+                                                <a href="{{ url('home/detailtransaksi/' . $db->idpembelianreal) }}" class="btn btn-detail">
+                                                    Detail
+                                                </a>
                                             </td>
                                         </tr>
                                         <?php $nomor++; ?>
