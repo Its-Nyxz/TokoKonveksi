@@ -455,7 +455,15 @@ class HomeController extends Controller
 
     public function logout()
     {
-        session()->flush();
+        // Preserve shopping cart when logging out — only remove user-related session keys
+        $keranjang = session()->get('keranjang');
+
+        // Forget authentication and reset-related keys but keep cart
+        session()->forget(['pengguna', 'admin', 'reset_email', 'otp_verified']);
+
+        if ($keranjang !== null) {
+            session(['keranjang' => $keranjang]);
+        }
 
         return redirect('home')->with([
             'swal_type'  => 'success',
