@@ -116,13 +116,13 @@
 
     <div class="row">
         @if (!empty($pembayaran) || $datapembelian->metodepembayaran == 'Cod')
-            @if (!in_array($datapembelian->statusbeli, ['Pesanan Di Tolak', 'Selesai']))
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow mb-4">
+                @if (!in_array($datapembelian->statusbeli, ['Pesanan Di Tolak', 'Selesai']))
+                <div class="col-md-6 mb-4 left-column" style="display: flex; flex-direction: column;">
+                    <div class="card shadow mb-4 left-card" style="flex: 1; display: flex; flex-direction: column;">
                         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-coklat">
                             <h6 class="m-0 font-weight-bold text-white">Konfirmasi</h6>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body" style="flex: 1; overflow-y: auto;">
                             <div class="row">
                                 <div class="col-md-12">
                                     @if ($pembayaran->count() > 0)
@@ -224,7 +224,7 @@
             @endif
             
             <!-- Right column: stacked Bukti Pembayaran and Foto Pengiriman -->
-            <div class="col-md-6 mb-4" style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="col-md-6 mb-4 right-column" style="display: flex; flex-direction: column; gap: 16px;">
                 @if ($datapembelian->metodepembayaran == 'Transfer')
                     <div class="card shadow mb-0" style="flex: 1; display: flex; flex-direction: column;">
                         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-coklat">
@@ -367,5 +367,34 @@
                 closeImage(e);
             }
         });
+
+    // Sync the Konfirmasi card height to match the combined stacked right column
+    (function() {
+        function syncKonfirmasiHeight() {
+            var leftCard = document.querySelector('.left-column .left-card');
+            var rightCol = document.querySelector('.right-column');
+            if (!leftCard || !rightCol) return;
+            // reset and measure
+            leftCard.style.height = 'auto';
+            var target = rightCol.clientHeight;
+            if (target && target > 0) leftCard.style.height = target + 'px';
+        }
+
+        window.addEventListener('load', function() {
+            syncKonfirmasiHeight();
+            setTimeout(syncKonfirmasiHeight, 300);
+        });
+        window.addEventListener('resize', syncKonfirmasiHeight);
+
+        document.querySelectorAll('.right-column img').forEach(function(img) {
+            if (!img.complete) img.addEventListener('load', syncKonfirmasiHeight);
+        });
+
+        var rightCol = document.querySelector('.right-column');
+        if (rightCol && window.MutationObserver) {
+            var mo = new MutationObserver(function() { syncKonfirmasiHeight(); });
+            mo.observe(rightCol, { childList: true, subtree: true, attributes: true });
+        }
+    })();
     </script>
 @endsection
