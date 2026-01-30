@@ -254,6 +254,12 @@
             white-space: nowrap;
         }
 
+        /* Default background for any status not explicitly styled */
+        .status-badge {
+            background: #e9ecef;
+            color: #343a40;
+        }
+
         .status-belum-bayar {
             background-color: #fff3cd;
             color: #856404;
@@ -314,6 +320,22 @@
         .btn-detail:hover {
             background-color: #5568d3 !important;
             border-color: #5568d3 !important;
+        }
+
+        /* Action buttons container: vertical stack */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Distinct pelunasan button */
+        .btn-pelunasan {
+            background-color: #ff7a00 !important;
+            border-color: #ff7a00 !important;
+            color: #fff !important;
         }
 
         .table-responsive {
@@ -765,9 +787,17 @@
                                             </td>
 
                                             <td class="text-center">
-                                                <a href="{{ url('home/detailtransaksi/' . $db->idpembelianreal) }}" class="btn btn-detail">
-                                                    Detail
-                                                </a>
+                                                <div class="action-buttons">
+                                                    <a href="{{ url('home/detailtransaksi/' . $db->idpembelianreal) }}" class="btn btn-detail">
+                                                        Detail
+                                                    </a>
+
+                                                    @if(isset($db->tipepembayaran) && $db->tipepembayaran == 'DP' && !empty($db->bukti_dp) && (empty($db->bukti_lunas)))
+                                                        <a href="{{ url('home/pelunasan/' . $db->idpembelianreal) }}" class="btn btn-pelunasan">
+                                                            Lanjutkan Pelunasan
+                                                        </a>
+                                                    @endif
+                                                </div>
                                             </td>
                                         </tr>
                                         <?php $nomor++; ?>
