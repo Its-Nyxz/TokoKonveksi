@@ -330,7 +330,214 @@
             display: inline-block;
         }
 
+        /* Filter & Search Bar Styles */
+        .filter-search-container {
+            margin-bottom: 25px;
+        }
+
+        .search-wrapper {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .search-wrapper input {
+            width: 100%;
+            padding: 12px 45px 12px 20px;
+            border: 2px solid #ffbf0f;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .search-wrapper input:focus {
+            outline: none;
+            border-color: #ffbf0f;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(255, 191, 15, 0.15);
+        }
+
+        .search-wrapper .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            pointer-events: none;
+        }
+
+        .filter-dropdown-wrapper {
+            position: relative;
+        }
+
+        .filter-toggle-btn {
+            padding: 12px 20px;
+            background: #ffbf0f;
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 8px rgba(255, 191, 15, 0.3);
+        }
+
+        .filter-toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(255, 191, 15, 0.4);
+            background: #f0b300;
+        }
+
+        .filter-toggle-btn .badge {
+            background: rgba(0, 0, 0, 0.15);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .filter-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            padding: 20px;
+            min-width: 320px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .filter-dropdown.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .filter-group {
+            margin-bottom: 18px;
+        }
+
+        .filter-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 12px;
+            color: #333;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-group select {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 13px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn-apply-filter {
+            flex: 1;
+            padding: 12px;
+            background: #ffbf0f;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-apply-filter:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 191, 15, 0.4);
+            background: #f0b300;
+        }
+
+        .btn-reset-filter {
+            flex: 1;
+            padding: 12px;
+            background: white;
+            color: #ffbf0f;
+            border: 2px solid #ffbf0f;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-reset-filter:hover {
+            background: #fffbf0;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
         @media (max-width: 768px) {
+            .top-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .page-title {
+                margin-bottom: 15px;
+            }
+
+            .search-wrapper {
+                max-width: 100%;
+                margin-bottom: 15px;
+            }
+
+            .filter-dropdown {
+                right: auto;
+                left: 0;
+                min-width: 100%;
+            }
+
             .transaction-table thead th {
                 padding: 12px 10px !important;
                 font-size: 10px;
@@ -375,8 +582,91 @@
 
     <section id="home-section" class="ftco-section">
         <div class="container mt-4">
-            <h1 class="page-title">Riwayat Transaksi</h1>
-            <div class="row">
+            <div class="top-bar">
+                <h1 class="page-title">Riwayat Transaksi</h1>
+            </div>
+
+            <div class="filter-search-container">
+                <form method="GET" id="filterForm">
+                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                        <!-- Search Bar -->
+                        <div class="search-wrapper">
+                            <input type="text" 
+                                   name="search" 
+                                   placeholder="Cari nama produk..." 
+                                   value="{{ request('search') }}">
+                            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                        </div>
+
+                        <!-- Filter Dropdown -->
+                        <div class="filter-dropdown-wrapper">
+                            <button type="button" class="filter-toggle-btn" onclick="toggleFilter()">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="4" y1="6" x2="20" y2="6"></line>
+                                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                                    <line x1="12" y1="18" x2="12" y2="18"></line>
+                                </svg>
+                                Filter
+                                @if(request('sort_time') || request('status') || request('metode'))
+                                    <span class="badge">{{ collect([request('sort_time'), request('status'), request('metode')])->filter()->count() }}</span>
+                                @endif
+                            </button>
+
+                            <div class="filter-dropdown" id="filterDropdown">
+                                <div class="filter-group">
+                                    <label>Urutkan Waktu</label>
+                                    <select name="sort_time">
+                                        <option value="">Semua</option>
+                                        <option value="time_desc" {{ request('sort_time')=='time_desc'? 'selected':'' }}>Terbaru</option>
+                                        <option value="time_asc" {{ request('sort_time')=='time_asc'? 'selected':'' }}>Terlama</option>
+                                    </select>
+                                </div>
+
+                                <div class="filter-group">
+                                    <label>Status Pesanan</label>
+                                    <select name="status">
+                                        <option value="">Semua Status</option>
+                                        <option value="Belum Bayar" {{ request('status')=='Belum Bayar'? 'selected':'' }}>Belum Bayar</option>
+                                        <option value="Sudah Upload Bukti Pembayaran" {{ request('status')=='Sudah Upload Bukti Pembayaran'? 'selected':'' }}>Sudah Upload Bukti Pembayaran</option>
+                                        <option value="Menunggu Konfirmasi" {{ request('status')=='Menunggu Konfirmasi'? 'selected':'' }}>Menunggu Konfirmasi</option>
+                                        <option value="Pesanan Di Terima" {{ request('status')=='Pesanan Di Terima'? 'selected':'' }}>Pesanan Diterima</option>
+                                        <option value="Sedang Dikirim" {{ request('status')=='Sedang Dikirim'? 'selected':'' }}>Sedang Dikirim</option>
+                                        <option value="Selesai" {{ request('status')=='Selesai'? 'selected':'' }}>Selesai</option>
+                                        <option value="Pesanan Di Tolak" {{ request('status')=='Pesanan Di Tolak'? 'selected':'' }}>Pesanan Di Tolak</option>
+                                    </select>
+                                </div>
+
+                                <div class="filter-group">
+                                    <label>Metode Pembayaran</label>
+                                    <select name="metode">
+                                        <option value="">Semua Metode</option>
+                                        <option value="Transfer" {{ request('metode')=='Transfer' ? 'selected' : '' }}>Transfer</option>
+                                        <option value="COD" {{ request('metode')=='COD' ? 'selected' : '' }}>COD</option>
+                                        @if(!empty($paymentMethods))
+                                            @foreach($paymentMethods as $pm)
+                                                @if(in_array($pm, ['Transfer', 'COD']))
+                                                    @continue
+                                                @endif
+                                                <option value="{{ $pm }}" {{ request('metode') == $pm ? 'selected' : '' }}>{{ $pm }}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                </div>
+
+                                <div class="filter-actions">
+                                    <button type="submit" class="btn-apply-filter">Terapkan Filter</button>
+                                    <button type="button" class="btn-reset-filter" onclick="resetFilter()">Reset</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="row mt-3">
                 <div class="col-md-12 ftco-animate">
                     <div class="cart-list">
                         <div class="table-responsive">
@@ -482,6 +772,13 @@
                                         </tr>
                                         <?php $nomor++; ?>
                                     @endforeach
+                                    @if($databeli->isEmpty())
+                                        <tr>
+                                            <td colspan="10" class="text-center" style="color:#7f8c8d;font-weight:600;padding:40px 0;">
+                                                Tidak ada data sesuai filter.
+                                            </td>
+                                        </tr>
+                                    @endif
                                 </tbody>
                             </table>
                         </div>
@@ -493,4 +790,39 @@
             </div>
         </div>
     </section>
+
+    <script>
+        function toggleFilter() {
+            const dropdown = document.getElementById('filterDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        function resetFilter() {
+            // Reset semua select ke nilai default
+            document.querySelector('select[name="sort_time"]').value = '';
+            document.querySelector('select[name="status"]').value = '';
+            document.querySelector('select[name="metode"]').value = '';
+            // Reset search input
+            const searchInput = document.querySelector('input[name="search"]');
+            if (searchInput) searchInput.value = '';
+            
+            // Submit form
+            document.getElementById('filterForm').submit();
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('filterDropdown');
+            const filterBtn = document.querySelector('.filter-toggle-btn');
+            
+            if (!dropdown.contains(event.target) && !filterBtn.contains(event.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        // Prevent dropdown close when clicking inside
+        document.getElementById('filterDropdown').addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+    </script>
 @endsection
