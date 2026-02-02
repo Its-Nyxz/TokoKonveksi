@@ -252,7 +252,7 @@
                                         <th width="30%">Produk</th>
                                         <th width="15%">Jumlah</th>
                                         <th width="20%">Total</th>
-                                        <th width="15%">Status</th>
+                                        <th width="15%">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>

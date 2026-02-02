@@ -94,15 +94,35 @@
         </div>
     </div>
 
+    <style>
+        .proof-container { display: flex; gap: 12px; }
+        .proof-item { position: relative; border-radius: 6px; overflow: hidden; }
+        .proof-item img { display: block; width: 100%; height: auto; object-fit: cover; }
+        .proof-full { width: 100%; }
+        .proof-split { display: flex; gap: 12px; }
+        .proof-split .proof-item { flex: 1; }
+        .img-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); opacity: 0; transition: opacity .15s ease; }
+        .proof-item:hover .img-overlay { opacity: 1; }
+        .img-overlay i { color: #fff; font-size: 22px; cursor: pointer; }
+        /* Modal styles - size to image and avoid stretching */
+        .image-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); z-index: 1050; padding: 20px; }
+        .image-modal.open { display: flex; }
+        /* modal-content wraps the image and sizes to image dimensions */
+        .image-modal .modal-content { position: relative; display: inline-block; max-width: 500px; max-height: 500px; }
+        /* Image keeps its natural aspect ratio; constrained to smaller modal size */
+        .image-modal img { width: 100%; height: auto; display: block; border-radius: 6px; }
+        .modal-close { position: absolute; top: -12px; right: -12px; background: #fff; color: #333; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+    </style>
+
     <div class="row">
         @if (!empty($pembayaran) || $datapembelian->metodepembayaran == 'Cod')
-            @if (!in_array($datapembelian->statusbeli, ['Pesanan Di Tolak', 'Selesai']))
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow mb-4">
+                @if (!in_array($datapembelian->statusbeli, ['Pesanan Di Tolak', 'Selesai']))
+                <div class="col-md-6 mb-4 left-column" style="display: flex; flex-direction: column;">
+                    <div class="card shadow mb-4 left-card" style="flex: 1; display: flex; flex-direction: column;">
                         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-coklat">
                             <h6 class="m-0 font-weight-bold text-white">Konfirmasi</h6>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body" style="flex: 1; overflow-y: auto;">
                             <div class="row">
                                 <div class="col-md-12">
                                     @if ($pembayaran->count() > 0)
@@ -202,51 +222,107 @@
                     </div>
                 </div>
             @endif
-            @if ($datapembelian->metodepembayaran == 'Transfer')
-                <div class="col-md-6 mb-4">
-                    <div class="card shadow mb-4">
+            
+            <!-- Right column: stacked Bukti Pembayaran and Foto Pengiriman -->
+            <div class="col-md-6 mb-4 right-column" style="display: flex; flex-direction: column; gap: 16px;">
+                @if ($datapembelian->metodepembayaran == 'Transfer')
+                    <div class="card shadow mb-0" style="flex: 1; display: flex; flex-direction: column;">
                         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-coklat">
                             <h6 class="m-0 font-weight-bold text-white">Bukti Pembayaran</h6>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body" style="max-height: 280px; overflow-y: auto; flex: 1;">
 
-                            @forelse ($pembayaran as $p)
-                                <div class="mb-3">
-                                    <strong>{{ $p->tipe == 'DP' ? 'Down Payment (DP)' : 'Pelunasan' }}</strong><br>
-                                    <img src="{{ url('foto/' . $p->bukti) }}" alt="" width="100%"
-                                        class="img-responsive">
-                                    <hr>
-                                </div>
-                            @empty
+                            @php
+                                // Find DP and pelunasan entries
+                                $dp = $pembayaran->firstWhere('tipe', 'DP');
+                                $pelunasan = $pembayaran->firstWhere('tipe', '!=', 'DP');
+                            @endphp
+
+                            @if(!$dp && !$pelunasan)
                                 <p class="text-danger">Belum ada bukti pembayaran.</p>
-                            @endforelse
-
-                        </div>
-                    </div>
-                </div>
-            @endif
-
-            <div class="col-md-12 mb-4">
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-coklat">
-                        <h6 class="m-0 font-weight-bold text-white">Foto Pengiriman</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            @foreach ($pembelianFoto as $foto)
-                                <div class="col-md-6 mb-4">
-                                    <div class="card h-100 shadow-sm">
-                                        <div class="card-body">
-                                            <p class="font-weight-bold">Status: {{ $foto->status }}</p>
-                                            <div class="image-container text-center">
-                                                <img src="{{ url('foto/' . $foto->foto) }}" alt="Bukti Pengiriman"
-                                                    class="img-fluid img-thumbnail" style="max-width: 300px">
+                            @else
+                                @if($dp && !$pelunasan)
+                                    {{-- Only DP: show full-width image inside card --}}
+                                    <div class="proof-container">
+                                        <div class="proof-item proof-full">
+                                            <img src="{{ url('foto/' . $dp->bukti) }}" alt="Bukti DP" />
+                                            <div class="img-overlay">
+                                                <i class="fa fa-eye" onclick="openImage('{{ url('foto/' . $dp->bukti) }}')"></i>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            @endforeach
+                                @elseif($dp && $pelunasan)
+                                    {{-- Both DP and Pelunasan: show side-by-side --}}
+                                    <div class="proof-split">
+                                        <div class="proof-item">
+                                            <strong>Down Payment (DP)</strong>
+                                            <img src="{{ url('foto/' . $dp->bukti) }}" alt="Bukti DP" />
+                                            <div class="img-overlay">
+                                                <i class="fa fa-eye" onclick="openImage('{{ url('foto/' . $dp->bukti) }}')"></i>
+                                            </div>
+                                        </div>
+
+                                        <div class="proof-item">
+                                            <strong>Pelunasan</strong>
+                                            <img src="{{ url('foto/' . $pelunasan->bukti) }}" alt="Bukti Pelunasan" />
+                                            <div class="img-overlay">
+                                                <i class="fa fa-eye" onclick="openImage('{{ url('foto/' . $pelunasan->bukti) }}')"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @else
+                                    {{-- Fallback: list any available proofs --}}
+                                    @foreach($pembayaran as $p)
+                                        <div class="mb-3">
+                                            <div class="proof-item">
+                                                <strong>{{ $p->tipe == 'DP' ? 'Down Payment (DP)' : 'Pelunasan' }}</strong>
+                                                <img src="{{ url('foto/' . $p->bukti) }}" alt="Bukti" />
+                                                <div class="img-overlay">
+                                                    <i class="fa fa-eye" onclick="openImage('{{ url('foto/' . $p->bukti) }}')"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                @endif
+                            @endif
+
                         </div>
+                    </div>
+                @endif
+
+                <div class="card shadow mb-0" style="flex: 1; display: flex; flex-direction: column;">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-coklat">
+                        <h6 class="m-0 font-weight-bold text-white">Foto Pengiriman</h6>
+                    </div>
+                    <div class="card-body" style="max-height: 280px; overflow-y: auto; flex: 1;">
+                        @if($pembelianFoto->count() == 0)
+                            <p class="text-danger">Belum ada foto pengiriman.</p>
+                        @elseif($pembelianFoto->count() == 1)
+                            {{-- Only one foto: show full-width image --}}
+                            @php $foto = $pembelianFoto->first(); @endphp
+                            <div class="proof-container">
+                                <div class="proof-item proof-full">
+                                    <strong>Status: {{ $foto->status }}</strong>
+                                    <img src="{{ url('foto/' . $foto->foto) }}" alt="Foto Pengiriman" />
+                                    <div class="img-overlay">
+                                        <i class="fa fa-eye" onclick="openImage('{{ url('foto/' . $foto->foto) }}')"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            {{-- Multiple fotos: show side-by-side --}}
+                            <div class="proof-split">
+                                @foreach($pembelianFoto as $foto)
+                                    <div class="proof-item">
+                                        <strong>Status: {{ $foto->status }}</strong>
+                                        <img src="{{ url('foto/' . $foto->foto) }}" alt="Foto Pengiriman" />
+                                        <div class="img-overlay">
+                                            <i class="fa fa-eye" onclick="openImage('{{ url('foto/' . $foto->foto) }}')"></i>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -263,4 +339,62 @@
             </div>
         @endif
     </div>
+
+    {{-- Modal for viewing images --}}
+    <div id="imageModal" class="image-modal" onclick="closeImage(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-close" onclick="closeImage(event)"><i class="fa fa-times"></i></div>
+            <img id="modalImage" src="" alt="Preview">
+        </div>
+    </div>
+
+    <script>
+        function openImage(src) {
+            var modal = document.getElementById('imageModal');
+            var modalImg = document.getElementById('modalImage');
+            modalImg.src = src;
+            modal.classList.add('open');
+        }
+
+        function closeImage(e) {
+            var modal = document.getElementById('imageModal');
+            modal.classList.remove('open');
+            document.getElementById('modalImage').src = '';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeImage(e);
+            }
+        });
+
+    // Sync the Konfirmasi card height to match the combined stacked right column
+    (function() {
+        function syncKonfirmasiHeight() {
+            var leftCard = document.querySelector('.left-column .left-card');
+            var rightCol = document.querySelector('.right-column');
+            if (!leftCard || !rightCol) return;
+            // reset and measure
+            leftCard.style.height = 'auto';
+            var target = rightCol.clientHeight;
+            if (target && target > 0) leftCard.style.height = target + 'px';
+        }
+
+        window.addEventListener('load', function() {
+            syncKonfirmasiHeight();
+            setTimeout(syncKonfirmasiHeight, 300);
+        });
+        window.addEventListener('resize', syncKonfirmasiHeight);
+
+        document.querySelectorAll('.right-column img').forEach(function(img) {
+            if (!img.complete) img.addEventListener('load', syncKonfirmasiHeight);
+        });
+
+        var rightCol = document.querySelector('.right-column');
+        if (rightCol && window.MutationObserver) {
+            var mo = new MutationObserver(function() { syncKonfirmasiHeight(); });
+            mo.observe(rightCol, { childList: true, subtree: true, attributes: true });
+        }
+    })();
+    </script>
 @endsection

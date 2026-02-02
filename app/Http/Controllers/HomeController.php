@@ -455,7 +455,15 @@ class HomeController extends Controller
 
     public function logout()
     {
-        session()->flush();
+        // Preserve shopping cart when logging out — only remove user-related session keys
+        $keranjang = session()->get('keranjang');
+
+        // Forget authentication and reset-related keys but keep cart
+        session()->forget(['pengguna', 'admin', 'reset_email', 'otp_verified']);
+
+        if ($keranjang !== null) {
+            session(['keranjang' => $keranjang]);
+        }
 
         return redirect('home')->with([
             'swal_type'  => 'success',
@@ -759,7 +767,7 @@ class HomeController extends Controller
         ]);
     }
 
-    public function riwayat()
+    public function riwayat(Request $request)
     {
         if (!session('pengguna')) {
             return redirect('home/login')->with([
@@ -770,8 +778,8 @@ class HomeController extends Controller
         }
 
         $idpengguna = session('pengguna')->id;
-
-        $databeli = DB::table('pembelian')
+        // Base query with joins
+        $query = DB::table('pembelian')
 
             // Subquery bukti DP
             ->leftJoin(
@@ -800,9 +808,42 @@ class HomeController extends Controller
                 'lunas.bukti_lunas'
             )
 
-            ->where('pembelian.id', $idpengguna)
-            ->orderBy('pembelian.tanggalbeli', 'desc')
-            ->paginate(10);
+            ->where('pembelian.id', $idpengguna);
+
+        // Apply search by product name
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->whereExists(function ($q) use ($search) {
+                $q->select(DB::raw(1))
+                    ->from('pembelianproduk')
+                    ->join('produk', 'pembelianproduk.idproduk', '=', 'produk.idproduk')
+                    ->whereColumn('pembelianproduk.idpembelian', 'pembelian.idpembelian')
+                    ->where('produk.nama', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('pembelian.statusbeli', $request->input('status'));
+        }
+
+        // Filter by payment method
+        if ($request->filled('metode')) {
+            $query->where('pembelian.metodepembayaran', $request->input('metode'));
+        }
+
+        // Sorting by transaction time
+        $sortTime = $request->input('sort_time');
+        if ($sortTime == 'time_asc') {
+            $query->orderBy('pembelian.waktu', 'asc');
+        } elseif ($sortTime == 'time_desc') {
+            $query->orderBy('pembelian.waktu', 'desc');
+        } else {
+            $query->orderBy('pembelian.tanggalbeli', 'desc');
+        }
+
+        // Paginate and preserve filters in query string
+        $databeli = $query->paginate(10)->appends($request->only(['search', 'sort_time', 'status', 'metode']));
 
         // Produk
         $dataproduk = [];
@@ -814,7 +855,10 @@ class HomeController extends Controller
             $dataproduk[$row->idpembelianreal] = $produk;
         }
 
-        return view('home.riwayat', compact('databeli', 'dataproduk'));
+        // Payment methods for filter dropdown
+        $paymentMethods = DB::table('pembelian')->where('id', $idpengguna)->distinct()->pluck('metodepembayaran');
+
+        return view('home.riwayat', compact('databeli', 'dataproduk', 'paymentMethods'));
     }
 
 

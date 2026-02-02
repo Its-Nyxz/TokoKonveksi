@@ -477,6 +477,33 @@ class AdminController extends Controller
             $statusbeli = $request->input('statusbeli');
             $pembelianproduk = DB::table('pembelianproduk')->where('idpembelian', $id)->get();
 
+            // Validate payment proofs: admin may only set status other than 'Pesanan Di Tolak' if proof exists
+            $paymentRecords = DB::table('pembayaran')->where('idpembelian', $id)->get();
+            if ($statusbeli != 'Pesanan Di Tolak') {
+                if ($statusbeli == 'Selesai') {
+                    // To mark as Selesai, pelunasan must exist (tipe != 'DP')
+                    $hasPelunasan = $paymentRecords->contains(function ($p) {
+                        return isset($p->tipe) && strtolower($p->tipe) != 'dp';
+                    });
+                    if (!$hasPelunasan) {
+                        return back()->with([
+                            'swal_type' => 'warning',
+                            'swal_title' => '',
+                            'swal_text' => 'Tidak bisa mengubah ke Selesai — bukti pelunasan belum tersedia.'
+                        ]);
+                    }
+                } else {
+                    // For other non-reject statuses, at least one payment proof (DP or pelunasan) must exist
+                    if ($paymentRecords->isEmpty()) {
+                        return back()->with([
+                            'swal_type' => 'warning',
+                            'swal_title' => '',
+                            'swal_text' => 'Harap unggah bukti pembayaran (DP atau Pelunasan) sebelum mengubah status.'
+                        ]);
+                    }
+                }
+            }
+
             if ($request->hasFile('foto')) {
                 $namafoto = date('Ymdhis') . '-' . $request->file('foto')->getClientOriginalName();
                 $request->file('foto')->move(public_path('foto'), $namafoto);
@@ -517,6 +544,31 @@ class AdminController extends Controller
         if ($request->has('proses')) {
             $statusbeli = $request->input('statusbeli');
             $pembelianproduk = DB::table('pembelianproduk')->where('idpembelian', $id)->get();
+
+            // Validate payment proofs before allowing status changes
+            $paymentRecords = DB::table('pembayaran')->where('idpembelian', $id)->get();
+            if ($statusbeli != 'Pesanan Di Tolak') {
+                if ($statusbeli == 'Selesai') {
+                    $hasPelunasan = $paymentRecords->contains(function ($p) {
+                        return isset($p->tipe) && strtolower($p->tipe) != 'dp';
+                    });
+                    if (!$hasPelunasan) {
+                        return back()->with([
+                            'swal_type' => 'warning',
+                            'swal_title' => '',
+                            'swal_text' => 'Tidak bisa mengubah ke Selesai — bukti pelunasan belum tersedia.'
+                        ]);
+                    }
+                } else {
+                    if ($paymentRecords->isEmpty()) {
+                        return back()->with([
+                            'swal_type' => 'warning',
+                            'swal_title' => '',
+                            'swal_text' => 'Harap unggah bukti pembayaran (DP atau Pelunasan) sebelum mengubah status.'
+                        ]);
+                    }
+                }
+            }
 
             if ($request->hasFile('foto')) {
                 $namafoto = date('Ymdhis') . '-' . $request->file('foto')->getClientOriginalName();
