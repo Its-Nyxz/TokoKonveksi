@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="{{ asset('assets/home/css/style.css') }}">
     {{-- <link rel="icon" type="image/x-icon" href="{{ asset('foto/logonya.jpeg') }}"> --}}
     <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 
 </head>
 

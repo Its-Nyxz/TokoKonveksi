@@ -10,6 +10,14 @@
         .btn-download:hover {
             color: white;
         }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+        }
+
+        input[type="date"] {
+            cursor: pointer;
+        }
     </style>
     <div class="row">
         <div class="col-md-12 mb-4">
@@ -24,15 +32,15 @@
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label for="exampleInputEmail1">Tanggal Awal</label>
-                                    <input type="date" name="tanggalawal" 
-                                        class="form-control" required>
+                                    <input type="date" name="tanggalawal" class="form-control" required
+                                        onclick="this.showPicker()">
                                 </div>
                             </div>
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label for="exampleInputEmail1">Tanggal Akhir</label>
-                                    <input type="date" name="tanggalakhir"
-                                        class="form-control" required>
+                                    <input type="date" name="tanggalakhir" class="form-control" required
+                                        onclick="this.showPicker()">
                                 </div>
                             </div>
                             <div class="col-md-12">
@@ -43,7 +51,7 @@
                     </form>
                 </div>
             </div>
-         
+
         </div>
     </div>
 @endsection

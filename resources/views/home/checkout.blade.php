@@ -1,5 +1,133 @@
 @extends('home.templates.index')
 
+<style>
+    /* Container Utama untuk Overlay */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.4);
+        /* Warna hitam transparan */
+
+        /* Efek Blur Latar Belakang */
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    /* Box Modal */
+    .modal-box {
+        background-color: #ffffff;
+        width: 100%;
+        max-width: 600px;
+        /* Lebar ideal untuk modal */
+        max-height: 80vh;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        animation: fade 0.5s ease-in-out;
+    }
+
+    /* Header Modal */
+    .modal-header {
+        padding: 20px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .modal-header h1 {
+        font-size: 1.7rem;
+        font-weight: 700;
+        margin: 0;
+        color: #1a1a1a;
+    }
+
+    .close-icon {
+        cursor: pointer;
+        color: #999;
+        transition: color 0.2s;
+    }
+
+    .close-icon:hover {
+        color: #ff4d4d;
+    }
+
+    /* Konten / Isi Modal */
+    .modal-content {
+        padding: 24px;
+        overflow-y: auto;
+        /* Scroll jika teks terlalu panjang */
+        line-height: 1.6;
+        color: #444;
+    }
+
+    .modal-content h3 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+        color: #000;
+    }
+
+    .modal-content p {
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+    }
+
+    /* Footer Modal */
+    .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: flex-end;
+        background-color: #fcfcfc;
+    }
+
+    .confirm-btn {
+        background-color: #ffbf0f;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    .confirm-btn:hover {
+        background-color: #bb8d0f;
+    }
+
+    /* Styling Scrollbar (Opsional agar lebih rapi) */
+    .modal-content::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb {
+        background: #e0e0e0;
+        border-radius: 10px;
+    }
+
+    @keyframes fade {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+</style>
+
 @section('page-content')
     <section id="home-section" class="ftco-section">
         <div class="container mt-4">
@@ -53,24 +181,29 @@
                                         <textarea class="form-control" name="alamat" placeholder="Masukkan Alamat" required id="inputAlamat" readonly>{{ $pengguna->alamat }}</textarea>
                                     </div>
                                 </div>
-                                
+
                             </div>
                             <div>
                                 <div class="form-group">
                                     <label>Catatan untuk Penjual (opsional)</label>
-                                    <textarea class="form-control" name="catatan_pembeli" placeholder="Contoh: Pesan Ukuran XL & Varian Warna Biru" id="inputCatatan" readonly>{{ old('catatan_pembeli') }}</textarea>
+                                    <textarea class="form-control" name="catatan_pembeli" placeholder="Contoh: Pesan Ukuran XL & Varian Warna Biru"
+                                        id="inputCatatan" readonly>{{ old('catatan_pembeli') }}</textarea>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <button type="button" id="btnEdit" class="btn btn-sm text-white" style="background-color: #ffbf0f;">Edit</button>
-                                <button type="button" id="btnSimpan" class="btn btn-sm text-white" style="background-color: #ffbf0f; display: none;">Simpan</button>
-                                <button type="button" id="btnBatal" class="btn btn-sm text-white" style="background-color: #d33; display: none;">Batal</button>
+                                <button type="button" id="btnEdit" class="btn btn-sm text-white"
+                                    style="background-color: #ffbf0f;">Edit</button>
+                                <button type="button" id="btnSimpan" class="btn btn-sm text-white"
+                                    style="background-color: #ffbf0f; display: none;">Simpan</button>
+                                <button type="button" id="btnBatal" class="btn btn-sm text-white"
+                                    style="background-color: #d33; display: none;">Batal</button>
                             </div>
                         </div>
                         <div class="card py-2 px-2 text-justify mt-5">
                             <h3 style="color: black;">Kebijakan Pemesanan</h3>
                             Dengan melanjutkan ke tahapan selanjutnya, Anda telah membaca dan setuju dengan pihak Seni
-                            Relief Kuningan dengan <a href="#" style="color: #ffbf0f;">Syarat & Kententuannya</a>.
+                            Relief Kuningan dengan <a href="#" onclick="buttonModal()" style="color: #ffbf0f;">Syarat
+                                & Kententuannya</a>.
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -144,7 +277,8 @@
 
                         <div class="form-group">
                             <label>Ongkir</label>
-                            <input type="text" class="form-control" name="ongkir" id="ongkir" readonly required>
+                            <input type="text" class="form-control" name="ongkir" id="ongkir" readonly
+                                required>
                         </div>
 
                     </div>
@@ -200,10 +334,9 @@
                         </div>
                         <hr>
                         <p>Dengan melanjutkan ke tahapan selanjutnya, Anda telah membaca dan setuju dengan pihak Seni
-                            Relief Kuningan dengan <a href="#" style="color: #ffbf0f;">Syarat &
+                            Relief Kuningan dengan <a href="#" onclick="buttonModal()"
+                                idstyle="color: #ffbf0f;">Syarat &
                                 Kententuannya</a>.</p>
-
-
 
                         <input type="hidden" id="total_belanja" name="total_belanja" value="{{ $totalbelanja }}">
                         <button class="btn btn-lg text-white" style="background-color: #ffbf0f"
@@ -213,11 +346,59 @@
             </div>
         </form>
     </div>
+
+    <div id="modalContainer" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h1>Syarat & Ketentuan</h1>
+                <i class="fa-solid fa-x close-icon"></i>
+            </div>
+
+            <div class="modal-content">
+                <section>
+                    <h3>Pemesanan</h3>
+                    <p>Pemesanan dilakukan melalui website, marketplace, atau kontak resmi kami. Data pesanan (jenis
+                        produk, jumlah, ukuran, desain) wajib diisi dengan benar.</p>
+                </section>
+
+                <section>
+                    <h3>Harga & Pembayaran</h3>
+                    <p>Harga disesuaikan dengan jumlah, bahan, dan tingkat kesulitan desain. Pembayaran DP / pelunasan
+                        dilakukan sesuai kesepakatan.</p>
+                </section>
+
+                <section>
+                    <h3>Produksi & Custom Order</h3>
+                    <p>Waktu produksi menyesuaikan jumlah dan tingkat kesulitan. Produk bersifat custom, tidak dapat
+                        dibatalkan atau direfund setelah produksi berjalan.</p>
+                </section>
+
+                <section>
+                    <h3>Komplain</h3>
+                    <p>Komplain diterima maksimal 2×24 jam setelah barang diterima dengan bukti foto/video unboxing.</p>
+                </section>
+            </div>
+
+            <div class="modal-footer">
+                <button onclick="buttonModal()" class="confirm-btn">Saya Mengerti</button>
+            </div>
+        </div>
+    </div>
 </section>
 @endsection
 
 @section('script')
 <script>
+    const modalContainer = document.getElementById('modalContainer');
+
+    function buttonModal() {
+        if (modalContainer.style.display === 'flex') {
+            modalContainer.style.display = 'none';
+        } else {
+            modalContainer.style.display = 'flex';
+        }
+    }
+
     const totalBelanja = {{ $totalbelanja ?? 0 }};
 
     // Simpan nilai awal untuk fitur batal
@@ -242,7 +423,7 @@
 
         // Hilangkan readonly
         $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan').prop('readonly', false);
-        
+
         // Toggle tombol
         $('#btnEdit').hide();
         $('#btnSimpan, #btnBatal').show();
@@ -252,7 +433,7 @@
     $('#btnSimpan').click(function() {
         // Set readonly kembali
         $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan').prop('readonly', true);
-        
+
         // Toggle tombol
         $('#btnSimpan, #btnBatal').hide();
         $('#btnEdit').show();
@@ -277,7 +458,7 @@
 
         // Set readonly kembali
         $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan').prop('readonly', true);
-        
+
         // Toggle tombol
         $('#btnSimpan, #btnBatal').hide();
         $('#btnEdit').show();
