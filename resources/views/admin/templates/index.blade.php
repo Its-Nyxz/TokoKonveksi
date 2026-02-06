@@ -213,6 +213,9 @@
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Logout
                                 </a>
+                                <a class="dropdown-item" href={{ url('admin/akun') }}> <i
+                                        class="fa-solid fa-user fa-sm fa-fw mr-2 text-gray-400"></i>Profil
+                                    Akun</a>
                             </div>
                         </li>
                     </ul>
@@ -281,7 +284,7 @@
                 // SweetAlert Logout Confirmation
                 function handleLogout(e) {
                     e.preventDefault();
-                    
+
                     Swal.fire({
                         icon: 'warning',
                         title: 'Konfirmasi Logout',
@@ -310,9 +313,9 @@
                         }
                     });
                 }
-                
+
                 document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-                
+
                 document.querySelectorAll('.logout-btn').forEach(function(btn) {
                     btn.addEventListener('click', handleLogout);
                 });
