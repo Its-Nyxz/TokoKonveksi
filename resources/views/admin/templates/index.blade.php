@@ -96,9 +96,6 @@
                         <span class="badge badge-success">Online</span>
                     </div>
                 </div>
-                <a href="#" class="logout-btn text-white ml-2" title="Logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
             </div>
             <hr class="sidebar-divider">
 
