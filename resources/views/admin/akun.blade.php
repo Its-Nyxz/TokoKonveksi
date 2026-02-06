@@ -28,7 +28,7 @@
 
                         <input type="hidden" name="passwordlama" value="{{ $pengguna->password }}">
 
-                        <button type="button" class="btn ml-3" id="btnSimpan" style="background-color: #55acce; color: white;">
+                        <button type="button" class="btn" id="btnSimpan" style="background-color: #55acce; color: white;">
                             <i class="glyphicon glyphicon-saved"></i> Simpan Perubahan
                         </button>
                     </div>
@@ -46,41 +46,48 @@
             e.preventDefault();
 
             Swal.fire({
-                title: 'Konfirmasi Perubahan',
-                text: "Apakah Anda yakin ingin menyimpan perubahan data akun?",
                 icon: 'question',
+                title: 'Konfirmasi Perubahan',
+                text: 'Apakah Anda yakin ingin menyimpan perubahan data akun?',
                 showCancelButton: true,
-                confirmButtonColor: '#55acce',
+                confirmButtonColor: '#ffbf0f',
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'Ya, Simpan!',
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    // Tampilkan loading saat submit
+                    Swal.fire({
+                        title: 'Menyimpan...',
+                        text: 'Mohon tunggu sebentar',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    // Submit form
                     document.getElementById('formAkun').submit();
                 }
             });
         });
-
-        // Notifikasi berhasil setelah update (dari session)
-        @if (session('success'))
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil!',
-                text: '{{ session('success') }}',
-                confirmButtonColor: '#55acce',
-                timer: 3000,
-                timerProgressBar: true
-            });
-        @endif
-
-        // Notifikasi error jika ada
-        @if (session('error'))
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal!',
-                text: '{{ session('error') }}',
-                confirmButtonColor: '#55acce'
-            });
-        @endif
     </script>
+
+    {{-- Sweet Alert untuk notifikasi dari session --}}
+    @if (session()->has('swal_type'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: @json(session('swal_type')),
+                    title: @json(session('swal_title')),
+                    text: @json(session('swal_text')),
+                    confirmButtonColor: '#ffbf0f',
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            });
+        </script>
+    @endif
 @endsection
