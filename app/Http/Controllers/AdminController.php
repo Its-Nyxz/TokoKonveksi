@@ -339,6 +339,10 @@ class AdminController extends Controller
         return redirect('home')->with('alert', 'Anda Telah Logout');
     }
 
+    public function akun() {
+        return view('admin/akun');
+    }
+
     public function pembelian()
     {
         $pembelian = DB::table('pembelian')->orderBy('pembelian.tanggalbeli', 'desc')->orderBy('pembelian.idpembelian', 'desc')->get();
