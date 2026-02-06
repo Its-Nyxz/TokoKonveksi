@@ -45,6 +45,7 @@ Route::controller(AdminController::class)->group(function () {
     Route::post('admin/updateproduk/{id}', 'updateproduk');
     Route::get('admin/hapusproduk/{id}', 'hapusproduk');
 
+    Route::get('admin/akun', 'akun');
     Route::get('admin/profile', 'profile');
     Route::get('admin/tambahprofile', 'tambahprofile');
     Route::post('admin/simpanprofile', 'simpanprofile');
