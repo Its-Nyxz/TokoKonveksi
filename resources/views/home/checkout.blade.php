@@ -498,7 +498,12 @@
                 // console.log(res);
             },
             error: function() {
-                alert('Gagal mencari lokasi');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: 'Gagal mencari lokasi',
+                    confirmButtonColor: '#ffbf0f'
+                });
             }
         });
     });
@@ -537,7 +542,12 @@
                     });
                 },
                 error: function() {
-                    alert('Gagal mengambil layanan pengiriman');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: 'Gagal mengambil layanan pengiriman',
+                        confirmButtonColor: '#ffbf0f'
+                    });
                 }
             });
         }
