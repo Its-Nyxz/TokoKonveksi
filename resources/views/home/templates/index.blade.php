@@ -88,7 +88,7 @@
                         </li>
                         <li class="nav-item active">
                             <a href="{{ url('home/daftar') }}" class="nav-item nav-link btn py-2 px-2 mt-3 ml-3"
-                                style="background-color: white; color: black !important; border: solid #ffbf0f 1px;">Daftar</a>
+                                style="background-color: white; color: black !important; border: solid #ffbf0f 1px;">Registrasi</a>
                         </li>
                     @endif
                 </ul>
