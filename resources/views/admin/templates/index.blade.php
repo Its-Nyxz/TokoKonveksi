@@ -206,13 +206,13 @@
                             <!-- Dropdown - User Information -->
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
                                 aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href={{ url('admin/akun') }}> <i
+                                        class="fa-solid fa-user fa-sm fa-fw mr-2 text-gray-400"></i>Profil
+                                    Akun</a>
                                 <a class="dropdown-item" href="#" id="logoutBtn">
                                     <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Logout
                                 </a>
-                                <a class="dropdown-item" href={{ url('admin/akun') }}> <i
-                                        class="fa-solid fa-user fa-sm fa-fw mr-2 text-gray-400"></i>Profil
-                                    Akun</a>
                             </div>
                         </li>
                     </ul>
