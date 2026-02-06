@@ -340,7 +340,7 @@ class AdminController extends Controller
     }
 
     public function akun() {
-        return redirect('admin/akun');
+        return view('admin/akun');
     }
 
     public function pembelian()
