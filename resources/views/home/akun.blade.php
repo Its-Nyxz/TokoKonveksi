@@ -5,7 +5,7 @@
         <form method="post" enctype="multipart/form-data" action="{{ url('home/ubahakun/' . $pengguna->id) }}" id="formAkun">
             @csrf
             <div class="container mt-4">
-                <h1 style="color: black; font-weight:bold;">My Account</h1>
+                <h1 style="color: black; font-weight:bold;">Akun Saya</h1>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
