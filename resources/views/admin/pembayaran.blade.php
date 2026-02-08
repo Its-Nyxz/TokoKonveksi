@@ -5,7 +5,7 @@
         <div class="col-md-12 mb-4">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-coklat">
-                    <h6 class="m-0 font-weight-bold text-white">Daftar Pembelian</h6>
+                    <h6 class="m-0 font-weight-bold text-white">Daftar Transaksi</h6>
                 </div>
                 <div class="card-body">
                     <div class="row">
