@@ -339,8 +339,70 @@ class AdminController extends Controller
         return redirect('home')->with('alert', 'Anda Telah Logout');
     }
 
-    public function akun() {
-        return view('admin/akun');
+    public function akun()
+    {
+        if (!session('admin')) {
+            return redirect('home/login')->with([
+                'swal_type'  => 'warning',
+                'swal_title' => 'Akses Ditolak',
+                'swal_text'  => 'Anda belum login, silakan login terlebih dahulu'
+            ]);
+        }
+
+        $idpengguna = session('admin')->id;
+        $pengguna = DB::table('pengguna')->where('id', $idpengguna)->first();
+
+        $data = [
+            'pengguna' => $pengguna,
+        ];
+
+        return view('admin/akun', $data);
+    }
+
+    public function ubahakun(Request $request, $id)
+    {
+        // Validasi input
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'nullable|min:6',
+        ]);
+
+        // Ambil data pengguna yang sedang login
+        $pengguna = DB::table('pengguna')->where('id', $id)->first();
+
+        // Cek apakah pengguna ditemukan
+        if (!$pengguna) {
+            return redirect('admin/akun')->with('error', 'Pengguna tidak ditemukan');
+        }
+
+        // Data yang akan diupdate
+        $dataUpdate = [
+            'email' => $request->input('email')
+        ];
+
+        // Cek apakah pengguna adalah Administrator (ID 2 atau nama Administrator)
+        if ($pengguna->id == 2 || $pengguna->nama == 'Administrator') {
+            // Administrator bisa mengubah password
+            $password = $request->input('password');
+
+            if (!empty($password)) {
+                // Jika password diisi, hash password baru
+                $dataUpdate['password'] = bcrypt($password);
+            }
+            // Jika password kosong, tidak diupdate (tetap pakai password lama)
+        }
+        // Jika SuperAdmin (ID 3), password tidak akan diupdate
+
+        // Update data
+        DB::table('pengguna')
+            ->where('id', $id)
+            ->update($dataUpdate);
+
+        return redirect('admin/akun')->with([
+            'swal_type'  => 'success',
+            'swal_title' => 'Berhasil!',
+            'swal_text'  => 'Data akun berhasil diubah'
+        ]);
     }
 
     public function pembelian()
