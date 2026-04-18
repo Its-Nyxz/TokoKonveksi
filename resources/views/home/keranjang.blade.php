@@ -267,9 +267,8 @@
                                                     <strong>{{ $nomor }}</strong>
                                                 </td>
                                                 <td class="image-prod">
-                                                    <img src="{{ asset('foto/' . $item['foto']) }}" 
-                                                         class="product-image" 
-                                                         width="100">
+                                                    <img src="{{ asset('foto/' . $item['foto']) }}" class="product-image"
+                                                        width="100">
                                                 </td>
                                                 <td>
                                                     <span class="product-name">{{ $item['nama'] }}</span>
@@ -281,8 +280,8 @@
                                                     <span class="price-tag-cart">Rp {{ number_format($totalharga) }}</span>
                                                 </td>
                                                 <td>
-                                                    <a href="{{ url('home/hapuskeranjang/' . $idproduk) }}" 
-                                                       class="btn-delete">
+                                                    <a href="{{ url('home/hapuskeranjang/' . $idproduk) }}"
+                                                        class="btn-delete">
                                                         Hapus
                                                     </a>
                                                 </td>
@@ -302,7 +301,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="row">
                 <div class="col-md-12">
                     <div class="action-buttons">
@@ -311,7 +310,7 @@
                         </a>
                         @if (!empty($keranjang))
                             <a href="{{ url('home/checkout') }}" class="btn-action">
-                                Lanjutkan ke Checkout
+                                Lanjutkan ke Pesan Produk
                             </a>
                         @endif
                     </div>

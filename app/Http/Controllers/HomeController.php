@@ -762,7 +762,7 @@ class HomeController extends Controller
 
         return redirect('home/riwayat')->with([
             'swal_type'  => 'success',
-            'swal_title' => 'Checkout Berhasil',
+            'swal_title' => 'Pesan Produk Berhasil',
             'swal_text'  => 'Pesanan Anda berhasil diproses'
         ]);
     }

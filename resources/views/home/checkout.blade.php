@@ -139,7 +139,7 @@
                         <img src="{{ asset('foto/2b.png') }}" href="{{ url('home') }}" width="20"> Pembayaran
                         <img src="{{ asset('foto/line.png') }}" href="{{ url('home') }}" width="20">
                         <img src="{{ asset('foto/3b.png') }}" href="{{ url('home') }}" width="20"> Konfirmasi --}}
-                        Checkout
+                        Pesan Produk
                     </p>
                 </div>
             </div>
