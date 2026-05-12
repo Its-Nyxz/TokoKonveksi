@@ -220,13 +220,13 @@
                         @endforeach
                         {{-- metode pembayaran --}}
 
-                        <p style="color: #ffbf0f; font-weight:600">Metode Pembayaran</p>
+                        <p style="color: #ffbf0f; font-weight:600">Metode Pengiriman</p>
                         <div class="form-group">
-                            <label>Pilih Metode Pembayaran</label>
+                            <label>Pilih Metode Pengiriman</label>
                             <select id="metode" name="metodepembayaran" class="form-control" required>
-                                <option value="">Pilih Metode Pembayaran</option>
-                                <option value="Transfer">Transfer Bank</option>
-                                <option value="COD">COD (Cash On Delivery)</option>
+                                <option value="">Pilih Metode Pengiriman</option>
+                                <option value="Transfer">Dengan Kurir</option>
+                                <option value="COD">Tanpa Kurir</option>
                                 <!-- Tambah metode lainnya sesuai kebutuhan -->
                             </select>
                         </div>
