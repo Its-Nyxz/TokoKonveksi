@@ -139,7 +139,7 @@
             </div>
             <div class="card mt-3 py-2 px-2">
                 <h3 style="color: black;">{{ $dp->nama }}</h3>
-                Kota Asal Pengiriman : Kabupaten Jepara
+                Kota Asal Pengiriman : Kabupaten Wonogiri
                 <img src="{{ asset('foto/' . $dp->foto) }}" height="250px" alt="">
                 <p style="color: #000;">{{ $datapembelian->alamat }}, {{ $datapembelian->kec }},
                     {{ $datapembelian->kota }}, {{ $datapembelian->provinsi }},{{ $datapembelian->kode_pos }}</p>
