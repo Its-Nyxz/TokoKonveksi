@@ -950,6 +950,18 @@ class HomeController extends Controller
 
     public function pembayaransimpan(Request $request)
     {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'bukti' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->with([
+                'swal_type' => 'error',
+                'swal_title' => 'Validasi Gagal',
+                'swal_text' => 'File harus berupa gambar dengan ukuran maksimal 2MB.'
+            ]);
+        }
+
         $namabukti = $request->file('bukti')->getClientOriginalName();
         $namafix = date("YmdHis") . $namabukti;
         $request->file('bukti')->move('foto', $namafix);
@@ -1038,6 +1050,18 @@ class HomeController extends Controller
 
     public function pelunasansimpan(Request $request)
     {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'bukti' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->with([
+                'swal_type' => 'error',
+                'swal_title' => 'Validasi Gagal',
+                'swal_text' => 'File harus berupa gambar dengan ukuran maksimal 2MB.'
+            ]);
+        }
+
         // Upload bukti
         $namabukti = $request->file('bukti')->getClientOriginalName();
         $namafix = date("YmdHis") . $namabukti;

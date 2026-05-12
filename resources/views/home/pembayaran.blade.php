@@ -38,7 +38,8 @@
                             </div>
                             <div class="form-group">
                                 <label>Foto Bukti</label>
-                                <input type="file" name="bukti" class="form-control" required>
+                                <input type="file" name="bukti" class="form-control" accept="image/*" required onchange="validateFile(this)">
+                                <small id="fileError" class="text-danger mt-2" style="display:none; font-weight: bold;"></small>
                             </div>
                         </div>
                         <div class="card py-2 px-2 text-justify">
@@ -161,4 +162,36 @@
         </div>
         </div>
     </section>
+
+    <script>
+        function validateFile(input) {
+            const fileError = document.getElementById('fileError');
+            const submitBtn = document.querySelector('button[name="kirim"]');
+            const file = input.files[0];
+            
+            if (file) {
+                if (file.size > 2 * 1024 * 1024) {
+                    fileError.textContent = 'Ukuran file maksimal 2MB.';
+                    fileError.style.display = 'block';
+                    submitBtn.disabled = true;
+                    input.value = ''; // clear input
+                    return;
+                }
+                
+                if (!file.type.startsWith('image/')) {
+                    fileError.textContent = 'File harus berupa gambar (JPG, PNG, dll).';
+                    fileError.style.display = 'block';
+                    submitBtn.disabled = true;
+                    input.value = ''; // clear input
+                    return;
+                }
+                
+                fileError.style.display = 'none';
+                submitBtn.disabled = false;
+            } else {
+                fileError.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        }
+    </script>
 @endsection
