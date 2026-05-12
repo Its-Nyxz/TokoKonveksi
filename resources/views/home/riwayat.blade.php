@@ -430,6 +430,18 @@
             justify-content: center;
         }
 
+        /* Distinct upload button */
+        .btn-upload {
+            background-color: #ffbf0f !important;
+            border-color: #ffbf0f !important;
+            color: #000 !important;
+        }
+
+        .btn-upload:hover {
+            background-color: #f0b300 !important;
+            border-color: #f0b300 !important;
+        }
+
         /* Distinct pelunasan button */
         .btn-pelunasan {
             background-color: #ff7a00 !important;
@@ -888,9 +900,15 @@
 
                                             <td class="text-center">
                                                 <div class="action-buttons">
-                                                    <a href="{{ url('home/detailtransaksi/' . $db->idpembelianreal) }}" class="btn btn-detail">
-                                                        Detail
-                                                    </a>
+                                                    @if ($db->statusbeli == 'Belum Bayar')
+                                                        <a href="{{ url('home/pembayaran/' . $db->idpembelianreal) }}" class="btn btn-upload">
+                                                            Upload Bukti Pembayaran
+                                                        </a>
+                                                    @else
+                                                        <a href="{{ url('home/detailtransaksi/' . $db->idpembelianreal) }}" class="btn btn-detail">
+                                                            Detail
+                                                        </a>
+                                                    @endif
 
                                                     @if(isset($db->tipepembayaran) && $db->tipepembayaran == 'DP' && !empty($db->bukti_dp) && (empty($db->bukti_lunas)))
                                                         <a href="{{ url('home/pelunasan/' . $db->idpembelianreal) }}" class="btn btn-pelunasan">
