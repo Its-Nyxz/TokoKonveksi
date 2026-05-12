@@ -239,10 +239,109 @@
             box-shadow: 0 2px 6px rgba(102, 126, 234, 0.2);
             transition: transform 0.2s ease;
             max-width: 90px;
+            cursor: pointer;
         }
 
         .qr-code-container img:hover {
             transform: scale(1.1);
+        }
+
+        /* ===== Image Preview Modal ===== */
+        .image-preview-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .image-preview-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .image-preview-modal {
+            position: relative;
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            max-height: 90vh;
+            transform: scale(0.8) translateY(20px);
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-align: center;
+        }
+
+        .image-preview-overlay.active .image-preview-modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .image-preview-modal .modal-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .image-preview-modal img {
+            max-width: 100%;
+            max-height: 65vh;
+            border-radius: 10px;
+            object-fit: contain;
+        }
+
+        .image-preview-modal .close-btn {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            border: 3px solid white;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 3px 10px rgba(238, 90, 36, 0.4);
+            z-index: 1;
+        }
+
+        .image-preview-modal .close-btn:hover {
+            transform: scale(1.15) rotate(90deg);
+            box-shadow: 0 5px 15px rgba(238, 90, 36, 0.5);
+        }
+
+        /* QR specific modal styling */
+        .image-preview-modal.qr-modal img {
+            border: 4px solid #667eea;
+            padding: 10px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        /* Proof image specific modal styling */
+        .image-preview-modal.proof-modal img {
+            border: 3px solid #dee2e6;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .status-badge {
@@ -743,7 +842,8 @@
                                                     <div class="proof-section">
                                                         <small>DP:</small>
                                                         @if (!empty($db->bukti_dp) && file_exists(public_path('foto/' . $db->bukti_dp)))
-                                                            <img width="70" src="{{ asset('foto/' . $db->bukti_dp) }}" alt="Bukti DP">
+                                                            <img width="70" src="{{ asset('foto/' . $db->bukti_dp) }}" alt="Bukti DP"
+                                                                 onclick="openImagePreview('{{ asset('foto/' . $db->bukti_dp) }}', 'Bukti Pembayaran DP', 'proof')">
                                                         @else
                                                             <strong>-</strong>
                                                         @endif
@@ -752,7 +852,8 @@
                                                     <div class="proof-section">
                                                         <small>Lunas:</small>
                                                         @if (!empty($db->bukti_lunas) && file_exists(public_path('foto/' . $db->bukti_lunas)))
-                                                            <img width="70" src="{{ asset('foto/' . $db->bukti_lunas) }}" alt="Bukti Lunas">
+                                                            <img width="70" src="{{ asset('foto/' . $db->bukti_lunas) }}" alt="Bukti Lunas"
+                                                                 onclick="openImagePreview('{{ asset('foto/' . $db->bukti_lunas) }}', 'Bukti Pelunasan', 'proof')">
                                                         @else
                                                             <strong>-</strong>
                                                         @endif
@@ -762,9 +863,8 @@
 
                                             <td class="text-center">
                                                 <div class="qr-code-container">
-                                                    <a href="{{ asset('qr/' . $db->qrcode) }}" target="_blank">
-                                                        <img src="{{ asset('qr/' . $db->qrcode) }}" alt="qr-code" width="90">
-                                                    </a>
+                                                    <img src="{{ asset('qr/' . $db->qrcode) }}" alt="qr-code" width="90"
+                                                         onclick="openImagePreview('{{ asset('qr/' . $db->qrcode) }}', 'QR Code Transaksi', 'qr')">
                                                 </div>
                                             </td>
 
@@ -821,6 +921,15 @@
         </div>
     </section>
 
+    <!-- Image Preview Modal -->
+    <div class="image-preview-overlay" id="imagePreviewOverlay" onclick="closeImagePreview(event)">
+        <div class="image-preview-modal" id="imagePreviewModal">
+            <button class="close-btn" onclick="closeImagePreview(event, true)" title="Tutup">&times;</button>
+            <div class="modal-title" id="imagePreviewTitle"></div>
+            <img id="imagePreviewImg" src="" alt="Preview">
+        </div>
+    </div>
+
     <script>
         function toggleFilter() {
             const dropdown = document.getElementById('filterDropdown');
@@ -853,6 +962,55 @@
         // Prevent dropdown close when clicking inside
         document.getElementById('filterDropdown').addEventListener('click', function(event) {
             event.stopPropagation();
+        });
+        // ===== Image Preview Modal Functions =====
+        function openImagePreview(src, title, type) {
+            const overlay = document.getElementById('imagePreviewOverlay');
+            const modal = document.getElementById('imagePreviewModal');
+            const img = document.getElementById('imagePreviewImg');
+            const titleEl = document.getElementById('imagePreviewTitle');
+
+            img.src = src;
+            titleEl.textContent = title || '';
+
+            // Apply type-specific class
+            modal.classList.remove('qr-modal', 'proof-modal');
+            if (type === 'qr') {
+                modal.classList.add('qr-modal');
+            } else if (type === 'proof') {
+                modal.classList.add('proof-modal');
+            }
+
+            // Prevent body scroll
+            document.body.style.overflow = 'hidden';
+
+            // Show modal with animation
+            overlay.classList.add('active');
+        }
+
+        function closeImagePreview(event, forceClose) {
+            if (forceClose || event.target === document.getElementById('imagePreviewOverlay')) {
+                const overlay = document.getElementById('imagePreviewOverlay');
+                overlay.classList.remove('active');
+
+                // Restore body scroll
+                document.body.style.overflow = '';
+
+                // Clear image after animation completes
+                setTimeout(function() {
+                    document.getElementById('imagePreviewImg').src = '';
+                }, 350);
+            }
+        }
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const overlay = document.getElementById('imagePreviewOverlay');
+                if (overlay.classList.contains('active')) {
+                    closeImagePreview(event, true);
+                }
+            }
         });
     </script>
 @endsection
