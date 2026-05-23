@@ -557,6 +557,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -724,11 +725,10 @@
                     <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                         <!-- Search Bar -->
                         <div class="search-wrapper">
-                            <input type="text" 
-                                   name="search" 
-                                   placeholder="Cari nama produk..." 
-                                   value="{{ request('search') }}">
-                            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <input type="text" name="search" placeholder="Cari nama produk..."
+                                value="{{ request('search') }}">
+                            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <path d="m21 21-4.35-4.35"></path>
                             </svg>
@@ -737,14 +737,16 @@
                         <!-- Filter Dropdown -->
                         <div class="filter-dropdown-wrapper">
                             <button type="button" class="filter-toggle-btn" onclick="toggleFilter()">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <line x1="4" y1="6" x2="20" y2="6"></line>
                                     <line x1="8" y1="12" x2="16" y2="12"></line>
                                     <line x1="12" y1="18" x2="12" y2="18"></line>
                                 </svg>
                                 Filter
-                                @if(request('sort_time') || request('status') || request('metode'))
-                                    <span class="badge">{{ collect([request('sort_time'), request('status'), request('metode')])->filter()->count() }}</span>
+                                @if (request('sort_time') || request('status') || request('metode'))
+                                    <span
+                                        class="badge">{{ collect([request('sort_time'), request('status'), request('metode')])->filter()->count() }}</span>
                                 @endif
                             </button>
 
@@ -753,8 +755,11 @@
                                     <label>Urutkan Waktu</label>
                                     <select name="sort_time">
                                         <option value="">Semua</option>
-                                        <option value="time_desc" {{ request('sort_time')=='time_desc'? 'selected':'' }}>Terbaru</option>
-                                        <option value="time_asc" {{ request('sort_time')=='time_asc'? 'selected':'' }}>Terlama</option>
+                                        <option value="time_desc"
+                                            {{ request('sort_time') == 'time_desc' ? 'selected' : '' }}>
+                                            Terbaru</option>
+                                        <option value="time_asc" {{ request('sort_time') == 'time_asc' ? 'selected' : '' }}>
+                                            Terlama</option>
                                     </select>
                                 </div>
 
@@ -762,13 +767,30 @@
                                     <label>Status Pesanan</label>
                                     <select name="status">
                                         <option value="">Semua Status</option>
-                                        <option value="Belum Bayar" {{ request('status')=='Belum Bayar'? 'selected':'' }}>Belum Bayar</option>
-                                        <option value="Sudah Upload Bukti Pembayaran" {{ request('status')=='Sudah Upload Bukti Pembayaran'? 'selected':'' }}>Sudah Upload Bukti Pembayaran</option>
-                                        <option value="Menunggu Konfirmasi" {{ request('status')=='Menunggu Konfirmasi'? 'selected':'' }}>Menunggu Konfirmasi</option>
-                                        <option value="Pesanan Di Terima" {{ request('status')=='Pesanan Di Terima'? 'selected':'' }}>Pesanan Diterima</option>
-                                        <option value="Sedang Dikirim" {{ request('status')=='Sedang Dikirim'? 'selected':'' }}>Sedang Dikirim</option>
-                                        <option value="Selesai" {{ request('status')=='Selesai'? 'selected':'' }}>Selesai</option>
-                                        <option value="Pesanan Di Tolak" {{ request('status')=='Pesanan Di Tolak'? 'selected':'' }}>Pesanan Di Tolak</option>
+                                        <option value="Belum Bayar"
+                                            {{ request('status') == 'Belum Bayar' ? 'selected' : '' }}>
+                                            Belum Bayar</option>
+                                        <option value="Sudah Upload Bukti Pembayaran"
+                                            {{ request('status') == 'Sudah Upload Bukti Pembayaran' ? 'selected' : '' }}>
+                                            Sudah
+                                            Upload Bukti Pembayaran</option>
+                                        <option value="Menunggu Konfirmasi"
+                                            {{ request('status') == 'Menunggu Konfirmasi' ? 'selected' : '' }}>Menunggu
+                                            Konfirmasi</option>
+                                        <option value="Pesanan Di Terima"
+                                            {{ request('status') == 'Pesanan Di Terima' ? 'selected' : '' }}>Pesanan
+                                            Diterima
+                                        </option>
+                                        <option value="Sedang Dikirim"
+                                            {{ request('status') == 'Sedang Dikirim' ? 'selected' : '' }}>Sedang Dikirim
+                                        </option>
+                                        <option value="Selesai" {{ request('status') == 'Selesai' ? 'selected' : '' }}>
+                                            Selesai
+                                        </option>
+                                        <option value="Pesanan Di Tolak"
+                                            {{ request('status') == 'Pesanan Di Tolak' ? 'selected' : '' }}>Pesanan Di
+                                            Tolak
+                                        </option>
                                     </select>
                                 </div>
 
@@ -776,14 +798,18 @@
                                     <label>Metode Pembayaran</label>
                                     <select name="metode">
                                         <option value="">Semua Metode</option>
-                                        <option value="Transfer" {{ request('metode')=='Transfer' ? 'selected' : '' }}>Transfer</option>
-                                        <option value="COD" {{ request('metode')=='COD' ? 'selected' : '' }}>COD</option>
-                                        @if(!empty($paymentMethods))
-                                            @foreach($paymentMethods as $pm)
-                                                @if(in_array($pm, ['Transfer', 'COD']))
+                                        <option value="Transfer" {{ request('metode') == 'Transfer' ? 'selected' : '' }}>
+                                            Transfer</option>
+                                        <option value="COD" {{ request('metode') == 'COD' ? 'selected' : '' }}>COD
+                                        </option>
+                                        @if (!empty($paymentMethods))
+                                            @foreach ($paymentMethods as $pm)
+                                                @if (in_array($pm, ['Transfer', 'COD']))
                                                     @continue
                                                 @endif
-                                                <option value="{{ $pm }}" {{ request('metode') == $pm ? 'selected' : '' }}>{{ $pm }}</option>
+                                                <option value="{{ $pm }}"
+                                                    {{ request('metode') == $pm ? 'selected' : '' }}>{{ $pm }}
+                                                </option>
                                             @endforeach
                                         @endif
                                     </select>
@@ -854,8 +880,9 @@
                                                     <div class="proof-section">
                                                         <small>DP:</small>
                                                         @if (!empty($db->bukti_dp) && file_exists(public_path('foto/' . $db->bukti_dp)))
-                                                            <img width="70" src="{{ asset('foto/' . $db->bukti_dp) }}" alt="Bukti DP"
-                                                                 onclick="openImagePreview('{{ asset('foto/' . $db->bukti_dp) }}', 'Bukti Pembayaran DP', 'proof')">
+                                                            <img width="70" src="{{ asset('foto/' . $db->bukti_dp) }}"
+                                                                alt="Bukti DP"
+                                                                onclick="openImagePreview('{{ asset('foto/' . $db->bukti_dp) }}', 'Bukti Pembayaran DP', 'proof')">
                                                         @else
                                                             <strong>-</strong>
                                                         @endif
@@ -864,8 +891,10 @@
                                                     <div class="proof-section">
                                                         <small>Lunas:</small>
                                                         @if (!empty($db->bukti_lunas) && file_exists(public_path('foto/' . $db->bukti_lunas)))
-                                                            <img width="70" src="{{ asset('foto/' . $db->bukti_lunas) }}" alt="Bukti Lunas"
-                                                                 onclick="openImagePreview('{{ asset('foto/' . $db->bukti_lunas) }}', 'Bukti Pelunasan', 'proof')">
+                                                            <img width="70"
+                                                                src="{{ asset('foto/' . $db->bukti_lunas) }}"
+                                                                alt="Bukti Lunas"
+                                                                onclick="openImagePreview('{{ asset('foto/' . $db->bukti_lunas) }}', 'Bukti Pelunasan', 'proof')">
                                                         @else
                                                             <strong>-</strong>
                                                         @endif
@@ -875,8 +904,9 @@
 
                                             <td class="text-center">
                                                 <div class="qr-code-container">
-                                                    <img src="{{ asset('qr/' . $db->qrcode) }}" alt="qr-code" width="90"
-                                                         onclick="openImagePreview('{{ asset('qr/' . $db->qrcode) }}', 'QR Code Transaksi', 'qr')">
+                                                    <img src="{{ asset('qr/' . $db->qrcode) }}" alt="qr-code"
+                                                        width="90"
+                                                        onclick="openImagePreview('{{ asset('qr/' . $db->qrcode) }}', 'QR Code Transaksi', 'qr')">
                                                 </div>
                                             </td>
 
@@ -900,18 +930,14 @@
 
                                             <td class="text-center">
                                                 <div class="action-buttons">
-                                                    @if ($db->statusbeli == 'Belum Bayar')
-                                                        <a href="{{ url('home/pembayaran/' . $db->idpembelianreal) }}" class="btn btn-upload">
-                                                            Upload Bukti Pembayaran
-                                                        </a>
-                                                    @else
-                                                        <a href="{{ url('home/detailtransaksi/' . $db->idpembelianreal) }}" class="btn btn-detail">
-                                                            Detail
-                                                        </a>
-                                                    @endif
+                                                    <a href="{{ url('home/detailtransaksi/' . $db->idpembelianreal) }}"
+                                                        class="btn btn-detail">
+                                                        {{ $db->statusbeli == 'Belum Bayar' ? 'Detail Transaksi' : 'Detail' }}
+                                                    </a>
 
-                                                    @if(isset($db->tipepembayaran) && $db->tipepembayaran == 'DP' && !empty($db->bukti_dp) && (empty($db->bukti_lunas)))
-                                                        <a href="{{ url('home/pelunasan/' . $db->idpembelianreal) }}" class="btn btn-pelunasan">
+                                                    @if (isset($db->tipepembayaran) && $db->tipepembayaran == 'DP' && !empty($db->bukti_dp) && empty($db->bukti_lunas))
+                                                        <a href="{{ url('home/pelunasan/' . $db->idpembelianreal) }}"
+                                                            class="btn btn-pelunasan">
                                                             Lanjutkan Pelunasan
                                                         </a>
                                                     @endif
@@ -920,9 +946,10 @@
                                         </tr>
                                         <?php $nomor++; ?>
                                     @endforeach
-                                    @if($databeli->isEmpty())
+                                    @if ($databeli->isEmpty())
                                         <tr>
-                                            <td colspan="10" class="text-center" style="color:#7f8c8d;font-weight:600;padding:40px 0;">
+                                            <td colspan="10" class="text-center"
+                                                style="color:#7f8c8d;font-weight:600;padding:40px 0;">
                                                 Tidak ada data sesuai filter.
                                             </td>
                                         </tr>
@@ -962,7 +989,7 @@
             // Reset search input
             const searchInput = document.querySelector('input[name="search"]');
             if (searchInput) searchInput.value = '';
-            
+
             // Submit form
             document.getElementById('filterForm').submit();
         }
@@ -971,7 +998,7 @@
         document.addEventListener('click', function(event) {
             const dropdown = document.getElementById('filterDropdown');
             const filterBtn = document.querySelector('.filter-toggle-btn');
-            
+
             if (!dropdown.contains(event.target) && !filterBtn.contains(event.target)) {
                 dropdown.classList.remove('active');
             }
