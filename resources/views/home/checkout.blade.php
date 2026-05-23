@@ -220,15 +220,6 @@
                         @endforeach
                         {{-- metode pembayaran --}}
 
-                        <p style="color: #ffbf0f; font-weight:600">Metode Pengiriman</p>
-                        <div class="form-group">
-                            <label>Pilih Metode Pengiriman</label>
-                            <select name="metodepembayaran" id="metodepembayaran" class="form-control" required>
-                                <option value="">Pilih Metode Pengiriman</option>
-                                <option value="Transfer">Dengan Kurir</option>
-                                <option value="COD" id="optionTanpaKurir">Tanpa Kurir</option>
-                            </select>
-                        </div>
 
                         <p style="color: #ffbf0f; font-weight:600"><img src="{{ asset('foto/location.png') }}"
                                 alt=""> Input Lokasi Pengiriman Anda</p>
@@ -248,6 +239,18 @@
                             <select name="destination_id" id="destination_id" class="form-control" required>
                                 <option value="">Pilih Lokasi</option>
                             </select>
+                        </div>
+
+                        <p style="color: #ffbf0f; font-weight:600">Metode Pengiriman</p>
+                        <div class="form-group">
+                            <label>Pilih Metode Pengiriman</label>
+                            <select name="metodepembayaran" id="metodepembayaran" class="form-control" required
+                                disabled>
+                                <option value="">Pilih lokasi terlebih dahulu</option>
+                                <option value="Transfer">Dengan Kurir</option>
+                                <option value="COD" id="optionTanpaKurir">Tanpa Kurir</option>
+                            </select>
+                            <small id="infoMetodePengiriman" class="text-danger"></small>
                         </div>
 
                         <div class="pengiriman">
@@ -403,6 +406,7 @@
         const lokasiSelect = document.getElementById('destination_id');
         const metodeSelect = document.getElementById('metodepembayaran');
         const optionTanpaKurir = document.getElementById('optionTanpaKurir');
+        const infoMetode = document.getElementById('infoMetodePengiriman');
 
         if (!lokasiSelect || !metodeSelect || !optionTanpaKurir) {
             return;
@@ -411,24 +415,49 @@
         const selectedOption = lokasiSelect.options[lokasiSelect.selectedIndex];
         const teksLokasi = selectedOption ? selectedOption.text.toLowerCase() : '';
 
+        if (!lokasiSelect.value) {
+            metodeSelect.disabled = true;
+            metodeSelect.value = '';
+            metodeSelect.options[0].text = 'Pilih lokasi terlebih dahulu';
+            optionTanpaKurir.disabled = true;
+
+            if (infoMetode) {
+                infoMetode.textContent = '';
+            }
+
+            $('.pengiriman').show();
+            $('#courier').val('');
+            $('#service').empty().append('<option value="">Pilih Jenis Pengiriman</option>');
+            $('#etd-info').text('');
+            $('input[name="ongkir"]').val('');
+            updateTotal(0);
+
+            return;
+        }
+
+        metodeSelect.disabled = false;
+        metodeSelect.options[0].text = 'Pilih Metode Pengiriman';
+
         if (teksLokasi.includes('wonogiri')) {
             optionTanpaKurir.disabled = false;
+
+            if (infoMetode) {
+                infoMetode.textContent = 'Wilayah Wonogiri dapat memilih Tanpa Kurir.';
+            }
         } else {
             optionTanpaKurir.disabled = true;
 
             if (metodeSelect.value === 'COD') {
                 metodeSelect.value = '';
-                $('.pengiriman').show();
-                $('input[name="ongkir"]').val('');
-                updateTotal(0);
-
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Tidak Bisa Dipilih',
-                    text: 'Metode Tanpa Kurir hanya dapat dipilih untuk wilayah Wonogiri.',
-                    confirmButtonColor: '#ffbf0f'
-                });
             }
+
+            if (infoMetode) {
+                infoMetode.textContent = 'Tanpa Kurir hanya tersedia untuk wilayah Wonogiri.';
+            }
+
+            $('.pengiriman').show();
+            $('input[name="ongkir"]').val('');
+            updateTotal(0);
         }
     }
 
@@ -511,6 +540,7 @@
 
     $('#destination_id').on('change', function() {
         cekLokasiWonogiri();
+        aturMetodePengiriman();
     });
 
     $('#btnCariLokasi').click(function() {
@@ -532,6 +562,7 @@
                 });
 
                 cekLokasiWonogiri();
+                aturMetodePengiriman();
             },
             error: function() {
                 Swal.fire({
