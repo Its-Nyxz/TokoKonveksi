@@ -223,11 +223,10 @@
                         <p style="color: #ffbf0f; font-weight:600">Metode Pengiriman</p>
                         <div class="form-group">
                             <label>Pilih Metode Pengiriman</label>
-                            <select id="metode" name="metodepembayaran" class="form-control" required>
+                            <select name="metodepembayaran" id="metodepembayaran" class="form-control" required>
                                 <option value="">Pilih Metode Pengiriman</option>
                                 <option value="Transfer">Dengan Kurir</option>
-                                <option value="COD">Tanpa Kurir</option>
-                                <!-- Tambah metode lainnya sesuai kebutuhan -->
+                                <option value="COD" id="optionTanpaKurir">Tanpa Kurir</option>
                             </select>
                         </div>
 
@@ -390,6 +389,7 @@
 @section('script')
 <script>
     const modalContainer = document.getElementById('modalContainer');
+    const totalBelanja = {{ $totalbelanja ?? 0 }};
 
     function buttonModal() {
         if (modalContainer.style.display === 'flex') {
@@ -399,7 +399,59 @@
         }
     }
 
-    const totalBelanja = {{ $totalbelanja ?? 0 }};
+    function cekLokasiWonogiri() {
+        const lokasiSelect = document.getElementById('destination_id');
+        const metodeSelect = document.getElementById('metodepembayaran');
+        const optionTanpaKurir = document.getElementById('optionTanpaKurir');
+
+        if (!lokasiSelect || !metodeSelect || !optionTanpaKurir) {
+            return;
+        }
+
+        const selectedOption = lokasiSelect.options[lokasiSelect.selectedIndex];
+        const teksLokasi = selectedOption ? selectedOption.text.toLowerCase() : '';
+
+        if (teksLokasi.includes('wonogiri')) {
+            optionTanpaKurir.disabled = false;
+        } else {
+            optionTanpaKurir.disabled = true;
+
+            if (metodeSelect.value === 'COD') {
+                metodeSelect.value = '';
+                $('.pengiriman').show();
+                $('input[name="ongkir"]').val('');
+                updateTotal(0);
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Tidak Bisa Dipilih',
+                    text: 'Metode Tanpa Kurir hanya dapat dipilih untuk wilayah Wonogiri.',
+                    confirmButtonColor: '#ffbf0f'
+                });
+            }
+        }
+    }
+
+    function aturMetodePengiriman() {
+        const metode = $('#metodepembayaran').val();
+
+        if (metode === 'COD') {
+            $('.pengiriman').hide();
+            $('#courier').val('');
+            $('#service').empty().append('<option value="">Pilih Jenis Pengiriman</option>');
+            $('#etd-info').text('');
+            $('input[name="ongkir"]').val(0);
+            updateTotal(0);
+        } else if (metode === 'Transfer') {
+            $('.pengiriman').show();
+            $('input[name="ongkir"]').val('');
+            updateTotal(0);
+        } else {
+            $('.pengiriman').show();
+            $('input[name="ongkir"]').val('');
+            updateTotal(0);
+        }
+    }
 
     // Simpan nilai awal untuk fitur batal
     let originalValues = {
@@ -410,9 +462,7 @@
         catatan: $('#inputCatatan').val()
     };
 
-    // Tombol Edit
     $('#btnEdit').click(function() {
-        // Simpan nilai awal sebelum edit
         originalValues = {
             nama: $('#inputNama').val(),
             email: $('#inputEmail').val(),
@@ -421,24 +471,18 @@
             catatan: $('#inputCatatan').val()
         };
 
-        // Hilangkan readonly
         $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan').prop('readonly', false);
 
-        // Toggle tombol
         $('#btnEdit').hide();
         $('#btnSimpan, #btnBatal').show();
     });
 
-    // Tombol Simpan
     $('#btnSimpan').click(function() {
-        // Set readonly kembali
         $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan').prop('readonly', true);
 
-        // Toggle tombol
         $('#btnSimpan, #btnBatal').hide();
         $('#btnEdit').show();
 
-        // Tampilkan sweet alert
         Swal.fire({
             icon: 'success',
             title: 'Berhasil',
@@ -447,37 +491,28 @@
         });
     });
 
-    // Tombol Batal
     $('#btnBatal').click(function() {
-        // Kembalikan nilai ke nilai awal
         $('#inputNama').val(originalValues.nama);
         $('#inputEmail').val(originalValues.email);
         $('#inputTelepon').val(originalValues.telepon);
         $('#inputAlamat').val(originalValues.alamat);
         $('#inputCatatan').val(originalValues.catatan);
 
-        // Set readonly kembali
         $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan').prop('readonly', true);
 
-        // Toggle tombol
         $('#btnSimpan, #btnBatal').hide();
         $('#btnEdit').show();
     });
 
-    $('#metode').on('change', function() {
-        const metode = $(this).val();
-        if (metode === 'COD') {
-            $('.pengiriman').hide();
-            $('input[name="ongkir"]').val(0);
-            updateTotal(0);
-        } else {
-            $('.pengiriman').show();
-            $('input[name="ongkir"]').val('');
-            updateTotal(0);
-        }
+    $('#metodepembayaran').on('change', function() {
+        cekLokasiWonogiri();
+        aturMetodePengiriman();
     });
 
-    // Cari lokasi berdasarkan keyword
+    $('#destination_id').on('change', function() {
+        cekLokasiWonogiri();
+    });
+
     $('#btnCariLokasi').click(function() {
         const keyword = $('#lokasi').val();
 
@@ -489,13 +524,14 @@
             },
             success: function(res) {
                 $('#destination_id').empty().append('<option value="">Pilih Lokasi</option>');
+
                 res.forEach(function(lokasi) {
                     $('#destination_id').append(
                         `<option value="${lokasi.label}" data-id="${lokasi.id}">${lokasi.label}</option>`
                     );
                 });
 
-                // console.log(res);
+                cekLokasiWonogiri();
             },
             error: function() {
                 Swal.fire({
@@ -508,11 +544,11 @@
         });
     });
 
-    // Ambil layanan pengiriman saat kurir & tujuan dipilih
     $('#courier, #destination_id').change(function() {
         const destinationId = $('#destination_id option:selected').data('id');
-
         const courier = $('#courier').val();
+
+        cekLokasiWonogiri();
 
         if (destinationId && courier) {
             $.ajax({
@@ -525,6 +561,7 @@
                 success: function(data) {
                     $('#service').empty().append(
                         '<option value="">Pilih Jenis Pengiriman</option>');
+
                     data.forEach(function(service) {
                         if (service.code === courier) {
                             $('#service').append(
@@ -553,10 +590,8 @@
         }
     });
 
-    // Ketika jenis pengiriman dipilih
     $('#service').change(function() {
-        const ongkir = parseInt($(this).val());
-        const serviceName = $(this).find(':selected').data('service');
+        const ongkir = parseInt($(this).val()) || 0;
         const etd = $(this).find(':selected').data('etd');
 
         $('input[name="ongkir"]').val(ongkir);
@@ -569,5 +604,10 @@
         $('#totalHarga').html('Rp ' + total.toLocaleString() +
             ' <br><span style="color:red; font-weight:400;">NON REFUNDABLE</span>');
     }
+
+    $(document).ready(function() {
+        cekLokasiWonogiri();
+        aturMetodePengiriman();
+    });
 </script>
 @endsection

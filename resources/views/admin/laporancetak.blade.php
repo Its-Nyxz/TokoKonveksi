@@ -142,11 +142,19 @@
                             @foreach ($dataproduk[$p->idpembelian] as $dp)
                                 <li>{{ $dp->nama }}</li>
                             @endforeach
-                        </ul> 
+                        </ul>
                     </td>
                     <td>{{ tanggal(date('Y-m-d', strtotime($p->tanggalbeli))) }}</td>
                     <td>Rp {{ number_format($p->totalbeli) }}</td>
-                    <td>{{ $p->metodepembayaran }}</td>
+                    <td>
+                        @if (strtolower($p->metodepembayaran) == 'transfer')
+                            Dengan Kurir
+                        @elseif (strtolower($p->metodepembayaran) == 'cod')
+                            Tanpa Kurir
+                        @else
+                            -
+                        @endif
+                    </td>
                     <td>{{ $p->statusbeli }}</td>
                 </tr>
                 <?php $nomor++; ?>

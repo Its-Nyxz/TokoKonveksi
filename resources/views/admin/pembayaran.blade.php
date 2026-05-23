@@ -28,8 +28,16 @@
                                     <td>Rp. {{ number_format($datapembelian->totalbeli) }}</td>
                                 </tr>
                                 <tr>
-                                    <td>Metode Pembayaran</td>
-                                    <td>{{ $datapembelian->metodepembayaran }}</td>
+                                    <td>Metode Pengiriman</td>
+                                    <td>
+                                        @if (strtolower($datapembelian->metodepembayaran) == 'transfer')
+                                            Dengan Kurir
+                                        @elseif (strtolower($datapembelian->metodepembayaran) == 'cod')
+                                            Tanpa Kurir
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                 </tr>
                             </table>
                         </div>

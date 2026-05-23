@@ -26,7 +26,7 @@
                                 <th>Daftar</th>
                                 <th>Tanggal Pembelian</th>
                                 <th>Total Pembelian</th>
-                                <th>Metode Pembayaran</th>
+                                <th>Metode Pengiriman</th>
                                 <th>Status Belanja</th>
                                 <th>Aksi</th>
                             </tr>
@@ -48,7 +48,15 @@
                                     </td>
                                     <td>{{ tanggal(date('Y-m-d', strtotime($p->tanggalbeli))) }}</td>
                                     <td>Rp. {{ number_format($p->totalbeli) }}</td>
-                                    <td>{{ $p->metodepembayaran }}</td>
+                                    <td>
+                                        @if ($p->metodepembayaran == 'Transfer')
+                                            Dengan Kurir
+                                        @elseif ($p->metodepembayaran == 'COD')
+                                            Tanpa Kurir
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                     <td>{{ $p->statusbeli }}</td>
                                     <td>
                                         <div class="d-flex justify-content-center align-items-center gap-2">
