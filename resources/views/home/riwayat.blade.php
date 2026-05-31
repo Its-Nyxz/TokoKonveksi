@@ -799,8 +799,11 @@
                                     <select name="metode">
                                         <option value="">Semua Metode</option>
                                         <option value="Transfer" {{ request('metode') == 'Transfer' ? 'selected' : '' }}>
-                                            Transfer</option>
-                                        <option value="COD" {{ request('metode') == 'COD' ? 'selected' : '' }}>COD
+                                            Dengan Kurir
+                                        </option>
+
+                                        <option value="COD" {{ request('metode') == 'COD' ? 'selected' : '' }}>
+                                            Tanpa Kurir
                                         </option>
                                         @if (!empty($paymentMethods))
                                             @foreach ($paymentMethods as $pm)
@@ -873,7 +876,15 @@
                                                 <span class="price-tag">Rp {{ number_format($db->totalbeli) }}</span>
                                             </td>
                                             <td class="text-center">
-                                                <span class="payment-method">{{ $db->metodepembayaran }}</span>
+                                                <span class="payment-method">
+                                                    @if ($db->metodepembayaran == 'Transfer')
+                                                        Dengan Kurir
+                                                    @elseif ($db->metodepembayaran == 'COD')
+                                                        Tanpa Kurir
+                                                    @else
+                                                        {{ $db->metodepembayaran }}
+                                                    @endif
+                                                </span>
                                             </td>
                                             <td class="text-center">
                                                 <div class="payment-proof-container">
