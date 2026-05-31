@@ -17,7 +17,7 @@
         href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
         rel="stylesheet">
     <link href="{{ asset('assets/admin/css/css/sb-admin-2.min.css') }}" rel="stylesheet">
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
     <link rel="stylesheet"
         href="{{ asset('assets/admin/assets/DataTables/DataTables-1.10.18/css/dataTables.bootstrap4.min.css') }}">
     <link href="{{ asset('assets/admin/css/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet"
@@ -27,49 +27,70 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
+        :root {
+            --oldshine-yellow: #FFD135;
+            --oldshine-yellow-dark: #d6a800;
+        }
+
         .btn-secondary {
-            background-color: #ffbf0f;
+            background-color: var(--oldshine-yellow);
             border: none;
-            color: white;
+            color: #222D32;
         }
 
-        .btn-secondary:hover {
-            background-color: #a77c06;
-        }
-
+        .btn-secondary:hover,
         .btn-secondary:active,
         .btn-secondary:focus {
-            background-color: #a77c06;
+            background-color: var(--oldshine-yellow-dark);
             outline: none;
-            /* Menghilangkan outline saat fokus */
             box-shadow: none;
-            /* Menghilangkan box-shadow default */
         }
 
         .bg-coklat {
-            background-color: #ffbf0f;
-        }
-
-        .dropdown-menu .dropdown-item {
-            color: #000;
-            /* Warna teks default item */
+            background-color: var(--oldshine-yellow);
         }
 
         .dropdown-menu .dropdown-item:hover,
         .dropdown-menu .dropdown-item:active {
-            background-color: #a77c06;
-            /* Warna latar belakang saat hover atau aktif */
-            color: #fff;
-            border: 1px solid #ffbf0f !important;
-            /* Warna teks saat hover atau aktif */
+            background-color: var(--oldshine-yellow);
+            color: #222D32;
+            border: 1px solid var(--oldshine-yellow) !important;
         }
 
         .alerts-header {
-            background-color: #ffbf0f !important;
-            /* Warna Coklat */
-            color: white !important;
-            /* Teks Putih jika diinginkan */
-            border: 1px solid #ffbf0f !important;
+            background-color: var(--oldshine-yellow) !important;
+            color: #222D32 !important;
+            border: 1px solid var(--oldshine-yellow) !important;
+        }
+
+        .oldshine-sidebar-brand {
+            height: 90px;
+            padding: 10px 15px;
+            background-color: var(--oldshine-yellow);
+            text-align: center;
+        }
+
+        .oldshine-sidebar-logo {
+            max-width: 150px;
+            max-height: 70px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        .oldshine-topbar {
+            background-color: var(--oldshine-yellow) !important;
+        }
+
+        .sidebar.toggled .oldshine-sidebar-brand {
+            height: 70px;
+            padding: 8px;
+        }
+
+        .sidebar.toggled .oldshine-sidebar-logo {
+            max-width: 55px;
+            max-height: 55px;
         }
     </style>
 
@@ -79,9 +100,9 @@
 
     <div id="wrapper">
         <ul class="navbar-nav sidebar sidebar-dark accordion" id="accordionSidebar" style="background-color: #222D32;">
-            <a class="sidebar-brand d-flex align-items-center justify-content-center text-white"
-                style="background-color: #a77c06" href="{{ url('admin') }}">
-                <div class="sidebar-brand-text mx-3">Oldshine Konveksi</sup></div>
+            <a class="sidebar-brand d-flex align-items-center justify-content-center oldshine-sidebar-brand"
+                href="{{ url('admin') }}">
+                <img src="{{ asset('foto/logo.png') }}" alt="Oldshine Konveksi" class="oldshine-sidebar-logo">
             </a>
             <hr class="sidebar-divider">
 
@@ -187,8 +208,7 @@
         </ul>
         <div id="content-wrapper" class="d-flex flex-column">
             <div id="content">
-                <nav class="navbar navbar-expand navbar-light topbar mb-4 static-top shadow"
-                    style="background-color: #ffbf0f">
+                <nav class="navbar navbar-expand navbar-light topbar mb-4 static-top shadow oldshine-topbar">
                     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
                         <i class="fa fa-bars"></i>
                     </button>

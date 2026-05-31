@@ -30,8 +30,13 @@
     <nav class="navbar navbar-expand-lg navbar-danger ftco_navbar bg-white ftco-navbar-light" id="ftco-navbar"">
         <div class="container">
             {{-- <img src="{{ asset('foto/logonya1.png') }}" href="{{ url('home') }}" width="80"> --}}
-            <a class="navbar-brand" href="{{ url('') }}" style="color: #ffbf0f">
-                Oldshine Konveksi
+            <a class="navbar-brand d-flex align-items-center" href="{{ url('home') }}">
+                <img src="{{ asset('foto/logo.png') }}" alt="Oldshine Konveksi"
+                    style="height: 55px; width: auto; margin-right: 10px;">
+
+                {{-- <span style="color: #ffbf0f; font-weight: 700;">
+                    Oldshine Konveksi
+                </span> --}}
             </a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav"
                 aria-controls="ftco-nav" aria-expanded="false" aria-label="Toggle navigation">
@@ -190,7 +195,7 @@
         }
     </style>
 
-    <a href="https://wa.me/6282137259862" class="whatsapp-icon" target="_blank">
+    <a href="https://wa.me/6285229247413" class="whatsapp-icon" target="_blank">
         <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
     </a>
 
