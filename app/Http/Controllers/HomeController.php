@@ -893,24 +893,40 @@ class HomeController extends Controller
     public function invoice($id)
     {
         if (!session('pengguna')) {
-
             return redirect('home/login')->with([
                 'swal_type'  => 'warning',
                 'swal_title' => 'Akses Ditolak',
                 'swal_text'  => 'Anda belum login, silakan login terlebih dahulu'
             ]);
         }
-        $datapembelian = DB::table('pembelian')->where('pembelian.idpembelian', $id)->first();
+
+        $datapembelian = DB::table('pembelian')
+            ->where('idpembelian', $id)
+            ->where('id', session('pengguna')->id)
+            ->first();
+
+        if (!$datapembelian) {
+            return redirect('home/riwayat')->with([
+                'swal_type'  => 'error',
+                'swal_title' => 'Data Tidak Ditemukan',
+                'swal_text'  => 'Transaksi tidak ditemukan atau bukan milik akun Anda.'
+            ]);
+        }
+
         $dataproduk = $this->getProdukTransaksi($id);
 
-        $data = [
+        $pembayaran = DB::table('pembayaran')
+            ->where('idpembelian', $id)
+            ->orderBy('idpembayaran', 'asc')
+            ->get();
+
+        return view('home.invoice', [
             'datapembelian' => $datapembelian,
             'dataproduk' => $dataproduk,
-        ];
-
-        return view('home.invoice', $data);
+            'pembayaran' => $pembayaran,
+        ]);
     }
-
+    
     public function detailtransaksi($id)
     {
         if (!session('pengguna')) {
