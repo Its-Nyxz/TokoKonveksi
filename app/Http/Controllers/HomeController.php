@@ -515,7 +515,7 @@ class HomeController extends Controller
                 'kode_pos' => $request->input('kode_pos'),
             ]);
 
-        return redirect('home/akun')->with('success','Data akun berhasil diubah');
+        return redirect('home/akun')->with('success', 'Data akun berhasil diubah');
     }
 
     public function pesan(Request $request)
@@ -697,7 +697,7 @@ class HomeController extends Controller
 
         $totalbeli = $request->input('total_belanja');
         $ongkir = $request->input('ongkir') ?? 0;
-     
+
         $nama = $request->input('nama');
         $telepon = $request->input('telepon');
         $email = $request->input('email');
@@ -744,16 +744,32 @@ class HomeController extends Controller
 
         // Simpan detail produk
         $keranjang = session()->get('keranjang');
+
         foreach ($keranjang as $idproduk => $item) {
-            $produk = DB::table('produk')->where('idproduk', $idproduk)->first();
+            $produk = DB::table('produk as p')
+                ->leftJoin('kategori as k', 'p.idkategori', '=', 'k.idkategori')
+                ->where('p.idproduk', $idproduk)
+                ->select('p.*', 'k.namakategori')
+                ->first();
+
+            if (!$produk) {
+                continue;
+            }
 
             DB::table('pembelianproduk')->insert([
                 'idpembelian' => $idpembelian,
                 'idproduk' => $produk->idproduk,
+
+                // snapshot yang sudah ada
                 'nama' => $produk->nama,
                 'harga' => $produk->harga,
                 'subharga' => $produk->harga * $item['jumlah'],
                 'jumlah' => $item['jumlah'],
+
+                // snapshot tambahan
+                'foto_produk' => $produk->foto,
+                'idkategori_snapshot' => $produk->idkategori,
+                'namakategori_snapshot' => $produk->namakategori,
             ]);
         }
 
@@ -815,10 +831,13 @@ class HomeController extends Controller
             $search = $request->input('search');
             $query->whereExists(function ($q) use ($search) {
                 $q->select(DB::raw(1))
-                    ->from('pembelianproduk')
-                    ->join('produk', 'pembelianproduk.idproduk', '=', 'produk.idproduk')
-                    ->whereColumn('pembelianproduk.idpembelian', 'pembelian.idpembelian')
-                    ->where('produk.nama', 'like', '%' . $search . '%');
+                    ->from('pembelianproduk as pp')
+                    ->leftJoin('produk as p', 'pp.idproduk', '=', 'p.idproduk')
+                    ->whereColumn('pp.idpembelian', 'pembelian.idpembelian')
+                    ->where(function ($qq) use ($search) {
+                        $qq->where('pp.nama', 'like', '%' . $search . '%')
+                            ->orWhere('p.nama', 'like', '%' . $search . '%');
+                    });
             });
         }
 
@@ -848,10 +867,7 @@ class HomeController extends Controller
         // Produk
         $dataproduk = [];
         foreach ($databeli as $row) {
-            $produk = DB::table('pembelianproduk')
-                ->join('produk', 'pembelianproduk.idproduk', '=', 'produk.idproduk')
-                ->where('idpembelian', $row->idpembelianreal)
-                ->get();
+            $produk = $this->getProdukTransaksi($row->idpembelianreal);
             $dataproduk[$row->idpembelianreal] = $produk;
         }
 
@@ -885,10 +901,7 @@ class HomeController extends Controller
             ]);
         }
         $datapembelian = DB::table('pembelian')->where('pembelian.idpembelian', $id)->first();
-        $dataproduk = DB::table('pembelianproduk')
-            ->join('produk', 'pembelianproduk.idproduk', '=', 'produk.idproduk')
-            ->where('idpembelian', $id)
-            ->get();
+        $dataproduk = $this->getProdukTransaksi($id);
 
         $data = [
             'datapembelian' => $datapembelian,
@@ -908,12 +921,13 @@ class HomeController extends Controller
                 'swal_text'  => 'Anda belum login, silakan login terlebih dahulu'
             ]);
         }
-        $datapembelian = DB::table('pembelian')->join('pengguna', 'pengguna.id', '=', 'pembelian.id')
-            ->where('pembelian.idpembelian', $id)->first();
-        $dataproduk = DB::table('pembelianproduk')
-            ->join('produk', 'pembelianproduk.idproduk', '=', 'produk.idproduk')
+        // $datapembelian = DB::table('pembelian')->join('pengguna', 'pengguna.id', '=', 'pembelian.id')
+        //     ->where('pembelian.idpembelian', $id)->first();
+        $datapembelian = DB::table('pembelian')
             ->where('idpembelian', $id)
-            ->get();
+            ->where('id', session('pengguna')->id)
+            ->first();
+        $dataproduk = $this->getProdukTransaksi($id);
 
         $data = [
             'datapembelian' => $datapembelian,
@@ -933,12 +947,13 @@ class HomeController extends Controller
                 'swal_text'  => 'Anda belum login, silakan login terlebih dahulu'
             ]);
         }
-        $datapembelian = DB::table('pembelian')->join('pengguna', 'pengguna.id', '=', 'pembelian.id')
-            ->where('pembelian.idpembelian', $id)->first();
-        $dataproduk = DB::table('pembelianproduk')
-            ->join('produk', 'pembelianproduk.idproduk', '=', 'produk.idproduk')
+        // $datapembelian = DB::table('pembelian')->join('pengguna', 'pengguna.id', '=', 'pembelian.id')
+        //     ->where('pembelian.idpembelian', $id)->first();
+        $datapembelian = DB::table('pembelian')
             ->where('idpembelian', $id)
-            ->get();
+            ->where('id', session('pengguna')->id)
+            ->first();
+        $dataproduk = $this->getProdukTransaksi($id);
 
         $data = [
             'datapembelian' => $datapembelian,
@@ -1020,10 +1035,7 @@ class HomeController extends Controller
             ->first();
 
         // DATA PRODUK DALAM PEMBELIAN
-        $dataproduk = DB::table('pembelianproduk')
-            ->join('produk', 'pembelianproduk.idproduk', '=', 'produk.idproduk')
-            ->where('idpembelian', $id)
-            ->get();
+        $dataproduk = $this->getProdukTransaksi($id);
 
         // HITUNG TOTAL DP YANG SUDAH PERNAH DIBAYAR
         $totalDP = DB::table('pembayaran')
@@ -1120,5 +1132,22 @@ class HomeController extends Controller
             'statusbeli' => 'Selesai'
         ]);
         return redirect('home/riwayat');
+    }
+
+    private function getProdukTransaksi($idpembelian)
+    {
+        return DB::table('pembelianproduk as pp')
+            ->leftJoin('produk as p', 'pp.idproduk', '=', 'p.idproduk')
+            ->leftJoin('kategori as k', 'p.idkategori', '=', 'k.idkategori')
+            ->where('pp.idpembelian', $idpembelian)
+            ->select(
+                'pp.*',
+                DB::raw("COALESCE(pp.nama, p.nama, CONCAT('Produk #', pp.idproduk, ' sudah dihapus')) as nama"),
+                DB::raw("COALESCE(pp.harga, p.harga, 0) as harga"),
+                DB::raw("COALESCE(pp.subharga, pp.harga * pp.jumlah, p.harga * pp.jumlah, 0) as subharga"),
+                DB::raw("COALESCE(pp.foto_produk, p.foto, 'noimage.png') as foto"),
+                DB::raw("COALESCE(pp.namakategori_snapshot, k.namakategori, 'Kategori sudah dihapus') as namakategori")
+            )
+            ->get();
     }
 }

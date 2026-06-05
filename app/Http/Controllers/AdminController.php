@@ -101,7 +101,34 @@ class AdminController extends Controller
 
     public function hapuskategori($id)
     {
-        KategoriModel::where('idkategori', $id)->delete();
+        $kategori = DB::table('kategori')
+            ->where('idkategori', $id)
+            ->first();
+
+        if ($kategori) {
+            $produkIds = DB::table('produk')
+                ->where('idkategori', $id)
+                ->pluck('idproduk');
+
+            if ($produkIds->count() > 0) {
+                DB::table('pembelianproduk')
+                    ->whereIn('idproduk', $produkIds)
+                    ->whereNull('idkategori_snapshot')
+                    ->update([
+                        'idkategori_snapshot' => $id,
+                    ]);
+
+                DB::table('pembelianproduk')
+                    ->whereIn('idproduk', $produkIds)
+                    ->whereNull('namakategori_snapshot')
+                    ->update([
+                        'namakategori_snapshot' => $kategori->namakategori,
+                    ]);
+            }
+
+            KategoriModel::where('idkategori', $id)->delete();
+        }
+
         session()->flash('alert', 'Berhasil menghapus data!');
         return redirect('admin/kategori');
     }
@@ -237,7 +264,37 @@ class AdminController extends Controller
 
     public function hapusproduk($id)
     {
-        DB::table('produk')->where('idproduk', $id)->delete();
+        $produk = DB::table('produk as p')
+            ->leftJoin('kategori as k', 'p.idkategori', '=', 'k.idkategori')
+            ->where('p.idproduk', $id)
+            ->select('p.*', 'k.namakategori')
+            ->first();
+
+        if ($produk) {
+            DB::table('pembelianproduk')
+                ->where('idproduk', $id)
+                ->whereNull('foto_produk')
+                ->update([
+                    'foto_produk' => $produk->foto,
+                ]);
+
+            DB::table('pembelianproduk')
+                ->where('idproduk', $id)
+                ->whereNull('idkategori_snapshot')
+                ->update([
+                    'idkategori_snapshot' => $produk->idkategori,
+                ]);
+
+            DB::table('pembelianproduk')
+                ->where('idproduk', $id)
+                ->whereNull('namakategori_snapshot')
+                ->update([
+                    'namakategori_snapshot' => $produk->namakategori,
+                ]);
+
+            DB::table('produk')->where('idproduk', $id)->delete();
+        }
+
         session()->flash('alert', 'Berhasil menghapus data!');
         return redirect('admin/produk');
     }
@@ -412,10 +469,7 @@ class AdminController extends Controller
         $dataproduk = [];
         foreach ($pembelian as $row) {
             $idpembelian = $row->idpembelian;
-            $produk = DB::table('pembelianproduk')
-                ->join('produk', 'pembelianproduk.idproduk', '=', 'produk.idproduk')
-                ->where('idpembelian', $idpembelian)
-                ->get();
+            $produk = $this->getProdukTransaksi($idpembelian);
             $dataproduk[$idpembelian] = $produk;
         }
 
@@ -434,10 +488,7 @@ class AdminController extends Controller
         $dataproduk = [];
         foreach ($pembelian as $row) {
             $idpembelian = $row->idpembelian;
-            $produk = DB::table('pembelianproduk')
-                ->join('produk', 'pembelianproduk.idproduk', '=', 'produk.idproduk')
-                ->where('idpembelian', $idpembelian)
-                ->get();
+            $produk = $this->getProdukTransaksi($idpembelian);
             $dataproduk[$idpembelian] = $produk;
         }
 
@@ -451,62 +502,71 @@ class AdminController extends Controller
 
     public function pembayarankurir($id)
     {
-        $datapembelian = DB::table('pembelian')->where('pembelian.idpembelian', $id)->first();
-        $dataproduk = DB::table('pembelianproduk')
-            ->join('produk', 'pembelianproduk.idproduk', '=', 'produk.idproduk')
+        $datapembelian = DB::table('pembelian')
             ->where('idpembelian', $id)
+            ->first();
+
+        $dataproduk = $this->getProdukTransaksi($id);
+
+        $pembelianFoto = DB::table('pembelian_foto')
+            ->where('id_pembelian', $id)
             ->get();
-        $pemabelianFoto = DB::table('pembelian_foto')->where('id_pembelian', $datapembelian->idpembelian)->get();
-        $pembayaran = DB::table('pembayaran')->where('idpembelian', $id)->first();
 
-        $kurir = DB::table('pengguna')->where('level', 'Kurir')->get();
-
-        $data = [
-            'datapembelian' => $datapembelian,
-            'dataproduk' => $dataproduk,
-            'pembayaran' => $pembayaran,
-            'pembelianFoto' => $pembelianFoto,
-            'kurir' => $kurir,
-        ];
-        return view('admin.pembayarankurir', $data);
-    }
-
-    public function pembayaran($id)
-    {
-        $datapembelian = DB::table('pembelian')->where('pembelian.idpembelian', $id)->first();
-        $dataproduk = DB::table('pembelianproduk')
-            ->join('produk', 'pembelianproduk.idproduk', '=', 'produk.idproduk')
-            ->where('idpembelian', $id)
-            ->get();
-        $pembelianFoto = DB::table('pembelian_foto')->where('id_pembelian', $datapembelian->idpembelian)->get();
         $pembayaran = DB::table('pembayaran')
             ->where('idpembelian', $id)
             ->orderBy('idpembayaran')
             ->get();
 
+        $kurir = DB::table('pengguna')
+            ->where('level', 'Kurir')
+            ->get();
 
-        $data = [
+        return view('admin.pembayarankurir', [
             'datapembelian' => $datapembelian,
             'dataproduk' => $dataproduk,
             'pembayaran' => $pembayaran,
             'pembelianFoto' => $pembelianFoto,
-        ];
-        return view('admin.pembayaran', $data);
+            'kurir' => $kurir,
+        ]);
+    }
+
+    public function pembayaran($id)
+    {
+        $datapembelian = DB::table('pembelian')
+            ->where('idpembelian', $id)
+            ->first();
+
+        $dataproduk = $this->getProdukTransaksi($id);
+
+        $pembelianFoto = DB::table('pembelian_foto')
+            ->where('id_pembelian', $id)
+            ->get();
+
+        $pembayaran = DB::table('pembayaran')
+            ->where('idpembelian', $id)
+            ->orderBy('idpembayaran')
+            ->get();
+
+        return view('admin.pembayaran', [
+            'datapembelian' => $datapembelian,
+            'dataproduk' => $dataproduk,
+            'pembayaran' => $pembayaran,
+            'pembelianFoto' => $pembelianFoto,
+        ]);
     }
 
     public function exportpdf()
     {
         // Mengambil data pembelian dan produk
-        $pembelian = DB::table('pembelian')->join('pengguna', 'pengguna.id', '=', 'pembelian.id')
-            ->orderBy('pembelian.tanggalbeli', 'desc')->orderBy('pembelian.idpembelian', 'desc')->get();
+        $pembelian = DB::table('pembelian')
+            ->orderBy('tanggalbeli', 'desc')
+            ->orderBy('idpembelian', 'desc')
+            ->get();
 
         $dataproduk = [];
         foreach ($pembelian as $row) {
             $idpembelian = $row->idpembelian;
-            $produk = DB::table('pembelianproduk')
-                ->join('produk', 'pembelianproduk.idproduk', '=', 'produk.idproduk')
-                ->where('idpembelian', $idpembelian)
-                ->get();
+            $produk = $this->getProdukTransaksi($idpembelian);
             $dataproduk[$idpembelian] = $produk;
         }
 
@@ -589,15 +649,23 @@ class AdminController extends Controller
             ]);
 
             if ($request->statusbeli == 'Pesanan Di Terima') {
-                foreach ($pembelianproduk as $key => $value) {
+                foreach ($pembelianproduk as $value) {
                     $idproduk = $value->idproduk;
                     $jumlahbeli = $value->jumlah;
 
-                    // Mengurangi stok produk
-                    $produk = DB::table('produk')->where('idproduk', $idproduk)->first();
-                    $stokbaru = $produk->stok - $jumlahbeli;
+                    $produk = DB::table('produk')
+                        ->where('idproduk', $idproduk)
+                        ->first();
 
-                    DB::table('produk')->where('idproduk', $idproduk)->update(['stok' => $stokbaru]);
+                    if ($produk) {
+                        $stokbaru = max(0, $produk->stok - $jumlahbeli);
+
+                        DB::table('produk')
+                            ->where('idproduk', $idproduk)
+                            ->update([
+                                'stok' => $stokbaru
+                            ]);
+                    }
                 }
             }
 
@@ -655,15 +723,23 @@ class AdminController extends Controller
             ]);
 
             if ($request->statusbeli == 'Pesanan Di Terima') {
-                foreach ($pembelianproduk as $key => $value) {
+                foreach ($pembelianproduk as $value) {
                     $idproduk = $value->idproduk;
                     $jumlahbeli = $value->jumlah;
 
-                    // Mengurangi stok produk
-                    $produk = DB::table('produk')->where('idproduk', $idproduk)->first();
-                    $stokbaru = $produk->stok - $jumlahbeli;
+                    $produk = DB::table('produk')
+                        ->where('idproduk', $idproduk)
+                        ->first();
 
-                    DB::table('produk')->where('idproduk', $idproduk)->update(['stok' => $stokbaru]);
+                    if ($produk) {
+                        $stokbaru = max(0, $produk->stok - $jumlahbeli);
+
+                        DB::table('produk')
+                            ->where('idproduk', $idproduk)
+                            ->update([
+                                'stok' => $stokbaru
+                            ]);
+                    }
                 }
             }
 
@@ -678,52 +754,40 @@ class AdminController extends Controller
 
     public function laporancetak(Request $request)
     {
-        // Retrieve the date range from the request
         $tanggalawal = $request->input('tanggalawal');
         $tanggalakhir = $request->input('tanggalakhir');
 
-        // Fetch purchases with the status 'Pesanan Di Terima' and within the date range
         $pembelian = DB::table('pembelian')
-            ->where('statusbeli', 'Pesanan Di Terima')
-            ->orWhere('statusbeli', 'Selesai')
             ->whereBetween('tanggalbeli', [$tanggalawal, $tanggalakhir])
+            ->where(function ($query) {
+                $query->where('statusbeli', 'Pesanan Di Terima')
+                    ->orWhere('statusbeli', 'Selesai');
+            })
             ->orderBy('tanggalbeli', 'desc')
             ->orderBy('idpembelian', 'desc')
             ->get();
 
-        // Fetch related products for each purchase
         $dataproduk = [];
+
         foreach ($pembelian as $row) {
-            $idpembelian = $row->idpembelian;
-            $produk = DB::table('pembelianproduk')
-                ->join('produk', 'pembelianproduk.idproduk', '=', 'produk.idproduk')
-                ->where('idpembelian', $idpembelian)
-                ->get();
-            $dataproduk[$idpembelian] = $produk;
+            $dataproduk[$row->idpembelian] = $this->getProdukTransaksi($row->idpembelian);
         }
 
-        // Calculate total purchases
         $totalPembelian = $pembelian->sum('totalbeli');
 
-        // Prepare data for the view
-        $data = [
+        return view('admin.laporancetak', [
             'pembelian' => $pembelian,
             'dataproduk' => $dataproduk,
             'tanggalawal' => $tanggalawal,
             'tanggalakhir' => $tanggalakhir,
-            'totalPembelian' => $totalPembelian,  // Pass total purchases to the view
-        ];
-
-        return view('admin.laporancetak', $data);
+            'totalPembelian' => $totalPembelian,
+        ]);
     }
 
     public function invoice($id)
     {
         $datapembelian = DB::table('pembelian')->where('pembelian.idpembelian', $id)->first();
-        $dataproduk = DB::table('pembelianproduk')
-            ->join('produk', 'pembelianproduk.idproduk', '=', 'produk.idproduk')
-            ->where('idpembelian', $id)
-            ->get();
+        $dataproduk = $this->getProdukTransaksi($id);
 
         // Ambil semua record pembayaran terkait (bisa ada DP dan pelunasan)
         $pembayaran = DB::table('pembayaran')->where('idpembelian', $id)->get();
@@ -735,5 +799,22 @@ class AdminController extends Controller
         ];
 
         return view('home.invoice', $data);
+    }
+
+    private function getProdukTransaksi($idpembelian)
+    {
+        return DB::table('pembelianproduk as pp')
+            ->leftJoin('produk as p', 'pp.idproduk', '=', 'p.idproduk')
+            ->leftJoin('kategori as k', 'p.idkategori', '=', 'k.idkategori')
+            ->where('pp.idpembelian', $idpembelian)
+            ->select(
+                'pp.*',
+                DB::raw("COALESCE(pp.nama, p.nama, CONCAT('Produk #', pp.idproduk, ' sudah dihapus')) as nama"),
+                DB::raw("COALESCE(pp.harga, p.harga, 0) as harga"),
+                DB::raw("COALESCE(pp.subharga, pp.harga * pp.jumlah, p.harga * pp.jumlah, 0) as subharga"),
+                DB::raw("COALESCE(pp.foto_produk, p.foto, 'noimage.png') as foto"),
+                DB::raw("COALESCE(pp.namakategori_snapshot, k.namakategori, 'Kategori sudah dihapus') as namakategori")
+            )
+            ->get();
     }
 }
