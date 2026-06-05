@@ -1,6 +1,133 @@
 @extends('home.templates.index')
 
 @section('page-content')
+    <style>
+        /* Container Utama untuk Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.4);
+            /* Warna hitam transparan */
+
+            /* Efek Blur Latar Belakang */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        /* Box Modal */
+        .modal-box {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 600px;
+            /* Lebar ideal untuk modal */
+            max-height: 80vh;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: fade 0.5s ease-in-out;
+        }
+
+        /* Header Modal */
+        .modal-header {
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .modal-header h1 {
+            font-size: 1.7rem;
+            font-weight: 700;
+            margin: 0;
+            color: #1a1a1a;
+        }
+
+        .close-icon {
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s;
+        }
+
+        .close-icon:hover {
+            color: #ff4d4d;
+        }
+
+        /* Konten / Isi Modal */
+        .modal-content {
+            padding: 24px;
+            overflow-y: auto;
+            /* Scroll jika teks terlalu panjang */
+            line-height: 1.6;
+            color: #444;
+        }
+
+        .modal-content h3 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: #000;
+        }
+
+        .modal-content p {
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* Footer Modal */
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: flex-end;
+            background-color: #fcfcfc;
+        }
+
+        .confirm-btn {
+            background-color: #ffbf0f;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .confirm-btn:hover {
+            background-color: #bb8d0f;
+        }
+
+        /* Styling Scrollbar (Opsional agar lebih rapi) */
+        .modal-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: #e0e0e0;
+            border-radius: 10px;
+        }
+
+        @keyframes fade {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
     <section id="home-section" class="ftco-section">
         <div class="container mt-4">
             <div>
@@ -126,9 +253,9 @@
 
                             <hr>
                             <p>Dengan melanjutkan ke tahapan selanjutnya, Anda telah membaca dan setuju dengan pihak
-                                Oldshine Konveksi dengan <a href="#" style="color: #ffbf0f;">Syarat &
-                                    Kententuannya</a>.
-                            </p>
+                                Oldshine Konveksi dengan <a href="#" onclick="buttonModal()"
+                                    idstyle="color: #ffbf0f;">Syarat &
+                                    Kententuannya</a>.</p>
 
                             <button class="btn btn-lg text-white" style="background-color: #ffbf0f"
                                 name="kirim">Kirimkan</button>
@@ -168,6 +295,51 @@
         </div>
         </div>
         </div>
+
+        <div id="modalContainer" class="modal-overlay">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <h1>Syarat & Ketentuan</h1>
+                    <i class="fa-solid fa-xmark close-icon" onclick="buttonModal()"></i>
+                </div>
+
+                <div class="modal-content">
+                    <section>
+                        <h3>Pemesanan</h3>
+                        <p>Pemesanan dilakukan melalui website, marketplace, atau kontak resmi kami. Data pesanan (jenis
+                            produk, jumlah, ukuran, desain) wajib diisi dengan benar.</p>
+                    </section>
+
+                    <section>
+                        <h3>Harga & Pembayaran</h3>
+                        <p>Harga disesuaikan dengan jumlah, bahan, dan tingkat kesulitan desain. Pembayaran DP / pelunasan
+                            dilakukan sesuai kesepakatan.</p>
+                    </section>
+
+                    <section>
+                        <h3>Produksi & Custom Order</h3>
+                        <p>Waktu produksi menyesuaikan jumlah dan tingkat kesulitan. Produk bersifat custom, tidak dapat
+                            dibatalkan atau direfund setelah produksi berjalan.</p>
+                    </section>
+
+                    <section>
+                        <h3>Komplain</h3>
+                        <p>Komplain diterima maksimal 2×24 jam setelah barang diterima dengan bukti foto/video unboxing.</p>
+                    </section>
+
+                    <section>
+                        <h3>Pesanan Ditolak</h3>
+                        <p>Pesanan akan ditolak oleh admin apabila dalam waktu 1×24 jam setelah pemesanan tidak terdapat
+                            bukti pembayaran yang valid. Pastikan bukti pembayaran telah diunggah atau dikirim sesuai
+                            ketentuan agar pesanan dapat diproses.</p>
+                    </section>
+                </div>
+
+                <div class="modal-footer">
+                    <button onclick="buttonModal()" class="confirm-btn">Saya Mengerti</button>
+                </div>
+            </div>
+        </div>
     </section>
 
     <script>
@@ -198,6 +370,17 @@
             } else {
                 fileError.style.display = 'none';
                 submitBtn.disabled = false;
+            }
+        }
+
+        const modalContainer = document.getElementById('modalContainer');
+        const totalBelanja = {{ $totalbelanja ?? 0 }};
+
+        function buttonModal() {
+            if (modalContainer.style.display === 'flex') {
+                modalContainer.style.display = 'none';
+            } else {
+                modalContainer.style.display = 'flex';
             }
         }
     </script>
