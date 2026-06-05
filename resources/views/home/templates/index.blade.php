@@ -34,9 +34,9 @@
                 <img src="{{ asset('foto/logo.png') }}" alt="Oldshine Konveksi"
                     style="height: 55px; width: auto; margin-right: 10px;">
 
-                {{-- <span style="color: #ffbf0f; font-weight: 700;">
+                <span style="color: #ffbf0f; font-weight: 700;">
                     Oldshine Konveksi
-                </span> --}}
+                </span>
             </a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav"
                 aria-controls="ftco-nav" aria-expanded="false" aria-label="Toggle navigation">

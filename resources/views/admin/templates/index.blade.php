@@ -103,6 +103,7 @@
             <a class="sidebar-brand d-flex align-items-center justify-content-center oldshine-sidebar-brand"
                 href="{{ url('admin') }}">
                 <img src="{{ asset('foto/logo.png') }}" alt="Oldshine Konveksi" class="oldshine-sidebar-logo">
+                <div class="sidebar-brand-text mx-3">Oldshine Konveksi</sup></div>
             </a>
             <hr class="sidebar-divider">
 
