@@ -273,19 +273,44 @@
             <script src="{{ asset('assets/admin/assets/DataTables/Buttons-1.5.6/js/buttons.colvis.min.js') }}"></script>
             <script>
                 $(document).ready(function() {
-                    var table = $('#table').DataTable({
-                        buttons: ['csv', 'print', 'excel', 'pdf'],
-                        dom: "<'row'<'col-md-3'l><'col-md-5'B><'col-md-4'f>>" +
-                            "<'row'<'col-md-12'tr>>" +
-                            "<'row'<'col-md-5'i><'col-md-7'p>>",
-                        lengthMenu: [
-                            [5, 10, 25, 50, 100, -1],
-                            [5, 10, 25, 50, 100, "ALL"]
-                        ]
-                    });
+                    if ($('#table').length) {
+                        var table = $('#table').DataTable({
+                            buttons: ['csv', 'print', 'excel', 'pdf'],
+                            dom: "<'row'<'col-md-3'l><'col-md-5'B><'col-md-4'f>>" +
+                                "<'row'<'col-md-12'tr>>" +
+                                "<'row'<'col-md-5'i><'col-md-7'p>>",
+                            lengthMenu: [
+                                [5, 10, 25, 50, 100, -1],
+                                [5, 10, 25, 50, 100, "ALL"]
+                            ],
+                            columnDefs: [{
+                                orderable: false,
+                                targets: 'no-sort'
+                            }],
+                            order: []
+                        });
 
-                    table.buttons().container()
-                        .appendTo('#table_wrapper .col-md-5:eq(0)');
+                        function updateNomorUrut() {
+                            var info = table.page.info();
+
+                            table.column(0, {
+                                page: 'current',
+                                search: 'applied',
+                                order: 'applied'
+                            }).nodes().each(function(cell, i) {
+                                cell.innerHTML = info.start + i + 1;
+                            });
+                        }
+
+                        table.on('draw.dt', function() {
+                            updateNomorUrut();
+                        });
+
+                        updateNomorUrut();
+
+                        table.buttons().container()
+                            .appendTo('#table_wrapper .col-md-5:eq(0)');
+                    }
                 });
             </script>
             <script>

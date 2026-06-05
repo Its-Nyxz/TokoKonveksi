@@ -10,6 +10,18 @@
         .btn-download:hover {
             color: white;
         }
+
+        table.dataTable thead th.no-sort::before,
+        table.dataTable thead th.no-sort::after {
+            display: none !important;
+            content: "" !important;
+        }
+
+        table.dataTable thead th.no-sort {
+            pointer-events: none;
+            cursor: default !important;
+            background-image: none !important;
+        }
     </style>
     <div class="row">
         <div class="col-md-12 mb-4">
@@ -21,21 +33,21 @@
                     <table class="table table-bordered" id="table">
                         <thead>
                             <tr>
-                                <th>No</th>
+                                <th class="no-sort">No</th>
                                 <th>Nama</th>
-                                <th>Daftar</th>
+                                <th class="no-sort">Daftar</th>
                                 <th>Tanggal Pembelian</th>
                                 <th>Total Pembelian</th>
                                 <th>Metode Pengiriman</th>
-                                <th>Status Belanja</th>
-                                <th>Aksi</th>
+                                <th class="no-sort">Status Belanja</th>
+                                <th class="no-sort">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php $nomor = 1; ?>
+
                             @foreach ($pembelian as $p)
                                 <tr>
-                                    <td><?php echo $nomor; ?></td>
+                                    <td class="nomor-urut">{{ $loop->iteration }}</td>
                                     <td>{{ $p->nama }}</td>
                                     <td>
                                         <ul>
@@ -72,7 +84,6 @@
                                         </div>
                                     </td>
                                 </tr>
-                                <?php $nomor++; ?>
                             @endforeach
                         </tbody>
                     </table>

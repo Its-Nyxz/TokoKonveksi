@@ -2,6 +2,19 @@
 
 @section('page-content')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        table.dataTable thead th.no-sort::before,
+        table.dataTable thead th.no-sort::after {
+            display: none !important;
+            content: "" !important;
+        }
+
+        table.dataTable thead th.no-sort {
+            pointer-events: none;
+            cursor: default !important;
+            background-image: none !important;
+        }
+    </style>
 
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <a href="{{ url('admin/tambahproduk') }}" class="btn btn-sm btn-secondary shadow-sm float-right pull-right"><i
@@ -17,20 +30,20 @@
                     <table class="table table-bordered table-striped" id="table">
                         <thead>
                             <tr>
-                                <th>No</th>
+                                <th class="no-sort">No</th>
                                 <th>Nama</th>
                                 <th>Kategori</th>
-                                <th>Stok</th>
+                                <th class="no-sort">Stok</th>
                                 <th>Harga</th>
-                                <th>Foto</th>
-                                <th>Aksi</th>
+                                <th class="no-sort">Foto</th>
+                                <th class="no-sort">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php $nomor = 1; ?>
+
                             @foreach ($produk as $p)
                                 <tr>
-                                    <td><?php echo $nomor; ?></td>
+                                    <td class="nomor-urut">{{ $loop->iteration }}</td>
                                     <td>{{ $p->nama }}</td>
                                     <td>{{ $p->namakategori }}</td>
                                     <td>{{ $p->stok }}</td>
@@ -51,7 +64,6 @@
                                         </div>
                                     </td>
                                 </tr>
-                                <?php $nomor++; ?>
                             @endforeach
                         </tbody>
                     </table>

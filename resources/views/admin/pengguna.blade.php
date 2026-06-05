@@ -1,6 +1,19 @@
 @extends('admin.templates.index')
 
 @section('page-content')
+    <style>
+        table.dataTable thead th.no-sort::before,
+        table.dataTable thead th.no-sort::after {
+            display: none !important;
+            content: "" !important;
+        }
+
+        table.dataTable thead th.no-sort {
+            pointer-events: none;
+            cursor: default !important;
+            background-image: none !important;
+        }
+    </style>
     <div class="row">
         <div class="col-md-12 mb-4">
             <div class="card shadow mb-4">
@@ -11,19 +24,19 @@
                     <table class="table table-bordered" id="table">
                         <thead>
                             <tr>
-                                <th>No</th>
+                                <th class="no-sort">No</th>
                                 <th>Nama</th>
                                 <th>Email</th>
                                 <th>Telepon</th>
                                 <th>Alamat</th>
-                                <th>Aksi</th>
+                                <th class="no-sort">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php $nomor = 1; ?>
+
                             @foreach ($pengguna as $pecah)
                                 <tr>
-                                    <td><?php echo $nomor; ?></td>
+                                    <td class="nomor-urut">{{ $loop->iteration }}</td>
                                     <td>{{ $pecah->nama }}</td>
                                     <td>{{ $pecah->email }}</td>
                                     <td>{{ $pecah->telepon }}</td>
@@ -33,7 +46,6 @@
                                             class="btn btn-danger btn-delete">Hapus</a>
                                     </td>
                                 </tr>
-                                <?php $nomor++; ?>
                             @endforeach
                         </tbody>
                     </table>

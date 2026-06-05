@@ -1,6 +1,19 @@
 @extends('admin.templates.index')
 
 @section('page-content')
+    <style>
+        table.dataTable thead th.no-sort::before,
+        table.dataTable thead th.no-sort::after {
+            display: none !important;
+            content: "" !important;
+        }
+
+        table.dataTable thead th.no-sort {
+            pointer-events: none;
+            cursor: default !important;
+            background-image: none !important;
+        }
+    </style>
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <a href="{{ url('admin/tambahkategori') }}" class="btn btn-sm btn-secondary shadow-sm float-right pull-right"><i
                 class="fas fa-plus fa-sm text-white-50"></i> Tambah Kategori</a>
@@ -15,16 +28,16 @@
                     <table class="table table-bordered" id="table">
                         <thead>
                             <tr>
-                                <th>No</th>
+                                <th class="no-sort">No</th>
                                 <th>Kategori</th>
-                                <th>Aksi</th>
+                                <th class="no-sort">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php $nomor = 1; ?>
+
                             @foreach ($kategori as $data)
                                 <tr>
-                                    <td><?php echo $nomor; ?></td>
+                                    <td class="nomor-urut">{{ $loop->iteration }}</td>
                                     <td>{{ $data->namakategori }}</td>
                                     <td>
                                         <div class="d-flex justify-content-center align-items-center">
@@ -36,9 +49,7 @@
                                         </div>
                                     </td>
                                     </td>
-
                                 </tr>
-                                <?php $nomor++; ?>
                             @endforeach
                         </tbody>
                     </table>
@@ -46,7 +57,6 @@
             </div>
         </div>
 
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
         <script>
@@ -72,6 +82,24 @@
                         }
                     });
                 });
+            });
+        </script>
+        <script>
+            $(document).ready(function() {
+                if ($.fn.dataTable.isDataTable('#table')) {
+                    const table = $('#table').DataTable();
+
+                    table.on('order.dt search.dt draw.dt', function() {
+                        let nomor = 1;
+
+                        table.column(0, {
+                            search: 'applied',
+                            order: 'applied'
+                        }).nodes().each(function(cell) {
+                            cell.innerHTML = nomor++;
+                        });
+                    }).draw();
+                }
             });
         </script>
     </div>
