@@ -125,9 +125,7 @@
                 <div class="col-md-3">
                     <div class="ftco-footer-widget mb-4">
                         <h2 class="ftco-heading-2" style="color:#ffbf0f;">JAM OPERASIONAL :</h2>
-                        <p>Senin - Kamis :</p>
-                        <p style="margin-top: -20px">08.00 - 16.00 WIB</p>
-                        <p style="margin-top: -20px">Sabtu - Minggu</p>
+                        <p>Setiap Hari</p>
                         <p style="margin-top: -20px">08.00 - 16.00 WIB</p>
                     </div>
                 </div>

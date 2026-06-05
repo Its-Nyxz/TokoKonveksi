@@ -38,8 +38,10 @@
                             </div>
                             <div class="form-group">
                                 <label>Foto Bukti</label>
-                                <input type="file" name="bukti" class="form-control" accept="image/*" required onchange="validateFile(this)">
-                                <small id="fileError" class="text-danger mt-2" style="display:none; font-weight: bold;"></small>
+                                <input type="file" name="bukti" class="form-control" accept="image/*" required
+                                    onchange="validateFile(this)">
+                                <small id="fileError" class="text-danger mt-2"
+                                    style="display:none; font-weight: bold;"></small>
                             </div>
                         </div>
                         <div class="card py-2 px-2 text-justify">
@@ -82,7 +84,7 @@
                                         {{ number_format($totalbelanja + $datapembelian->ongkir) }} <br> <span
                                             style="color: red; font-weight:400;">NON REFUNDABLE</span></p>
                                 </div>
-                            </div> 
+                            </div>
                             {{-- TOTAL KESELURUHAN --}}
                             <div class="row">
                                 <div class="col-md-8">
@@ -123,8 +125,9 @@
                             <p class="text-warning"><strong>Pembayaran: Pelunasan</strong></p>
 
                             <hr>
-                            <p>Dengan melanjutkan ke tahapan selanjutnya, Anda telah membaca dan setuju dengan pihak Seni
-                                Relief Kuningan dengan <a href="#" style="color: #ffbf0f;">Syarat & Kententuannya</a>.
+                            <p>Dengan melanjutkan ke tahapan selanjutnya, Anda telah membaca dan setuju dengan pihak
+                                Oldshine Konveksi dengan <a href="#" style="color: #ffbf0f;">Syarat &
+                                    Kententuannya</a>.
                             </p>
 
                             <button class="btn btn-lg text-white" style="background-color: #ffbf0f"
@@ -172,7 +175,7 @@
             const fileError = document.getElementById('fileError');
             const submitBtn = document.querySelector('button[name="kirim"]');
             const file = input.files[0];
-            
+
             if (file) {
                 if (file.size > 2 * 1024 * 1024) {
                     fileError.textContent = 'Ukuran file maksimal 2MB.';
@@ -181,7 +184,7 @@
                     input.value = ''; // clear input
                     return;
                 }
-                
+
                 if (!file.type.startsWith('image/')) {
                     fileError.textContent = 'File harus berupa gambar (JPG, PNG, dll).';
                     fileError.style.display = 'block';
@@ -189,7 +192,7 @@
                     input.value = ''; // clear input
                     return;
                 }
-                
+
                 fileError.style.display = 'none';
                 submitBtn.disabled = false;
             } else {

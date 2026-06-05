@@ -119,8 +119,7 @@
                         @endif
 
                         <hr>
-                        <p>Dengan melanjutkan ke tahapan selanjutnya, Anda telah membaca dan setuju dengan pihak Seni Relief
-                            Kuningan dengan <a href="#" style="color: #ffbf0f;">Syarat & Kententuannya</a>.</p>
+                        <p>Dengan melanjutkan ke tahapan selanjutnya, Anda telah membaca dan setuju dengan pihak Oldshine Konveksi dengan <a href="#" style="color: #ffbf0f;">Syarat & Kententuannya</a>.</p>
 
                         <?php if ($datapembelian->statusbeli == "Belum Bayar") { ?>
                         <a class="btn btn-lg text-white" href="{{ url('home/pembayaran/' . $datapembelian->idpembelian) }}"

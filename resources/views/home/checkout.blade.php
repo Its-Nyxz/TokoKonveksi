@@ -201,8 +201,8 @@
                         </div>
                         <div class="card py-2 px-2 text-justify mt-5">
                             <h3 style="color: black;">Kebijakan Pemesanan</h3>
-                            Dengan melanjutkan ke tahapan selanjutnya, Anda telah membaca dan setuju dengan pihak Seni
-                            Relief Kuningan dengan <a href="#" onclick="buttonModal()" style="color: #ffbf0f;">Syarat
+                            Dengan melanjutkan ke tahapan selanjutnya, Anda telah membaca dan setuju dengan pihak Oldshine
+                            Konveksi dengan <a href="#" onclick="buttonModal()" style="color: #ffbf0f;">Syarat
                                 & Kententuannya</a>.
                         </div>
                     </div>
@@ -335,8 +335,8 @@
                             </div>
                         </div>
                         <hr>
-                        <p>Dengan melanjutkan ke tahapan selanjutnya, Anda telah membaca dan setuju dengan pihak Seni
-                            Relief Kuningan dengan <a href="#" onclick="buttonModal()"
+                        <p>Dengan melanjutkan ke tahapan selanjutnya, Anda telah membaca dan setuju dengan pihak
+                            Oldshine Konveksi dengan <a href="#" onclick="buttonModal()"
                                 idstyle="color: #ffbf0f;">Syarat &
                                 Kententuannya</a>.</p>
 
@@ -353,7 +353,7 @@
         <div class="modal-box">
             <div class="modal-header">
                 <h1>Syarat & Ketentuan</h1>
-                <i class="fa-solid fa-x close-icon"></i>
+                <i class="fa-solid fa-xmark close-icon" onclick="buttonModal()"></i>
             </div>
 
             <div class="modal-content">
@@ -378,6 +378,13 @@
                 <section>
                     <h3>Komplain</h3>
                     <p>Komplain diterima maksimal 2×24 jam setelah barang diterima dengan bukti foto/video unboxing.</p>
+                </section>
+
+                <section>
+                    <h3>Pesanan Ditolak</h3>
+                    <p>Pesanan akan ditolak oleh admin apabila dalam waktu 1×24 jam setelah pemesanan tidak terdapat
+                        bukti pembayaran yang valid. Pastikan bukti pembayaran telah diunggah atau dikirim sesuai
+                        ketentuan agar pesanan dapat diproses.</p>
                 </section>
             </div>
 

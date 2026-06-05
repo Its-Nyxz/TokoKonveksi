@@ -205,7 +205,7 @@
     </style>
 
     <div class="row">
-        @if (!empty($pembayaran) || $datapembelian->metodepembayaran == 'Cod')
+        @if ($pembayaran->count() > 0 || strtolower(trim($datapembelian->metodepembayaran ?? '')) == 'cod')
             @if (!in_array($datapembelian->statusbeli, ['Pesanan Di Tolak', 'Selesai']))
                 <div class="col-md-6 mb-4 left-column" style="display: flex; flex-direction: column;">
                     <div class="card shadow mb-4 left-card" style="flex: 1; display: flex; flex-direction: column;">
@@ -252,33 +252,38 @@
                                                 <option value="" selected disabled>Belum di Konfirmasi</option>
                                                 <option value="Pesanan Di Tolak"
                                                     {{ $datapembelian->statusbeli == 'Pesanan Di Tolak' ? 'selected' : '' }}>
-                                                    Pesanan Di Tolak</option>
+                                                    Pesanan Di Tolak
+                                                </option>
                                                 <option value="Pesanan Di Terima"
                                                     {{ $datapembelian->statusbeli == 'Pesanan Di Terima' ? 'selected' : '' }}>
-                                                    Pesanan Di Terima</option>
+                                                    Pesanan Di Terima
+                                                </option>
                                                 <option value="Pesanan Sedang Dikirim"
                                                     {{ $datapembelian->statusbeli == 'Pesanan Sedang Dikirim' ? 'selected' : '' }}>
-                                                    Pesanan Sedang Dikirim</option>
+                                                    Pesanan Sedang Dikirim
+                                                </option>
                                                 <option value="Selesai"
                                                     {{ $datapembelian->statusbeli == 'Selesai' ? 'selected' : '' }}>
-                                                    Selesai</option>
+                                                    Selesai
+                                                </option>
                                             </select>
                                         </div>
+
 
                                         <div class="form-group">
                                             <label>Catatan</label>
                                             <textarea class="form-control" name="catatan" required>{{ $datapembelian->catatan }}</textarea>
                                         </div>
-                                        <div class="form-group">
+                                        <div class="form-group" id="fieldFotoPengiriman" style="display: none;">
                                             <label>Foto Pengiriman</label>
-                                            <input type="file" class="form-control" name="foto">
+                                            <input type="file" class="form-control" name="foto" id="fotoPengiriman">
                                         </div>
                                         <button class="btn btn-secondary float-right pull-right"
                                             name="proses">Simpan</button>
                                         <br>
                                     </form>
 
-                                    <script>
+                                    {{-- <script>
                                         document.getElementById('statusbeli').addEventListener('change', function() {
                                             var kurirDiv = document.getElementById('kurirDiv');
                                             var kurirSelect = kurirDiv.querySelector('select');
@@ -304,7 +309,7 @@
                                                 kurirSelect.value = ''; // Pastikan value tetap kosong saat reload
                                             }
                                         };
-                                    </script>
+                                    </script> --}}
 
                                 </div>
                             </div>
@@ -325,9 +330,13 @@
                             <div class="card-body" style="max-height: 280px; overflow-y: auto; flex: 1;">
 
                                 @php
-                                    // Find DP and pelunasan entries
-                                    $dp = $pembayaran->firstWhere('tipe', 'DP');
-                                    $pelunasan = $pembayaran->firstWhere('tipe', '!=', 'DP');
+                                    $dp = $pembayaran->first(function ($item) {
+                                        return strtoupper(trim($item->tipe ?? '')) === 'DP';
+                                    });
+
+                                    $pelunasan = $pembayaran->first(function ($item) {
+                                        return strtoupper(trim($item->tipe ?? '')) === 'LUNAS';
+                                    });
                                 @endphp
 
                                 @if (!$dp && !$pelunasan)
@@ -337,11 +346,17 @@
                                         {{-- Only DP: show full-width image inside card --}}
                                         <div class="proof-container">
                                             <div class="proof-item proof-full">
-                                                <img src="{{ url('foto/' . $dp->bukti) }}" alt="Bukti DP" />
-                                                <div class="img-overlay">
-                                                    <i class="fa fa-eye"
-                                                        onclick="openImage('{{ url('foto/' . $dp->bukti) }}')"></i>
-                                                </div>
+                                                <strong>Down Payment (DP)</strong>
+
+                                                @if (!empty($dp->bukti))
+                                                    <img src="{{ asset('foto/' . $dp->bukti) }}" alt="Bukti DP" />
+                                                    <div class="img-overlay">
+                                                        <i class="fa fa-eye"
+                                                            onclick="openImage('{{ asset('foto/' . $dp->bukti) }}')"></i>
+                                                    </div>
+                                                @else
+                                                    <p class="text-danger">File bukti DP belum tersedia.</p>
+                                                @endif
                                             </div>
                                         </div>
                                     @elseif($dp && $pelunasan)
@@ -349,19 +364,21 @@
                                         <div class="proof-split">
                                             <div class="proof-item">
                                                 <strong>Down Payment (DP)</strong>
-                                                <img src="{{ url('foto/' . $dp->bukti) }}" alt="Bukti DP" />
+                                                <img src="{{ asset('foto/' . rawurlencode($dp->bukti)) }}"
+                                                    alt="Bukti DP" />
                                                 <div class="img-overlay">
                                                     <i class="fa fa-eye"
-                                                        onclick="openImage('{{ url('foto/' . $dp->bukti) }}')"></i>
+                                                        onclick="openImage('{{ asset('foto/' . rawurlencode($dp->bukti)) }}')"></i>
                                                 </div>
                                             </div>
 
                                             <div class="proof-item">
                                                 <strong>Pelunasan</strong>
-                                                <img src="{{ url('foto/' . $pelunasan->bukti) }}" alt="Bukti Pelunasan" />
+                                                <img src="{{ asset('foto/' . rawurlencode($pelunasan->bukti)) }}"
+                                                    alt="Bukti Pelunasan" />
                                                 <div class="img-overlay">
                                                     <i class="fa fa-eye"
-                                                        onclick="openImage('{{ url('foto/' . $pelunasan->bukti) }}')"></i>
+                                                        onclick="openImage('{{ url('foto/' . rawurlencode($pelunasan->bukti)) }}')"></i>
                                                 </div>
                                             </div>
                                         </div>
@@ -428,7 +445,7 @@
 
             <!-- Layout khusus untuk status Selesai: Bukti Pembayaran dan Foto Pengiriman bersebelahan -->
             @if ($datapembelian->statusbeli == 'Selesai')
-                @if ($datapembelian->metodepembayaran == 'Transfer')
+                @if (strtolower(trim($datapembelian->metodepembayaran)) == 'transfer')
                     <div class="col-md-6 mb-4">
                         <div class="card shadow mb-4">
                             <div
@@ -450,10 +467,11 @@
                                         {{-- Only DP: show full-width image inside card --}}
                                         <div class="proof-container">
                                             <div class="proof-item proof-full">
-                                                <img src="{{ url('foto/' . $dp->bukti) }}" alt="Bukti DP" />
+                                                <img src="{{ asset('foto/' . rawurlencode($dp->bukti)) }}"
+                                                    alt="Bukti DP" />
                                                 <div class="img-overlay">
                                                     <i class="fa fa-eye"
-                                                        onclick="openImage('{{ url('foto/' . $dp->bukti) }}')"></i>
+                                                        onclick="openImage('{{ asset('foto/' . rawurlencode($dp->bukti)) }}')"></i>
                                                 </div>
                                             </div>
                                         </div>
@@ -462,10 +480,11 @@
                                         <div class="proof-split">
                                             <div class="proof-item">
                                                 <strong>Down Payment (DP)</strong>
-                                                <img src="{{ url('foto/' . $dp->bukti) }}" alt="Bukti DP" />
+                                                <img src="{{ asset('foto/' . rawurlencode($dp->bukti)) }}"
+                                                    alt="Bukti DP" />
                                                 <div class="img-overlay">
                                                     <i class="fa fa-eye"
-                                                        onclick="openImage('{{ url('foto/' . $dp->bukti) }}')"></i>
+                                                        onclick="openImage('{{ asset('foto/' . rawurlencode($dp->bukti)) }}')"></i>
                                                 </div>
                                             </div>
 

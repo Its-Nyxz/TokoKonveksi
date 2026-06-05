@@ -98,7 +98,7 @@ class HomeController extends Controller
 
     public function kategori()
     {
-        $kategori = DB::table('kategori')->paginate(8);
+        $kategori = DB::table('kategori')->paginate(12);
 
         $data = [
             'kategori' => $kategori,
