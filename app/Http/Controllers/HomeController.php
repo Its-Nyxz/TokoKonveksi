@@ -940,27 +940,32 @@ class HomeController extends Controller
     public function pembayaran($id)
     {
         if (!session('pengguna')) {
-
             return redirect('home/login')->with([
                 'swal_type'  => 'warning',
                 'swal_title' => 'Akses Ditolak',
                 'swal_text'  => 'Anda belum login, silakan login terlebih dahulu'
             ]);
         }
-        // $datapembelian = DB::table('pembelian')->join('pengguna', 'pengguna.id', '=', 'pembelian.id')
-        //     ->where('pembelian.idpembelian', $id)->first();
+
         $datapembelian = DB::table('pembelian')
             ->where('idpembelian', $id)
             ->where('id', session('pengguna')->id)
             ->first();
+
+        if (!$datapembelian) {
+            return redirect('home/riwayat')->with([
+                'swal_type'  => 'error',
+                'swal_title' => 'Data Tidak Ditemukan',
+                'swal_text'  => 'Transaksi tidak ditemukan atau bukan milik akun Anda.'
+            ]);
+        }
+
         $dataproduk = $this->getProdukTransaksi($id);
 
-        $data = [
+        return view('home.pembayaran', [
             'datapembelian' => $datapembelian,
             'dataproduk' => $dataproduk,
-        ];
-
-        return view('home.pembayaran', $data);
+        ]);
     }
 
     public function pembayaransimpan(Request $request)
