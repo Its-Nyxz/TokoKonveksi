@@ -265,12 +265,34 @@
                         <p>No Transaksi: <br> <span
                                 style="color: #000; font-weight:bold;">{{ $datapembelian->notransaksi }}</span></p>
                     </div>
+                    @php
+                        $produkUtama = $dataproduk->first();
+                    @endphp
                     <div class="card mt-3 py-2 px-2">
-                        <h3 style="color: black;">{{ $dp->nama }}</h3>
-                        Kota Asal Pengiriman : Kabupaten Wonogiri
-                        <img src="{{ asset('foto/' . $dp->foto) }}" height="250px" alt="">
-                        <p style="color: #000;">{{ $datapembelian->alamat }}, {{ $datapembelian->kec }},
-                            {{ $datapembelian->kota }}, {{ $datapembelian->provinsi }},{{ $datapembelian->kode_pos }}</p>
+                        <h3 style="color: black;">{{ $produkUtama->nama ?? 'Produk sudah dihapus' }}</h3>
+
+                        @if (!empty($produkUtama->foto))
+                            <img src="{{ asset('foto/' . $produkUtama->foto) }}" height="250px" alt="">
+                        @else
+                            <div class="text-center py-5 bg-light">
+                                <span class="text-muted">Foto produk tidak tersedia</span>
+                            </div>
+                        @endif
+                        @php
+                            $alamatLengkap = collect([
+                                $datapembelian->alamat ?? null,
+                                $datapembelian->kec ?? null,
+                                $datapembelian->kota ?? null,
+                                $datapembelian->provinsi ?? null,
+                                $datapembelian->kode_pos ?? null,
+                            ])
+                                ->filter()
+                                ->implode(', ');
+                        @endphp
+
+                        <p style="color: #000;">
+                            {{ $alamatLengkap ?: '-' }}
+                        </p>
                         <table class="">
                             <tr>
                                 <td width="150px"><strong>Nama Penerima</strong></td>
