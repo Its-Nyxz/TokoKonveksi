@@ -18,10 +18,10 @@ class DatabaseSeeder extends Seeder
             KategoriSeeder::class,
             PenggunaSeeder::class,
             ProdukSeeder::class,
-            PembelianSeeder::class,
-            PembelianProdukSeeder::class,
-            PembayaranSeeder::class,
-            PembelianFotoSeeder::class,
+            // PembelianSeeder::class,
+            // PembelianProdukSeeder::class,
+            // PembayaranSeeder::class,
+            // PembelianFotoSeeder::class,
         ]);
     }
 }
