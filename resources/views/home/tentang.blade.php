@@ -1,5 +1,9 @@
 @extends('home.templates.index')
 
+@php
+    $settings = DB::table('settings')->pluck('value', 'key');
+@endphp
+
 @section('page-content')
     <style>
         .product {
@@ -17,7 +21,6 @@
             font-weight: bold;
             font-size: 14px;
             z-index: 10;
-            /* Pastikan label muncul di atas gambar */
         }
     </style>
 
@@ -32,23 +35,18 @@
                     <div class="mb-5">
                         <h1 style="color: black; font-weight:bold;">Tentang Kami</h1>
                         <br>
-                        <h5 style="color: black; font-weight:bold;">
-                            Oldshine Konveksi adalah brand terpercaya yang bergerak di bidang konveksi dan produksi pakaian
-                            custom.
-                        </h5>
-                        <p>
-                            Kami menyediakan berbagai jenis pakaian berkualitas seperti kaos, kemeja, hoodie, jaket, dan
-                            seragam
-                            untuk kebutuhan pribadi, komunitas, perusahaan, hingga event. Setiap produk dikerjakan dengan
-                            standar
-                            tinggi, menggunakan bahan pilihan dan proses produksi yang rapi serta profesional.
+                        <h3 style="color: black; font-weight:bold;">
+                            {{ $settings['tentang_kami_judul'] ?? 'Tentang Oldshine Konveksi' }}
+                        </h3>
+                        <p style="color: black; font-size: 1.1rem; line-height: 1.7;">
+                            {!! nl2br(e($settings['tentang_kami_isi'] ?? 'Oldshine Konveksi adalah brand terpercaya yang bergerak di bidang konveksi dan produksi pakaian custom.')) !!}
                         </p>
                     </div>
                 </div>
 
-                <div class="col-md-6 d-flex justify-content-center">
-                    <img src="{{ asset('foto/bg.jpg') }}" href="{{ url('home') }}" width="100%"
-                        style="border-radius: 10px;">
+                <div class="col-md-6 d-flex justify-content-center align-items-center">
+                    <img src="{{ asset('foto/' . ($settings['tentang_kami_foto'] ?? 'logo.jpg')) }}" width="100%"
+                        style="border-radius: 10px; max-height: 400px; object-fit: cover; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
                 </div>
             </div>
         </div>

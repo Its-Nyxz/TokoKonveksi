@@ -105,15 +105,29 @@
 
     <div class="divider"></div>
 
-    <!-- TANGGAL -->
+    <!-- TANGGAL & FILTER -->
     <table id="info">
         <tr>
-            <td><strong>Tanggal Awal</strong></td>
-            <td>: <?= tanggal($tanggalawal) ?></td>
+            <td width="150px"><strong>Tanggal Awal</strong></td>
+            <td width="250px">: <?= tanggal($tanggalawal) ?></td>
+            <td width="150px"><strong>Status Filter</strong></td>
+            <td>: {{ empty($status) ? 'Semua Status' : $status }}</td>
         </tr>
         <tr>
             <td><strong>Tanggal Akhir</strong></td>
             <td>: <?= tanggal($tanggalakhir) ?></td>
+            <td><strong>Metode Pengiriman</strong></td>
+            <td>: 
+                @if (empty($metode))
+                    Semua Metode
+                @elseif (strtolower($metode) == 'transfer')
+                    Dengan Kurir
+                @elseif (strtolower($metode) == 'cod')
+                    Tanpa Kurir
+                @else
+                    {{ $metode }}
+                @endif
+            </td>
         </tr>
     </table>
 
@@ -140,9 +154,26 @@
                     <td>
                         <ul style="margin: 0; padding-left: 18px;">
                             @foreach ($dataproduk[$p->idpembelian] as $dp)
-                                <li>{{ $dp->nama }}</li>
+                                <li>
+                                    {{ $dp->nama }} ({{ $dp->jumlah }}x)
+                                    @if ($dp->size_m > 0 || $dp->size_l > 0 || $dp->size_xl > 0 || $dp->size_xxl > 0)
+                                        <small style="font-size: 8pt; color: #555;">
+                                            (Size: 
+                                            @if($dp->size_m > 0) M:{{ $dp->size_m }} @endif
+                                            @if($dp->size_l > 0) L:{{ $dp->size_l }} @endif
+                                            @if($dp->size_xl > 0) XL:{{ $dp->size_xl }} @endif
+                                            @if($dp->size_xxl > 0) XXL:{{ $dp->size_xxl }} @endif
+                                            )
+                                        </small>
+                                    @endif
+                                </li>
                             @endforeach
                         </ul>
+                        @if ($p->size_m > 0 || $p->size_l > 0 || $p->size_xl > 0 || $p->size_xxl > 0)
+                            <div style="font-size: 8.5pt; margin-top: 5px; font-style: italic; color: #555;">
+                                Size: M:{{ $p->size_m }} | L:{{ $p->size_l }} | XL:{{ $p->size_xl }} | XXL:{{ $p->size_xxl }}
+                            </div>
+                        @endif
                     </td>
                     <td>{{ tanggal(date('Y-m-d', strtotime($p->tanggalbeli))) }}</td>
                     <td>Rp {{ number_format($p->totalbeli) }}</td>
@@ -163,8 +194,9 @@
 
         <tfoot>
             <tr>
-                <th colspan="6">TOTAL PEMBELIAN</th>
-                <th>Rp {{ number_format($totalPembelian) }}</th>
+                <th colspan="4" style="text-align: right;">TOTAL PEMBELIAN</th>
+                <th style="text-align: left;">Rp {{ number_format($totalPembelian) }}</th>
+                <th colspan="2"></th>
             </tr>
         </tfoot>
     </table>

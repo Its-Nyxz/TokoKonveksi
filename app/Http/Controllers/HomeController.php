@@ -15,9 +15,39 @@ class HomeController extends Controller
 {
     public function index()
     {
+        $this->checkExpiredOrders();
+        $this->checkDeliveryNotification();
+
         $produk = DB::table('produk')->Join('kategori', 'produk.idkategori', '=', 'kategori.idkategori')->orderBy('idproduk', 'desc')->limit(6)->get();
+
+        // Load settings for promotion
+        $settings = DB::table('settings')->pluck('value', 'key');
+        $promoProduct = null;
+
+        if (isset($settings['promosi_tipe']) && $settings['promosi_tipe'] !== 'mati') {
+            $tipe = $settings['promosi_tipe'];
+            if ($tipe === 'terbaru') {
+                $promoProduct = DB::table('produk')->orderBy('idproduk', 'desc')->first();
+            } elseif ($tipe === 'terlaris') {
+                $topProduct = DB::table('pembelianproduk')
+                    ->select('idproduk', DB::raw('SUM(jumlah) as total_sold'))
+                    ->groupBy('idproduk')
+                    ->orderBy('total_sold', 'desc')
+                    ->first();
+
+                if ($topProduct) {
+                    $promoProduct = DB::table('produk')->where('idproduk', $topProduct->idproduk)->first();
+                } else {
+                    $promoProduct = DB::table('produk')->orderBy('idproduk', 'desc')->first();
+                }
+            } elseif ($tipe === 'kustom' && !empty($settings['promosi_produk_id'])) {
+                $promoProduct = DB::table('produk')->where('idproduk', $settings['promosi_produk_id'])->first();
+            }
+        }
+
         $data = [
             'produk' => $produk,
+            'promoProduct' => $promoProduct,
         ];
 
         return view('home/index', $data);
@@ -31,8 +61,16 @@ class HomeController extends Controller
 
     public function bersihkannotifikasi()
     {
-        $iduser = session('pengguna')->id;
-        DB::table('notifikasi')->where('id', $iduser)->delete();
+        $iduser = null;
+        if (session('pengguna')) {
+            $iduser = session('pengguna')->id;
+        } elseif (session('admin')) {
+            $iduser = session('admin')->id;
+        }
+
+        if ($iduser) {
+            DB::table('notifikasi')->where('id', $iduser)->delete();
+        }
         return back();
     }
 
@@ -549,14 +587,6 @@ class HomeController extends Controller
             $jumlahTotal += $keranjang[$idproduk]['jumlah'];
         }
 
-        if ($jumlahTotal > $produk->stok) {
-            return back()->with([
-                'swal_type'  => 'error',
-                'swal_title' => 'Gagal',
-                'swal_text'  => 'Jumlah yang diminta melebihi stok yang tersedia.'
-            ]);
-        }
-
         if (isset($keranjang[$idproduk])) {
             $keranjang[$idproduk]['jumlah'] += $jumlah;
         } else {
@@ -704,9 +734,56 @@ class HomeController extends Controller
         $alamatpengirim = $request->input('alamat');
         $catatanpembeli = $request->input('catatan_pembeli');
 
+        if (empty($alamatpengirim) || trim($alamatpengirim) == '') {
+            return back()->with([
+                'swal_type'  => 'error',
+                'swal_title' => 'Alamat Kosong',
+                'swal_text'  => 'Alamat pengiriman wajib diisi. Silakan edit dan lengkapi alamat Anda.'
+            ])->withInput();
+        }
+
+        // Update alamat di profil pengguna agar tersimpan untuk pemesanan berikutnya
+        DB::table('pengguna')->where('id', $id)->update([
+            'alamat' => $alamatpengirim
+        ]);
+
+        // Perbarui session pengguna
+        $penggunaTerupdate = DB::table('pengguna')->where('id', $id)->first();
+        session(['pengguna' => $penggunaTerupdate]);
+
         $lokasi = $request->input('destination_id');
         $tipe = $request->input('tipe'); // DP atau Lunas
         $metode = $request->input('metodepembayaran');
+
+        $sizes_input = $request->input('sizes', []);
+
+        $total_m = 0;
+        $total_l = 0;
+        $total_xl = 0;
+        $total_xxl = 0;
+
+        $keranjang = session()->get('keranjang', []);
+
+        // Validasi per produk
+        foreach ($keranjang as $idproduk => $item) {
+            $prod_m = (int) ($sizes_input[$idproduk]['m'] ?? 0);
+            $prod_l = (int) ($sizes_input[$idproduk]['l'] ?? 0);
+            $prod_xl = (int) ($sizes_input[$idproduk]['xl'] ?? 0);
+            $prod_xxl = (int) ($sizes_input[$idproduk]['xxl'] ?? 0);
+
+            if (($prod_m + $prod_l + $prod_xl + $prod_xxl) !== (int) $item['jumlah']) {
+                return back()->with([
+                    'swal_type'  => 'error',
+                    'swal_title' => 'Validasi Gagal',
+                    'swal_text'  => "Total rincian ukuran untuk produk '{$item['nama']}' tidak sesuai dengan kuantitas pesanan ({$item['jumlah']})."
+                ])->withInput();
+            }
+
+            $total_m += $prod_m;
+            $total_l += $prod_l;
+            $total_xl += $prod_xl;
+            $total_xxl += $prod_xxl;
+        }
 
         // Status awal tetap belum bayar
         $status = "Belum Bayar";
@@ -728,6 +805,10 @@ class HomeController extends Controller
             'waktu' => $waktu,
             'metodepembayaran' => $metode,
             'tipepembayaran' => $tipe,
+            'size_m' => $total_m,
+            'size_l' => $total_l,
+            'size_xl' => $total_xl,
+            'size_xxl' => $total_xxl,
         ]);
 
         // Ambil ID pembelian
@@ -756,6 +837,11 @@ class HomeController extends Controller
                 continue;
             }
 
+            $prod_m = (int) ($sizes_input[$idproduk]['m'] ?? 0);
+            $prod_l = (int) ($sizes_input[$idproduk]['l'] ?? 0);
+            $prod_xl = (int) ($sizes_input[$idproduk]['xl'] ?? 0);
+            $prod_xxl = (int) ($sizes_input[$idproduk]['xxl'] ?? 0);
+
             DB::table('pembelianproduk')->insert([
                 'idpembelian' => $idpembelian,
                 'idproduk' => $produk->idproduk,
@@ -770,6 +856,52 @@ class HomeController extends Controller
                 'foto_produk' => $produk->foto,
                 'idkategori_snapshot' => $produk->idkategori,
                 'namakategori_snapshot' => $produk->namakategori,
+
+                // ukuran detail produk
+                'size_m' => $prod_m,
+                'size_l' => $prod_l,
+                'size_xl' => $prod_xl,
+                'size_xxl' => $prod_xxl,
+
+                'is_bonus' => 0,
+            ]);
+
+            // =============================================
+            // BONUS OTOMATIS: kelipatan 12 → +2 produk
+            // 1 lusin (12)  → bonus 2 | 2 lusin (24) → bonus 4, dst.
+            // =============================================
+            $jumlah = (int) $item['jumlah'];
+            $bonusQty = (int) floor($jumlah / 12) * 2;
+
+            if ($bonusQty > 0) {
+                // Ukuran bonus awalnya diatur ke 0, akan ditentukan secara manual oleh Admin di halaman pembayaran
+                DB::table('pembelianproduk')->insert([
+                    'idpembelian'          => $idpembelian,
+                    'idproduk'             => $produk->idproduk,
+                    'nama'                 => $produk->nama,
+                    'harga'                => 0,            // bonus = gratis
+                    'subharga'             => 0,
+                    'jumlah'               => $bonusQty,
+                    'foto_produk'          => $produk->foto,
+                    'idkategori_snapshot'  => $produk->idkategori,
+                    'namakategori_snapshot' => $produk->namakategori,
+                    'size_m'               => 0,
+                    'size_l'               => 0,
+                    'size_xl'              => 0,
+                    'size_xxl'             => 0,
+                    'is_bonus'             => 1,
+                ]);
+            }
+        }
+
+        // Kirim notifikasi ke Admin
+        $admins = DB::table('pengguna')->where('level', 'Admin')->get();
+        foreach ($admins as $admin) {
+            DB::table('notifikasi')->insert([
+                'id' => $admin->id,
+                'pesan' => "Transaksi baru {$notransaksi} telah masuk dari {$nama}.",
+                'status' => 'unread',
+                'created_at' => $waktu
             ]);
         }
 
@@ -852,15 +984,18 @@ class HomeController extends Controller
         }
 
         // Sorting by transaction time
-        $sortTime = $request->input('sort_time');
-        if ($sortTime == 'time_asc') {
-            $query->orderBy('pembelian.waktu', 'asc');
-        } elseif ($sortTime == 'time_desc') {
-            $query->orderBy('pembelian.waktu', 'desc');
-        } else {
-            $query->orderBy('pembelian.tanggalbeli', 'desc');
-        }
+        // Sorting default: Tanggal Pesan terbaru
+        $sortTime = $request->input('sort_time', 'time_desc');
 
+        if ($sortTime == 'time_asc') {
+            $query->orderBy('pembelian.tanggalbeli', 'asc')
+                ->orderBy('pembelian.waktu', 'asc')
+                ->orderBy('pembelian.idpembelian', 'asc');
+        } else {
+            $query->orderBy('pembelian.tanggalbeli', 'desc')
+                ->orderBy('pembelian.waktu', 'desc')
+                ->orderBy('pembelian.idpembelian', 'desc');
+        }
         // Paginate and preserve filters in query string
         $databeli = $query->paginate(10)->appends($request->only(['search', 'sort_time', 'status', 'metode']));
 
@@ -926,7 +1061,7 @@ class HomeController extends Controller
             'pembayaran' => $pembayaran,
         ]);
     }
-    
+
     public function detailtransaksi($id)
     {
         if (!session('pengguna')) {
@@ -944,10 +1079,14 @@ class HomeController extends Controller
             ->where('id', session('pengguna')->id)
             ->first();
         $dataproduk = $this->getProdukTransaksi($id);
+        $pembelianFoto = DB::table('pembelian_foto')
+            ->where('id_pembelian', $id)
+            ->get();
 
         $data = [
             'datapembelian' => $datapembelian,
             'dataproduk' => $dataproduk,
+            'pembelianFoto' => $pembelianFoto,
         ];
 
         return view('home.detailtransaksi', $data);
@@ -1037,7 +1176,28 @@ class HomeController extends Controller
             'tipepembayaran'  => $datapembelian->tipepembayaran
         ]);
 
-        return redirect('home/riwayat')->with('alert', 'Terima kasih');
+        // Kirim notifikasi ke Admin
+        $waktu = date('Y-m-d H:i:s');
+        $notransaksi = $datapembelian->notransaksi;
+        $namaPemesan = $datapembelian->nama;
+        $tipeBayar   = $datapembelian->tipepembayaran == 'DP' ? 'DP (50%)' : 'Lunas';
+        $jumlahFmt   = 'Rp ' . number_format($jumlah, 0, ',', '.');
+
+        $admins = DB::table('pengguna')->where('level', 'Admin')->get();
+        foreach ($admins as $admin) {
+            DB::table('notifikasi')->insert([
+                'id'         => $admin->id,
+                'pesan'      => "💳 Bukti pembayaran {$tipeBayar} sebesar {$jumlahFmt} telah diupload oleh {$namaPemesan} untuk transaksi {$notransaksi}.",
+                'status'     => 'unread',
+                'created_at' => $waktu,
+            ]);
+        }
+
+        return redirect('home/riwayat')->with([
+            'swal_type'  => 'success',
+            'swal_title' => 'Bukti Pembayaran Terkirim',
+            'swal_text'  => 'Bukti pembayaran Anda berhasil diupload. Admin akan segera memverifikasi.',
+        ]);
     }
     public function pelunasan($id)
     {
@@ -1137,22 +1297,84 @@ class HomeController extends Controller
 
         // Update status pembelian
         DB::table('pembelian')->where('idpembelian', $idpembelian)->update([
-            // 'statusbeli'      => 'Sudah Upload Bukti Pelunasan',
             'tipepembayaran'  => 'Lunas'
         ]);
 
-        return redirect('home/riwayat')->with('alert', 'Terima kasih, pelunasan berhasil diupload.');
+        // Kirim notifikasi ke Admin
+        $waktu       = date('Y-m-d H:i:s');
+        $notransaksi = $datapembelian->notransaksi;
+        $namaPemesan = $datapembelian->nama;
+        $jumlahFmt   = 'Rp ' . number_format($jumlahPelunasan, 0, ',', '.');
+
+        $admins = DB::table('pengguna')->where('level', 'Admin')->get();
+        foreach ($admins as $admin) {
+            DB::table('notifikasi')->insert([
+                'id'         => $admin->id,
+                'pesan'      => "✅ Bukti pelunasan sebesar {$jumlahFmt} telah diupload oleh {$namaPemesan} untuk transaksi {$notransaksi}.",
+                'status'     => 'unread',
+                'created_at' => $waktu,
+            ]);
+        }
+
+        return redirect('home/riwayat')->with([
+            'swal_type'  => 'success',
+            'swal_title' => 'Pelunasan Terkirim',
+            'swal_text'  => 'Bukti pelunasan Anda berhasil diupload. Admin akan segera memverifikasi.',
+        ]);
     }
 
 
 
     public function selesai(Request $request)
     {
-        $idpembelian = $request->input('idpembelian');
-        DB::table('pembelian')->where('idpembelian', $idpembelian)->update([
-            'statusbeli' => 'Selesai'
+        $request->validate([
+            'idpembelian' => 'required',
+            'foto_penerimaan' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ], [
+            'foto_penerimaan.required' => 'Wajib melampirkan foto penerimaan barang untuk menyelesaikan pesanan.',
+            'foto_penerimaan.image' => 'File harus berupa gambar.',
+            'foto_penerimaan.max' => 'Ukuran gambar maksimal 2MB.',
         ]);
-        return redirect('home/riwayat');
+
+        $idpembelian = $request->input('idpembelian');
+
+        if ($request->hasFile('foto_penerimaan')) {
+            $file = $request->file('foto_penerimaan');
+            $namafoto = date('Ymdhis') . '-penerimaan-' . $file->getClientOriginalName();
+            $file->move(public_path('foto'), $namafoto);
+
+            // Simpan foto penerimaan barang
+            DB::table('pembelian_foto')->insert([
+                'id_pembelian' => $idpembelian,
+                'status' => 'Selesai',
+                'foto' => $namafoto,
+            ]);
+        }
+
+        DB::table('pembelian')->where('idpembelian', $idpembelian)->update([
+            'statusbeli' => 'Selesai',
+            'updated_at' => now(),
+        ]);
+
+        // Kirim notifikasi ke admin bahwa pesanan telah diselesaikan oleh pelanggan
+        $order = DB::table('pembelian')->where('idpembelian', $idpembelian)->first();
+        if ($order) {
+            $admins = DB::table('pengguna')->where('level', 'Admin')->get();
+            foreach ($admins as $admin) {
+                DB::table('notifikasi')->insert([
+                    'id' => $admin->id,
+                    'pesan' => "Pesanan {$order->notransaksi} telah diselesaikan oleh pelanggan dengan bukti foto.",
+                    'status' => 'unread',
+                    'created_at' => now()
+                ]);
+            }
+        }
+
+        return redirect('home/riwayat')->with([
+            'swal_type' => 'success',
+            'swal_title' => 'Pesanan Selesai',
+            'swal_text' => 'Terima kasih, pesanan Anda telah diselesaikan.'
+        ]);
     }
 
     private function getProdukTransaksi($idpembelian)

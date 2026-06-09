@@ -1,5 +1,9 @@
 @extends('home.templates.index')
 
+@php
+    $settings = DB::table('settings')->pluck('value', 'key');
+@endphp
+
 @section('page-content')
 
     <head>
@@ -9,7 +13,6 @@
     <style>
         .ftco-intro {
             background-color: #ffbf0f;
-            /* Updated to new color */
         }
 
         .intro {
@@ -27,7 +30,6 @@
         .intro .icon {
             font-size: 90px;
             color: #ffbf0f;
-            /* Updated to new color */
             margin-bottom: 0px;
         }
 
@@ -80,7 +82,6 @@
 
         .best-product .product-card .sale {
             background-color: #ffbf0f;
-            /* Updated to new color */
             color: black;
             padding: 5px 10px;
             border-radius: 5px;
@@ -99,62 +100,39 @@
             padding: 10px;
         }
 
-        .latest-articles {
-            padding: 50px 0;
-        }
-
-        .latest-articles .article-card {
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-            max-height: 600px;
-        }
-
-        .latest-articles .article-card img {
+        /* Modal overlay styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: 150px;
-            object-fit: cover;
-        }
-
-        .latest-articles .article-card .content {
-            padding: 20px;
-            flex: 1;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
             display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
         }
 
-        .latest-articles .article-card h3 {
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-
-        .latest-articles .article-card p {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 10px;
+        .modal-box {
+            background-color: #ffffff;
+            width: 100%;
+            border-radius: 16px;
             overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
+            animation: modalFadeIn 0.4s ease-out;
         }
 
-        .latest-articles .article-card .read-more {
-            font-size: 14px;
-            color: #A38758;
-            font-weight: bold;
-            text-decoration: none;
-        }
-
-        .latest-articles .article-card .date {
-            font-size: 12px;
-            color: #999;
-            margin-top: 10px;
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
     </style>
 
@@ -175,19 +153,18 @@
         </div>
     </div>
 
+    <!-- Tentang Kami Section (Dinamis) -->
     <section class="ftco-section ftco-no-pb mb-5">
         <div class="container">
             <div class="row">
                 <div class="col-md-6 img img-3 d-flex justify-content-center align-items-center">
-                    <img src="{{ asset('foto/logo.jpg') }}" width="100%" style="border-radius: 10px">
+                    <img src="{{ asset('foto/' . ($settings['tentang_kami_foto'] ?? 'logo.jpg')) }}" width="100%" style="border-radius: 10px; max-height: 400px; object-fit: cover;">
                 </div>
                 <div class="col-md-6 wrap-about pl-md-5 ftco-animate py-5">
                     <div class="heading-section">
-                        <h2 class="mt-4" style="color: black;">Tentang Oldshine Konveksi</h2>
+                        <h2 class="mt-4" style="color: black;">{{ $settings['tentang_kami_judul'] ?? 'Tentang Oldshine Konveksi' }}</h2>
                         <p style="color: black;">
-                            Oldshine Konveksi adalah layanan konveksi terpercaya yang menyediakan berbagai produk pakaian
-                            custom seperti kaos sablon, seragam, jaket, dan kebutuhan apparel lainnya. Kami mengutamakan
-                            bahan berkualitas, pengerjaan rapi, serta pelayanan profesional.
+                            {!! nl2br(e($settings['tentang_kami_isi'] ?? 'Oldshine Konveksi adalah brand terpercaya yang bergerak di bidang konveksi dan produksi pakaian custom.')) !!}
                         </p>
                         <p><a href="{{ url('home/tentang') }}" class="btn py-2 px-4"
                                 style="background-color: #ffbf0f; color: black">Tentang Kami</a></p>
@@ -197,42 +174,43 @@
         </div>
     </section>
 
+    <!-- Informasi Layanan Section (Dinamis) -->
     <section class="ftco-intro">
         <div class="container py-5">
-            <div class="text-center" style="color: black">
+            <div class="text-center mb-4" style="color: black">
                 <h1>Informasi Layanan</h1>
-                <p>Kami berkomitmen memberikan layanan terbaik dalam setiap proses produksi pakaian Anda.</p>
+                <p>{{ $settings['layanan_subjudul'] ?? 'Kami berkomitmen memberikan layanan terbaik dalam setiap proses produksi pakaian Anda.' }}</p>
             </div>
             <div class="row no-gutters">
                 <div class="col-md-3 d-flex">
-                    <div class="intro d-lg-flex ftco-animate">
+                    <div class="intro d-lg-flex ftco-animate w-100">
                         <div class="text">
-                            <h2 style="color: black;">Kualitas Terbaik</h2>
-                            <p>Setiap produk dibuat dengan standar kualitas tinggi dan kontrol yang ketat.</p>
+                            <h2 style="color: black; font-weight: bold;">{{ $settings['layanan_1_judul'] ?? 'Kualitas Terbaik' }}</h2>
+                            <p>{{ $settings['layanan_1_isi'] ?? 'Setiap produk dibuat dengan standar kualitas tinggi dan kontrol yang ketat.' }}</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3 d-flex">
-                    <div class="intro d-lg-flex ftco-animate">
+                    <div class="intro d-lg-flex ftco-animate w-100">
                         <div class="text">
-                            <h2 style="color: black;">Bahan Premium</h2>
-                            <p>Menggunakan material pilihan yang nyaman, awet, dan sesuai kebutuhan Anda.</p>
+                            <h2 style="color: black; font-weight: bold;">{{ $settings['layanan_2_judul'] ?? 'Bahan Premium' }}</h2>
+                            <p>{{ $settings['layanan_2_isi'] ?? 'Menggunakan material pilihan yang nyaman, awet, dan sesuai kebutuhan Anda.' }}</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3 d-flex">
-                    <div class="intro d-lg-flex ftco-animate">
+                    <div class="intro d-lg-flex ftco-animate w-100">
                         <div class="text">
-                            <h2 style="color: black;">Desain Custom</h2>
-                            <p>Menerima pesanan dengan desain khusus sesuai keinginan pelanggan.</p>
+                            <h2 style="color: black; font-weight: bold;">{{ $settings['layanan_3_judul'] ?? 'Desain Custom' }}</h2>
+                            <p>{{ $settings['layanan_3_isi'] ?? 'Menerima pesanan dengan desain khusus sesuai keinginan pelanggan.' }}</p>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3 d-flex">
-                    <div class="intro d-lg-flex ftco-animate">
+                    <div class="intro d-lg-flex ftco-animate w-100">
                         <div class="text">
-                            <h2 style="color: black;">Pembayaran Mudah</h2>
-                            <p>Transaksi fleksibel dan dapat dilakukan melalui berbagai metode pembayaran.</p>
+                            <h2 style="color: black; font-weight: bold;">{{ $settings['layanan_4_judul'] ?? 'Pembayaran Mudah' }}</h2>
+                            <p>{{ $settings['layanan_4_isi'] ?? 'Transaksi fleksibel dan dapat dilakukan melalui berbagai metode pembayaran.' }}</p>
                         </div>
                     </div>
                 </div>
@@ -240,6 +218,7 @@
         </div>
     </section>
 
+    <!-- Produk Konveksi Terbaik Section -->
     <section class="best-product mt-5">
         <div class="container">
             <div>
@@ -248,11 +227,21 @@
             </div>
             <div class="row">
                 @foreach ($produk as $product)
+                    @php
+                        $photos = explode(',', $product->foto);
+                        $mainPhoto = $photos[0] ?? 'noimage.png';
+                        $hoverPhoto = isset($photos[1]) ? $photos[1] : $mainPhoto;
+                    @endphp
                     <div class="col-md-4">
                         <div class="product-card">
-                            <img src="{{ asset('foto/' . $product->foto) }}" alt="{{ $product->nama }}">
+                            <img src="{{ asset('foto/' . $mainPhoto) }}" alt="{{ $product->nama }}" class="product-img-hover" data-main="{{ asset('foto/' . $mainPhoto) }}" data-hover="{{ asset('foto/' . $hoverPhoto) }}">
                             <h3>{{ $product->nama }}</h3>
-                            <p class="price">Rp {{ number_format($product->harga, 0, ',', '.') }}</p>
+                            <p class="price">
+                                @if (!empty($product->harga_sebelum) && $product->harga_sebelum > $product->harga)
+                                    <span style="text-decoration: line-through; color: #888; font-size: 0.9em; margin-right: 8px;">Rp {{ number_format($product->harga_sebelum, 0, ',', '.') }}</span>
+                                @endif
+                                <span>Rp {{ number_format($product->harga, 0, ',', '.') }}</span>
+                            </p>
                             <a href="{{ url('home/detail/' . $product->idproduk) }}" class="btn"
                                 style="background-color: #ffbf0f">Lihat Detail</a>
                         </div>
@@ -262,26 +251,63 @@
         </div>
     </section>
 
-
-
-    {{-- <section class="latest-articles">
-        <div class="container">
-            <h2 style="color: black;">Artikel Terbaru</h2>
-            <div class="row">
-                @foreach ($articles as $article)
-                    <div class="col-md-4">
-                        <div class="article-card">
-                            <img src="{{ asset('images/' . $article->image) }}" alt="{{ $article->title }}">
-                            <div class="content">
-                                <h3>{{ $article->title }}</h3>
-                                <p>{{ Str::limit($article->content, 100) }}</p>
-                                <p class="date">{{ $article->created_at->format('d M Y') }}</p>
-                                <a href="{{ url('home/artikel/' . $article->id) }}" class="read-more">Baca Selengkapnya</a>
-                            </div>
+    <!-- Modal Promosi -->
+    @if ($promoProduct)
+        <div id="promoModal" class="modal-overlay" style="display: none;">
+            <div class="modal-box" style="max-width: 450px; border: 3px solid #ffbf0f;">
+                <div class="modal-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
+                    <h5 class="m-0 font-weight-bold text-white"><i class="fas fa-fire text-warning mr-2"></i>Penawaran Populer!</h5>
+                    <button type="button" class="close text-white" onclick="closePromoModal()" style="border: none; background: transparent; font-size: 1.5rem; cursor: pointer;">&times;</button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <span class="badge badge-warning mb-2 py-1 px-2 text-uppercase font-weight-bold" style="letter-spacing: 1px;">Rekomendasi Utama</span>
+                    <h3 class="text-black font-weight-bold mb-3">{{ $promoProduct->nama }}</h3>
+                    @php
+                        $promoPhotos = explode(',', $promoProduct->foto);
+                        $promoFirstFoto = $promoPhotos[0] ?? 'noimage.png';
+                    @endphp
+                    <div class="mb-3">
+                        <img src="{{ asset('foto/' . $promoFirstFoto) }}" alt="{{ $promoProduct->nama }}" class="img-fluid rounded shadow-sm" style="max-height: 200px; object-fit: cover;">
+                    </div>
+                    <h4 class="text-danger font-weight-bold mb-4">
+                        @if (!empty($promoProduct->harga_sebelum) && $promoProduct->harga_sebelum > $promoProduct->harga)
+                            <span style="text-decoration: line-through; color: #888; font-size: 0.8em; margin-right: 8px;">Rp {{ number_format($promoProduct->harga_sebelum, 0, ',', '.') }}</span>
+                        @endif
+                        <span>Rp {{ number_format($promoProduct->harga, 0, ',', '.') }}</span>
+                    </h4>
+                    <div class="row">
+                        <div class="col-6">
+                            <button type="button" class="btn btn-outline-dark btn-block" onclick="closePromoModal()">Nanti Saja</button>
+                        </div>
+                        <div class="col-6">
+                            <a href="{{ url('home/detail/' . $promoProduct->idproduk) }}" class="btn btn-warning btn-block text-black font-weight-bold" style="background-color: #ffbf0f; border: none;">Pesan Sekarang</a>
                         </div>
                     </div>
-                @endforeach
+                </div>
             </div>
         </div>
-    </section> --}}
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Check if already closed in this session
+                if (!sessionStorage.getItem('promo_closed')) {
+                    setTimeout(function() {
+                        const promoModal = document.getElementById('promoModal');
+                        if (promoModal) {
+                            promoModal.style.display = 'flex';
+                        }
+                    }, 1200); // Delay popup
+                }
+            });
+
+            function closePromoModal() {
+                const promoModal = document.getElementById('promoModal');
+                if (promoModal) {
+                    promoModal.style.display = 'none';
+                }
+                sessionStorage.setItem('promo_closed', 'true');
+            }
+        </script>
+    @endif
+
 @endsection

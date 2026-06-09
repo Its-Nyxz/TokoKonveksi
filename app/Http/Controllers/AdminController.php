@@ -11,52 +11,77 @@ use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Jumlah pesanan
-        $jumlahPesanan = DB::table('pembelian')->count();
+        $this->checkExpiredOrders();
+        $this->checkDeliveryNotification();
 
-        // Jumlah user
-        $jumlahUser = DB::table('pengguna')->count();
+        // Date Range Filters
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
-        // Jumlah stok
-        $jumlahStok = DB::table('produk')->sum('stok');
+        $queryPesanan = DB::table('pembelian');
+        $queryRevenue = DB::table('pembelian')
+            ->whereIn('statusbeli', ['Pesanan Di Terima', 'Selesai']);
 
-        // Data untuk grafik pemesanan
-        $orderData = DB::table('pembelian')
+        if (!empty($startDate) && !empty($endDate)) {
+            $queryPesanan->whereBetween('tanggalbeli', [$startDate, $endDate]);
+            $queryRevenue->whereBetween('tanggalbeli', [$startDate, $endDate]);
+        }
+
+        $jumlahPesanan = $queryPesanan->count();
+        $jumlahUser = DB::table('pengguna')->where('level', 'Pelanggan')->count();
+        $totalRevenue = $queryRevenue->sum(DB::raw('totalbeli + ongkir'));
+
+        // Chart Data Queries
+        $revenueDataQuery = DB::table('pembelian')
+            ->select(DB::raw('DATE(tanggalbeli) as date'), DB::raw('SUM(totalbeli + ongkir) as total'))
+            ->whereIn('statusbeli', ['Pesanan Di Terima', 'Selesai'])
+            ->groupBy('date')
+            ->orderBy('date', 'asc');
+
+        $orderDataQuery = DB::table('pembelian')
             ->select(DB::raw('DATE(tanggalbeli) as date'), DB::raw('count(*) as jumlah'))
             ->groupBy('date')
-            ->orderBy('date', 'asc')
-            ->get();
+            ->orderBy('date', 'asc');
 
-        // Data untuk grafik stok
-        $stockData = DB::table('produk')
-            ->select(DB::raw('DATE(tanggal) as date'), DB::raw('sum(stok) as jumlah'))
-            ->groupBy('date')
-            ->orderBy('date', 'asc')
-            ->get();
+        $pieDataQuery = DB::table('pembelian')
+            ->select('tipepembayaran', DB::raw('count(*) as jumlah'))
+            ->groupBy('tipepembayaran');
 
-        // Menggabungkan data pemesanan dan stok berdasarkan tanggal
-        $dates = $orderData->pluck('date')->merge($stockData->pluck('date'))->unique()->sort()->values();
+        if (!empty($startDate) && !empty($endDate)) {
+            $revenueDataQuery->whereBetween('tanggalbeli', [$startDate, $endDate]);
+            $orderDataQuery->whereBetween('tanggalbeli', [$startDate, $endDate]);
+            $pieDataQuery->whereBetween('tanggalbeli', [$startDate, $endDate]);
+        }
 
-        $orderDataByDate = $orderData->keyBy('date');
-        $stockDataByDate = $stockData->keyBy('date');
+        $revenueData = $revenueDataQuery->get();
+        $orderData = $orderDataQuery->get();
+        $pieData = $pieDataQuery->get();
 
-        $combinedOrderData = $dates->map(function ($date) use ($orderDataByDate) {
-            return $orderDataByDate->has($date) ? $orderDataByDate[$date]->jumlah : 0;
+        $revenueLabels = $revenueData->pluck('date');
+        $revenueValues = $revenueData->pluck('total');
+
+        $orderLabels = $orderData->pluck('date');
+        $orderValues = $orderData->pluck('jumlah');
+
+        $pieLabels = $pieData->pluck('tipepembayaran')->map(function($val) {
+            return empty($val) ? 'Lunas' : $val;
         });
-
-        $combinedStockData = $dates->map(function ($date) use ($stockDataByDate) {
-            return $stockDataByDate->has($date) ? $stockDataByDate[$date]->jumlah : 0;
-        });
+        $pieValues = $pieData->pluck('jumlah');
 
         return view('admin.dashboard', [
             'jumlahPesanan' => $jumlahPesanan,
             'jumlahUser' => $jumlahUser,
-            'jumlahStok' => $jumlahStok,
-            'combinedLabels' => $dates,
-            'combinedOrderData' => $combinedOrderData,
-            'combinedStockData' => $combinedStockData,
+            'totalRevenue' => $totalRevenue,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'revenueLabels' => $revenueLabels,
+            'revenueValues' => $revenueValues,
+            'orderLabels' => $orderLabels,
+            'orderValues' => $orderValues,
+            'pieLabels' => $pieLabels,
+            'pieValues' => $pieValues,
         ]);
     }
 
@@ -218,16 +243,25 @@ class AdminController extends Controller
 
     public function simpanproduk(Request $request)
     {
-        $namafoto = $request->file('foto')->getClientOriginalName();
-        $request->file('foto')->move(public_path('foto'), $namafoto);
+        $fotoNames = [];
+        if ($request->hasFile('foto')) {
+            foreach ($request->file('foto') as $file) {
+                $namafoto = time() . '_' . $file->getClientOriginalName();
+                $file->move(public_path('foto'), $namafoto);
+                $fotoNames[] = $namafoto;
+            }
+        }
+        $fotoString = implode(',', $fotoNames);
 
         DB::table('produk')->insert([
             'nama' => $request->input('nama'),
             'idkategori' => $request->input('idkategori'),
             'harga' => $request->input('harga'),
-            'stok' => $request->input('stok'),
-            'foto' => $namafoto,
+            'harga_sebelum' => $request->input('harga_sebelum'),
+            'stok' => $request->input('stok') ?? 999999,
+            'foto' => $fotoString,
             'deskripsi' => $request->input('deskripsi'),
+            'tanggal' => date('Y-m-d'),
         ]);
         session()->flash('alert', 'Berhasil menambah data!');
 
@@ -247,15 +281,18 @@ class AdminController extends Controller
             'nama' => $request->input('nama'),
             'idkategori' => $request->input('idkategori'),
             'harga' => $request->input('harga'),
-            'stok' => $request->input('stok'),
+            'harga_sebelum' => $request->input('harga_sebelum'),
+            'stok' => $request->input('stok') ?? 999999,
             'deskripsi' => $request->input('deskripsi'),
         ];
-        $produk = DB::table('produk')->where('idproduk', $id)->first();
-        $fotoPath = public_path('foto/' . $produk->foto);
         if ($request->hasFile('foto')) {
-            $namafoto = $request->file('foto')->getClientOriginalName();
-            $request->file('foto')->move(public_path('foto'), $namafoto);
-            $data['foto'] = $namafoto;
+            $fotoNames = [];
+            foreach ($request->file('foto') as $file) {
+                $namafoto = time() . '_' . $file->getClientOriginalName();
+                $file->move(public_path('foto'), $namafoto);
+                $fotoNames[] = $namafoto;
+            }
+            $data['foto'] = implode(',', $fotoNames);
         }
         DB::table('produk')->where('idproduk', $id)->update($data);
         session()->flash('alert', 'Berhasil mengubah data!');
@@ -648,6 +685,16 @@ class AdminController extends Controller
                 'catatan' => $request->input('catatan'),
             ]);
 
+            $order = DB::table('pembelian')->where('idpembelian', $id)->first();
+            if ($order) {
+                DB::table('notifikasi')->insert([
+                    'id' => $order->id,
+                    'pesan' => "Status pesanan {$order->notransaksi} Anda telah diperbarui menjadi '{$statusbeli}'.",
+                    'status' => 'unread',
+                    'created_at' => now()
+                ]);
+            }
+
             if ($request->statusbeli == 'Pesanan Di Terima') {
                 foreach ($pembelianproduk as $value) {
                     $idproduk = $value->idproduk;
@@ -702,6 +749,23 @@ class AdminController extends Controller
                         ]);
                     }
                 }
+
+                // Validasi ukuran bonus harus teralokasi semua
+                $bonusItems = DB::table('pembelianproduk')
+                    ->where('idpembelian', $id)
+                    ->where('is_bonus', 1)
+                    ->get();
+
+                foreach ($bonusItems as $bonus) {
+                    $allocated = (int) $bonus->size_m + (int) $bonus->size_l + (int) $bonus->size_xl + (int) $bonus->size_xxl;
+                    if ($allocated !== (int) $bonus->jumlah) {
+                        return back()->with([
+                            'swal_type'  => 'warning',
+                            'swal_title' => 'Ukuran Bonus Belum Sesuai',
+                            'swal_text'  => "Harap tentukan alokasi ukuran untuk produk bonus '{$bonus->nama}' (total {$bonus->jumlah} pcs) terlebih dahulu."
+                        ]);
+                    }
+                }
             }
 
             if ($request->hasFile('foto')) {
@@ -721,6 +785,16 @@ class AdminController extends Controller
                 'statusbeli' => $statusbeli,
                 'catatan' => $request->input('catatan'),
             ]);
+
+            $order = DB::table('pembelian')->where('idpembelian', $id)->first();
+            if ($order) {
+                DB::table('notifikasi')->insert([
+                    'id' => $order->id,
+                    'pesan' => "Status pesanan {$order->notransaksi} Anda telah diperbarui menjadi '{$statusbeli}'.",
+                    'status' => 'unread',
+                    'created_at' => now()
+                ]);
+            }
 
             if ($request->statusbeli == 'Pesanan Di Terima') {
                 foreach ($pembelianproduk as $value) {
@@ -756,14 +830,21 @@ class AdminController extends Controller
     {
         $tanggalawal = $request->input('tanggalawal');
         $tanggalakhir = $request->input('tanggalakhir');
+        $status = $request->input('status');
+        $metode = $request->input('metode');
 
-        $pembelian = DB::table('pembelian')
-            ->whereBetween('tanggalbeli', [$tanggalawal, $tanggalakhir])
-            ->where(function ($query) {
-                $query->where('statusbeli', 'Pesanan Di Terima')
-                    ->orWhere('statusbeli', 'Selesai');
-            })
-            ->orderBy('tanggalbeli', 'desc')
+        $query = DB::table('pembelian')
+            ->whereBetween('tanggalbeli', [$tanggalawal, $tanggalakhir]);
+
+        if (!empty($status)) {
+            $query->where('statusbeli', $status);
+        }
+
+        if (!empty($metode)) {
+            $query->where('metodepembayaran', $metode);
+        }
+
+        $pembelian = $query->orderBy('tanggalbeli', 'desc')
             ->orderBy('idpembelian', 'desc')
             ->get();
 
@@ -780,6 +861,8 @@ class AdminController extends Controller
             'dataproduk' => $dataproduk,
             'tanggalawal' => $tanggalawal,
             'tanggalakhir' => $tanggalakhir,
+            'status' => $status,
+            'metode' => $metode,
             'totalPembelian' => $totalPembelian,
         ]);
     }
@@ -799,6 +882,97 @@ class AdminController extends Controller
         ];
 
         return view('home.invoice', $data);
+    }
+
+    public function settings()
+    {
+        $settings = DB::table('settings')->pluck('value', 'key');
+        $produk = DB::table('produk')->get();
+        return view('admin.settings', compact('settings', 'produk'));
+    }
+
+    public function savesettings(Request $request)
+    {
+        $keys = [
+            'tentang_kami_judul',
+            'tentang_kami_isi',
+            'layanan_subjudul',
+            'layanan_1_judul',
+            'layanan_1_isi',
+            'layanan_2_judul',
+            'layanan_2_isi',
+            'layanan_3_judul',
+            'layanan_3_isi',
+            'layanan_4_judul',
+            'layanan_4_isi',
+            'promosi_tipe',
+            'promosi_produk_id',
+        ];
+
+        foreach ($keys as $key) {
+            DB::table('settings')
+                ->where('key', $key)
+                ->update(['value' => $request->input($key)]);
+        }
+
+        if ($request->hasFile('tentang_kami_foto')) {
+            $file = $request->file('tentang_kami_foto');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('foto'), $filename);
+
+            DB::table('settings')
+                ->where('key', 'tentang_kami_foto')
+                ->update(['value' => $filename]);
+        }
+
+        return redirect('admin/settings')->with('success', 'Pengaturan berhasil disimpan!');
+    }
+
+    public function updateukuranbonus($idpembelian, $idpembelianproduk, Request $request)
+    {
+        $item = DB::table('pembelianproduk')
+            ->where('idpembelian', $idpembelian)
+            ->where('idpembelianproduk', $idpembelianproduk)
+            ->where('is_bonus', 1)
+            ->first();
+
+        if (!$item) {
+            return back()->with([
+                'swal_type'  => 'error',
+                'swal_title' => 'Gagal',
+                'swal_text'  => 'Data bonus produk tidak ditemukan.'
+            ]);
+        }
+
+        $size_m   = max(0, (int) $request->input('size_m'));
+        $size_l   = max(0, (int) $request->input('size_l'));
+        $size_xl  = max(0, (int) $request->input('size_xl'));
+        $size_xxl = max(0, (int) $request->input('size_xxl'));
+
+        $totalAlokasi = $size_m + $size_l + $size_xl + $size_xxl;
+
+        if ($totalAlokasi !== (int) $item->jumlah) {
+            return back()->with([
+                'swal_type'  => 'warning',
+                'swal_title' => 'Alokasi Ukuran Salah',
+                'swal_text'  => "Total alokasi ukuran ($totalAlokasi pcs) harus sama dengan jumlah bonus ({$item->jumlah} pcs)."
+            ]);
+        }
+
+        DB::table('pembelianproduk')
+            ->where('idpembelianproduk', $idpembelianproduk)
+            ->update([
+                'size_m'   => $size_m,
+                'size_l'   => $size_l,
+                'size_xl'  => $size_xl,
+                'size_xxl' => $size_xxl,
+            ]);
+
+        return back()->with([
+            'swal_type'  => 'success',
+            'swal_title' => 'Ukuran Diperbarui',
+            'swal_text'  => 'Ukuran bonus produk berhasil diperbarui.'
+        ]);
     }
 
     private function getProdukTransaksi($idpembelian)

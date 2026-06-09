@@ -267,7 +267,10 @@
                                                     <strong>{{ $nomor }}</strong>
                                                 </td>
                                                 <td class="image-prod">
-                                                    <img src="{{ asset('foto/' . $item['foto']) }}" class="product-image"
+                                                    @php
+                                                        $firstFoto = explode(',', $item['foto'])[0] ?? 'noimage.png';
+                                                    @endphp
+                                                    <img src="{{ asset('foto/' . $firstFoto) }}" class="product-image"
                                                         width="100">
                                                 </td>
                                                 <td>

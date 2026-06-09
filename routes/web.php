@@ -22,7 +22,7 @@ Route::get('/', [HomeController::class, 'index']);
 
 // Route::get('/kategori', [KategoriController::class,'index']);
 
-Route::controller(AdminController::class)->group(function () {
+Route::middleware(['admin.auth'])->controller(AdminController::class)->group(function () {
     Route::get('admin', 'index');
     Route::get('admin/kategori', 'kategori');
     Route::get('admin/tambahkategori', 'tambahkategori');
@@ -77,8 +77,11 @@ Route::controller(AdminController::class)->group(function () {
     Route::get('admin/pembelian', 'pembelian');
     Route::get('admin/pembayaran/{id}', 'pembayaran');
     Route::post('admin/simpanpembayaran/{id}', 'simpanpembayaran');
+    Route::post('admin/updateukuranbonus/{idpembelian}/{idpembelianproduk}', 'updateukuranbonus');
     Route::get('admin/laporan', 'laporan');
     Route::post('admin/laporancetak', 'laporancetak');
+    Route::get('admin/settings', 'settings');
+    Route::post('admin/savesettings', 'savesettings');
 });
 
 Route::controller(HomeController::class)->group(function () {

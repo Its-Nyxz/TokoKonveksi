@@ -11,7 +11,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Oldshine Konveksi - {{ session('admin')->level }}</title>
+    <title>Oldshine Konveksi - {{ optional(session('admin'))->level }}</title>
     <link href="{{ asset('assets/admin/css/vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
     <link
         href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
@@ -127,7 +127,7 @@
                     <span>Dashboard</span></a>
             </li>
 
-            @if (session('admin')->level == 'Admin')
+            @if (optional(session('admin'))->level == 'Admin')
                 <hr class="sidebar-divider">
                 <li class="nav-item">
                     <a class="nav-link text-white" href="{{ url('admin/kategori') }}">
@@ -158,6 +158,12 @@
                         <i class="fas fa-fw fa-users text-white"></i>
                         <span>Data Member</span></a>
                 </li>
+                <hr class="sidebar-divider">
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="{{ url('admin/settings') }}">
+                        <i class="fas fa-fw fa-cog text-white"></i>
+                        <span>Pengaturan</span></a>
+                </li>
                 {{-- <hr class="sidebar-divider">
                 <li class="nav-item">
                     <a class="nav-link text-white" href="{{ url('admin/timproduksi') }}">
@@ -166,7 +172,7 @@
                 </li> --}}
             @endif
 
-            @if (session('admin')->level == 'Owner')
+            @if (optional(session('admin'))->level == 'Owner')
                 <hr class="sidebar-divider">
                 <li class="nav-item">
                     <a class="nav-link text-white" href="{{ url('admin/kategori') }}">
@@ -186,7 +192,7 @@
                         <span>Laporan</span></a>
                 </li>
             @endif
-            @if (session('admin')->level == 'Tim Produksi')
+            @if (optional(session('admin'))->level == 'Tim Produksi')
                 <hr class="sidebar-divider">
                 <li class="nav-item">
                     <a class="nav-link text-white" href="{{ url('admin/kategori') }}">
@@ -215,6 +221,51 @@
                     </button>
 
                     <ul class="navbar-nav ml-auto">
+
+                        <!-- Notifikasi Admin -->
+                        @php
+                            $adminId = session('admin')->id;
+                            $adminNotifList = DB::table('notifikasi')
+                                ->where('id', $adminId)
+                                ->orderBy('created_at', 'desc')
+                                ->get();
+                            $adminNotifUnreadCount = $adminNotifList->where('status', 'unread')->count();
+                        @endphp
+                        <li class="nav-item dropdown no-arrow mx-2">
+                            <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-bell fa-fw text-white"></i>
+                                @if ($adminNotifUnreadCount > 0)
+                                    <span class="badge badge-danger badge-counter" style="position: absolute; top: 12px; right: 2px; font-size: 0.6rem; padding: 2px 4px;">{{ $adminNotifUnreadCount }}</span>
+                                @endif
+                            </a>
+                            <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                                aria-labelledby="alertsDropdown" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                                <h6 class="dropdown-header alerts-header font-weight-bold">
+                                    Notifikasi Masuk
+                                </h6>
+                                @if ($adminNotifList->isEmpty())
+                                    <a class="dropdown-item text-center small text-gray-500 py-3" href="#">Tidak ada notifikasi</a>
+                                @else
+                                    @foreach ($adminNotifList as $notif)
+                                        <div class="dropdown-item d-flex align-items-center py-2 border-bottom text-wrap" style="white-space: normal;">
+                                            <div class="mr-3">
+                                                <div class="icon-circle bg-warning text-white p-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; min-width: 35px;">
+                                                    <i class="fas fa-exclamation-triangle"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <span class="font-weight-bold text-gray-800" style="font-size: 0.85rem;">{{ $notif->pesan }}</span>
+                                                <div class="small text-gray-500 mt-1">{{ date('d M Y H:i', strtotime($notif->created_at)) }}</div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                    <a class="dropdown-item text-center small text-primary font-weight-bold py-2" href="{{ url('home/bersihkannotifikasi') }}">
+                                        Bersihkan Semua
+                                    </a>
+                                @endif
+                            </div>
+                        </li>
 
                         <!-- User Information -->
                         <li class="nav-item dropdown no-arrow">

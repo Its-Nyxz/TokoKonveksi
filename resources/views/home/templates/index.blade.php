@@ -76,6 +76,40 @@
                             </a>
                         </li>
 
+                        <!-- Notifikasi -->
+                        @php
+                            $notifList = DB::table('notifikasi')
+                                ->where('id', $userId)
+                                ->orderBy('created_at', 'desc')
+                                ->get();
+                            $notifUnreadCount = $notifList->where('status', 'unread')->count();
+                        @endphp
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="notifDropdown" data-toggle="dropdown"
+                                aria-haspopup="true" aria-expanded="false">
+                                <i class="fa fa-bell" style="color: black;"></i>
+                                @if ($notifUnreadCount > 0)
+                                    <span class="badge badge-danger badge-counter" style="position: absolute; top: 5px; right: 0; font-size: 0.6rem; padding: 2px 4px;">{{ $notifUnreadCount }}</span>
+                                @endif
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right p-3" aria-labelledby="notifDropdown" style="width: 300px; max-height: 400px; overflow-y: auto;">
+                                <h6 class="dropdown-header font-weight-bold p-0 mb-2" style="color: black;">Notifikasi</h6>
+                                <hr class="my-1">
+                                @if ($notifList->isEmpty())
+                                    <span class="dropdown-item text-muted text-center py-2">Tidak ada notifikasi</span>
+                                @else
+                                    @foreach ($notifList as $notif)
+                                        <div class="dropdown-item d-flex flex-column py-2 border-bottom text-wrap" style="white-space: normal;">
+                                            <span class="small text-dark">{{ $notif->pesan }}</span>
+                                            <span class="text-muted" style="font-size: 0.75rem;">{{ date('d M Y H:i', strtotime($notif->created_at)) }}</span>
+                                        </div>
+                                    @endforeach
+                                    <div class="dropdown-divider"></div>
+                                    <a class="dropdown-item text-center text-primary font-weight-bold" href="{{ url('home/bersihkannotifikasi') }}">Bersihkan Semua</a>
+                                @endif
+                            </div>
+                        </li>
+
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="dropdown04" data-toggle="dropdown"
                                 aria-haspopup="true" aria-expanded="false"><i class="fa fa-user"
@@ -232,6 +266,19 @@
                             .fadeOut();
                     }
                 }
+            });
+
+            // Product hover switching images
+            $(document).on('mouseenter', '.product-img-hover', function() {
+                $(this).attr('src', $(this).data('hover'));
+            }).on('mouseleave', '.product-img-hover', function() {
+                $(this).attr('src', $(this).data('main'));
+            });
+
+            $(document).on('mouseenter', '.product-bg-hover', function() {
+                $(this).css('background-image', $(this).data('hover'));
+            }).on('mouseleave', '.product-bg-hover', function() {
+                $(this).css('background-image', $(this).data('main'));
             });
         });
     </script>

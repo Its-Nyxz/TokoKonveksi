@@ -25,13 +25,14 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label>Stok</label>
-                            <input type="number" class="form-control" name="stok" value="{{ $produk->stok }}" required>
-                        </div>
+                        <input type="hidden" name="stok" value="999999">
                         <div class="form-group">
                             <label>Harga (Rp)</label>
                             <input type="number" class="form-control" name="harga" value="{{ $produk->harga }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Harga Sebelum Diskon (Harga Coret, Opsional) (Rp)</label>
+                            <input type="number" class="form-control" name="harga_sebelum" value="{{ $produk->harga_sebelum }}" min="0">
                         </div>
                         <div class="form-group">
                             <label>Deskripsi</label>
@@ -41,13 +42,13 @@
                             </script>
                         </div>
                         <div class="form-group">
-                            <label>Foto</label>
+                            <label>Foto (Bisa lebih dari 1, upload baru akan menimpa foto lama)</label>
                             <div class="letak-input" style="margin-bottom: 10px;">
-                                <input type="file" class="form-control" name="foto">
+                                <input type="file" class="form-control" name="foto[]" multiple>
                             </div>
                         </div>
-                        <button class="btn btn-secondary" name="save"><i
-                                class="glyphicon glyphicon-saved"></i>Simpan</a></button>
+                        <button type="submit" class="btn btn-secondary" name="save"><i
+                                class="glyphicon glyphicon-saved"></i>Simpan</button>
 
                     </form>
                 </div>

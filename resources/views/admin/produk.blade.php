@@ -33,7 +33,6 @@
                                 <th class="no-sort">No</th>
                                 <th>Nama</th>
                                 <th>Kategori</th>
-                                <th class="no-sort">Stok</th>
                                 <th>Harga</th>
                                 <th class="no-sort">Foto</th>
                                 <th class="no-sort">Aksi</th>
@@ -46,10 +45,17 @@
                                     <td class="nomor-urut">{{ $loop->iteration }}</td>
                                     <td>{{ $p->nama }}</td>
                                     <td>{{ $p->namakategori }}</td>
-                                    <td>{{ $p->stok }}</td>
-                                    <td>{{ rupiah($p->harga) }}</td>
                                     <td>
-                                        <img src="{{ asset('foto/' . $p->foto) }}" width="100px">
+                                        @if(!empty($p->harga_sebelum) && $p->harga_sebelum > $p->harga)
+                                            <span style="text-decoration: line-through; color: #888; font-size: 0.85em; margin-right: 8px;">{{ rupiah($p->harga_sebelum) }}</span>
+                                        @endif
+                                        <span>{{ rupiah($p->harga) }}</span>
+                                    </td>
+                                    <td>
+                                        @php
+                                            $firstFoto = explode(',', $p->foto)[0] ?? 'noimage.png';
+                                        @endphp
+                                        <img src="{{ asset('foto/' . $firstFoto) }}" width="100px">
                                     </td>
                                     <td>
                                         <div class="d-flex justify-content-center align-items-center gap-2">

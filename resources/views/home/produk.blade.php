@@ -52,11 +52,18 @@
             </div>
             <div class="row">
                 @foreach ($produk as $p)
+                    @php
+                        $photos = explode(',', $p->foto);
+                        $mainPhoto = $photos[0] ?? 'noimage.png';
+                        $hoverPhoto = isset($photos[1]) ? $photos[1] : $mainPhoto;
+                    @endphp
                     <div class="col-md-4 d-flex">
                         <div class="product ftco-animate">
                             <span class="sale-label">Sale</span>
-                            <div class="img d-flex align-items-center justify-content-center"
-                                style="background-image: url('{{ asset('foto/' . $p->foto) }}');">
+                            <div class="img d-flex align-items-center justify-content-center product-bg-hover"
+                                style="background-image: url('{{ asset('foto/' . $mainPhoto) }}');"
+                                data-main="url('{{ asset('foto/' . $mainPhoto) }}')"
+                                data-hover="url('{{ asset('foto/' . $hoverPhoto) }}')">
                                 <div class="desc">
                                     <p class="meta-prod d-flex">
                                         <a href="{{ url('home/detail/' . $p->idproduk) }}"
@@ -69,8 +76,12 @@
                             <div class="text text-center">
                                 <!-- <span class="category">{{ $p->namakategori }}</span> -->
                                 <!-- <span class="price">Stok : {{ $p->stok }}</span> -->
-                                <p class="text-right" style="color: #ffbf0f; font-weight:bold;">Rp
-                                    {{ number_format($p->harga) }}</p>
+                                <p class="text-right" style="color: #ffbf0f; font-weight:bold;">
+                                    @if (!empty($p->harga_sebelum) && $p->harga_sebelum > $p->harga)
+                                        <span style="text-decoration: line-through; color: #888; font-size: 0.85em; margin-right: 8px; font-weight: normal;">Rp {{ number_format($p->harga_sebelum) }}</span>
+                                    @endif
+                                    <span>Rp {{ number_format($p->harga) }}</span>
+                                </p>
                             </div>
                         </div>
                     </div>

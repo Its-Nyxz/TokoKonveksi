@@ -23,13 +23,14 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label>Stok</label>
-                            <input type="number" class="form-control" name="stok" min="1" required>
-                        </div>
+                        <input type="hidden" name="stok" value="999999">
                         <div class="form-group">
                             <label>Harga (Rp)</label>
                             <input type="number" class="form-control" name="harga" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Harga Sebelum Diskon (Harga Coret, Opsional) (Rp)</label>
+                            <input type="number" class="form-control" name="harga_sebelum" min="0">
                         </div>
                         <div class="form-group">
                             <label>Deskripsi</label>
@@ -39,13 +40,13 @@
                             </script>
                         </div>
                         <div class="form-group">
-                            <label>Foto</label>
+                            <label>Foto (Bisa pilih lebih dari 1)</label>
                             <div class="letak-input" style="margin-bottom: 10px;">
-                                <input type="file" class="form-control" name="foto" required>
+                                <input type="file" class="form-control" name="foto[]" multiple required>
                             </div>
                         </div>
-                        <button class="btn btn-secondary" name="save"><i
-                                class="glyphicon glyphicon-saved"></i>Simpan</a></button>
+                        <button type="submit" class="btn btn-secondary" name="save"><i
+                                class="glyphicon glyphicon-saved"></i>Simpan</button>
                     </form>
                 </div>
             </div>

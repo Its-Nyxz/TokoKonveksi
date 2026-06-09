@@ -2,6 +2,12 @@
 
 @section('page-content')
     <style>
+        .product-row-hover:hover {
+            background-color: #f8f9fa !important;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+
         /* Container Utama untuk Overlay */
         .modal-overlay {
             position: fixed;
@@ -118,6 +124,49 @@
             border-radius: 10px;
         }
 
+        .customer-detail-box {
+            margin-top: 16px;
+            font-size: 0.85rem;
+            color: #777;
+        }
+
+        .customer-address {
+            padding: 0 0 14px 0;
+        }
+
+        .customer-address strong {
+            color: #777;
+            font-weight: 600;
+        }
+
+        .customer-address span {
+            display: block;
+            margin-top: 4px;
+            color: #8a8a8a;
+        }
+
+        .customer-detail-row {
+            display: flex;
+            align-items: flex-start;
+            padding: 18px 24px;
+            border-top: 1px solid #f1f1f1;
+        }
+
+        .customer-detail-label {
+            width: 115px;
+            color: #888;
+        }
+
+        .customer-detail-value {
+            flex: 1;
+            color: #888;
+        }
+
+        .customer-detail-separator {
+            margin: 0 10px;
+            color: #888;
+        }
+
         @keyframes fade {
             from {
                 opacity: 0;
@@ -178,15 +227,58 @@
                             @foreach ($dataproduk as $dp)
                                 @php
                                     $totalharga = $dp->harga * $dp->jumlah;
+                                    $firstFoto = 'noimage.png';
+                                    if (!empty($dp->foto)) {
+                                        $firstFoto = explode(',', $dp->foto)[0];
+                                    }
+                                    $isBonus = isset($dp->is_bonus) && $dp->is_bonus == 1;
                                 @endphp
-                                <div class="row">
+                                <div class="row product-row-hover {{ $isBonus ? 'bg-light' : '' }}"
+                                    style="cursor: pointer; padding: 5px 0; margin-bottom: 5px; {{ $isBonus ? 'border-left: 3px solid #28a745; padding-left: 8px;' : '' }}"
+                                    data-foto="{{ asset('foto/' . $firstFoto) }}" data-nama="{{ $dp->nama }}">
                                     <div class="col-md-8">
-                                        <p style="color: black;">{{ $dp->nama }} ({{ $dp->jumlah }} x) Rp
-                                            {{ number_format($dp->harga) }},-</p>
+                                        <p
+                                            style="color: {{ $isBonus ? '#28a745' : 'black' }}; font-weight: bold; margin-bottom: 0;">
+                                            {{ $dp->nama }}
+                                            @if ($isBonus)
+                                                <span class="badge badge-success ml-1" style="font-size:0.7rem;">🎁
+                                                    BONUS</span>
+                                            @endif
+                                            ({{ $dp->jumlah }} x)
+                                            @if (!$isBonus)
+                                                Rp {{ number_format($dp->harga) }},-
+                                            @else
+                                                <span class="text-success" style="font-size:0.85rem;">GRATIS</span>
+                                            @endif
+                                        </p>
+                                        @if ($dp->size_m > 0 || $dp->size_l > 0 || $dp->size_xl > 0 || $dp->size_xxl > 0)
+                                            <p style="color:#666; font-size:0.85rem; margin:2px 0 0;">
+                                                Ukuran:
+                                                @if ($dp->size_m > 0)
+                                                    M:{{ $dp->size_m }}
+                                                @endif
+                                                @if ($dp->size_l > 0)
+                                                    L:{{ $dp->size_l }}
+                                                @endif
+                                                @if ($dp->size_xl > 0)
+                                                    XL:{{ $dp->size_xl }}
+                                                @endif
+                                                @if ($dp->size_xxl > 0)
+                                                    XXL:{{ $dp->size_xxl }}
+                                                @endif
+                                            </p>
+                                        @endif
+                                        @if ($isBonus)
+                                            <br>
+                                        @endif
                                     </div>
                                     <div class="col-md-4">
-                                        <p style="color: black;font-weight: bold;" class="text-right">Rp
-                                            {{ number_format($totalharga) }},-</p>
+                                        @if ($isBonus)
+                                            <p class="text-right mb-0"><span class="badge badge-success">GRATIS</span></p>
+                                        @else
+                                            <p style="color: black; font-weight: bold; margin-bottom: 0;"
+                                                class="text-right">Rp {{ number_format($totalharga) }},-</p>
+                                        @endif
                                     </div>
                                 </div>
 
@@ -259,8 +351,18 @@
         </div>
         </div>
         @php
+            $slideItemsPay = [];
+            foreach ($dataproduk as $_sp) {
+                $fotoList = !empty($_sp->foto) ? array_filter(explode(',', $_sp->foto)) : [];
+                if (empty($fotoList)) {
+                    $slideItemsPay[] = ['nama' => $_sp->nama, 'foto' => asset('foto/noimage.png')];
+                } else {
+                    foreach ($fotoList as $_f) {
+                        $slideItemsPay[] = ['nama' => $_sp->nama, 'foto' => asset('foto/' . trim($_f))];
+                    }
+                }
+            }
             $produkUtama = collect($dataproduk)->first();
-
             $alamatLengkap = collect([
                 $datapembelian->alamat ?? null,
                 $datapembelian->kec ?? null,
@@ -273,53 +375,8 @@
         @endphp
 
         <div class="col-md-4">
-            <div class="card py-2 px-2">
-                <p>
-                    No Transaksi: <br>
-                    <span style="color: #000; font-weight:bold;">
-                        {{ $datapembelian->notransaksi ?? '-' }}
-                    </span>
-                </p>
-            </div>
-
-            <div class="card mt-3 py-2 px-2">
-                <h3 style="color: black;">
-                    {{ $produkUtama->nama ?? 'Produk sudah dihapus' }}
-                </h3>
-
-                Kota Asal Pengiriman : Kabupaten Wonogiri
-
-                @if (!empty($produkUtama->foto))
-                    <img src="{{ asset('foto/' . rawurlencode($produkUtama->foto)) }}" height="250px" alt="">
-                @else
-                    <div class="text-center py-5 bg-light">
-                        <span class="text-muted">Foto produk tidak tersedia</span>
-                    </div>
-                @endif
-
-                <p style="color: #000;">
-                    {{ $alamatLengkap ?: '-' }}
-                </p>
-
-                <table class="">
-                    <tr>
-                        <td width="150px"><strong>Nama Penerima</strong></td>
-                        <td>: {{ $datapembelian->nama ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td>Tanggal Pemesanan</td>
-                        <td>: {{ tanggal(date('Y-m-d', strtotime($datapembelian->tanggalbeli))) }}</td>
-                    </tr>
-                    <tr>
-                        <td>No Telepon</td>
-                        <td>: {{ $datapembelian->telepon ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td>Status</td>
-                        <td>: {{ $datapembelian->statusbeli ?? '-' }}</td>
-                    </tr>
-                </table>
-            </div>
+            @include('home.partials.order-sidebar')
+        </div>
         </div>
         </div>
         </div>
@@ -411,5 +468,51 @@
                 modalContainer.style.display = 'flex';
             }
         }
+
+        // ============ SLIDESHOW LOGIC ============
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.product-slide');
+        const dots = document.querySelectorAll('.slide-dot');
+        let autoTimer = null;
+
+        function goToSlide(idx) {
+            if (!slides.length) return;
+            slides[currentSlide].style.opacity = '0';
+            if (dots[currentSlide]) dots[currentSlide].style.background = 'rgba(255,255,255,0.6)';
+            currentSlide = (idx + slides.length) % slides.length;
+            slides[currentSlide].style.opacity = '1';
+            if (dots[currentSlide]) dots[currentSlide].style.background = '#ffbf0f';
+            const nama = slides[currentSlide].dataset.nama;
+            const titleEl = document.getElementById('previewProductTitle');
+            if (titleEl && nama) titleEl.textContent = nama;
+        }
+
+        function slideMove(dir) {
+            goToSlide(currentSlide + dir);
+            resetAutoSlide();
+        }
+
+        function resetAutoSlide() {
+            if (autoTimer) clearInterval(autoTimer);
+            if (slides.length > 1) autoTimer = setInterval(() => goToSlide(currentSlide + 1), 5000);
+        }
+
+        dots.forEach(d => d.addEventListener('click', function() {
+            goToSlide(parseInt(this.dataset.dot));
+            resetAutoSlide();
+        }));
+
+        $(document).on('mouseenter', '.product-row-hover', function() {
+            const nama = $(this).data('nama');
+            for (let i = 0; i < slides.length; i++) {
+                if (slides[i].dataset.nama === nama) {
+                    goToSlide(i);
+                    resetAutoSlide();
+                    break;
+                }
+            }
+        });
+
+        resetAutoSlide();
     </script>
 @endsection

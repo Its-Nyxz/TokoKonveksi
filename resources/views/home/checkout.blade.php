@@ -1,6 +1,25 @@
 @extends('home.templates.index')
 
 <style>
+    .product-row-hover:hover {
+        background-color: #f8f9fa !important;
+        border-radius: 8px;
+        transition: background-color 0.2s ease;
+    }
+
+    .product-sizes-container::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .product-sizes-container::-webkit-scrollbar-thumb {
+        background: #e0e0e0;
+        border-radius: 10px;
+    }
+
+    .product-sizes-container::-webkit-scrollbar-thumb:hover {
+        background: #cccccc;
+    }
+
     /* Container Utama untuk Overlay */
     .modal-overlay {
         position: fixed;
@@ -161,33 +180,72 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Nama Pelanggan</label>
-                                        <input type="text" value="{{ $pengguna->nama }}" name="nama" required
+                                        <input type="text" value="{{ old('nama', $pengguna->nama) }}" name="nama" required
                                             class="form-control" id="inputNama" readonly>
                                     </div>
                                     <div class="form-group">
                                         <label>Alamat Email</label>
-                                        <input type="text" value="{{ $pengguna->email }}" name="email" required
+                                        <input type="text" value="{{ old('email', $pengguna->email) }}" name="email" required
                                             class="form-control" id="inputEmail" readonly>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>No. Telepon</label>
-                                        <input type="text" value="{{ $pengguna->telepon }}" name="telepon" required
+                                        <input type="text" value="{{ old('telepon', $pengguna->telepon) }}" name="telepon" required
                                             class="form-control" id="inputTelepon" readonly>
                                     </div>
                                     <div class="form-group">
                                         <label>Alamat Lengkap</label>
-                                        <textarea class="form-control" name="alamat" placeholder="Masukkan Alamat" required id="inputAlamat" readonly>{{ $pengguna->alamat }}</textarea>
+                                        <textarea class="form-control" name="alamat" placeholder="Masukkan Alamat" required id="inputAlamat" readonly>{{ old('alamat', $pengguna->alamat) }}</textarea>
                                     </div>
                                 </div>
 
                             </div>
-                            <div>
-                                <div class="form-group">
-                                    <label>Catatan untuk Penjual (opsional)</label>
-                                    <textarea class="form-control" name="catatan_pembeli" placeholder="Contoh: Pesan Ukuran XL & Varian Warna Biru"
-                                        id="inputCatatan" readonly>{{ old('catatan_pembeli') }}</textarea>
+                            <div class="row mt-3">
+                                <div class="col-md-7">
+                                    <label><strong>Rincian Ukuran Per Produk (M - XXL)</strong></label>
+                                    <hr class="mt-1 mb-3">
+                                    <div class="product-sizes-container" style="max-height: 350px; overflow-y: auto; padding-right: 5px; margin-bottom: 15px;">
+                                        @foreach (session('keranjang') as $idproduk => $item)
+                                            @php
+                                                $produk = DB::table('produk')->where('idproduk', $idproduk)->first();
+                                                $firstFoto = 'noimage.png';
+                                                if ($produk && !empty($produk->foto)) {
+                                                    $firstFoto = explode(',', $produk->foto)[0];
+                                                }
+                                            @endphp
+                                            <div class="product-size-section mb-3 p-3 bg-white border rounded product-row-hover" style="cursor: pointer;" data-id="{{ $idproduk }}" data-qty="{{ $item['jumlah'] }}" data-nama="{{ $produk->nama }}" data-foto="{{ asset('foto/' . $firstFoto) }}">
+                                                <h6 style="color: black; font-weight: bold; margin-bottom: 8px;">{{ $produk->nama }} (Kuantitas: {{ $item['jumlah'] }})</h6>
+                                                <div class="row">
+                                                    <div class="col-3 px-1">
+                                                        <label class="mb-1 text-dark" style="font-size: 0.8rem;">Size M</label>
+                                                        <input type="number" name="sizes[{{ $idproduk }}][m]" class="form-control size-input size-m p-1 text-center" value="{{ old('sizes.' . $idproduk . '.m', 0) }}" min="0" readonly style="height: 30px; font-size: 0.85rem;">
+                                                    </div>
+                                                    <div class="col-3 px-1">
+                                                        <label class="mb-1 text-dark" style="font-size: 0.8rem;">Size L</label>
+                                                        <input type="number" name="sizes[{{ $idproduk }}][l]" class="form-control size-input size-l p-1 text-center" value="{{ old('sizes.' . $idproduk . '.l', 0) }}" min="0" readonly style="height: 30px; font-size: 0.85rem;">
+                                                    </div>
+                                                    <div class="col-3 px-1">
+                                                        <label class="mb-1 text-dark" style="font-size: 0.8rem;">Size XL</label>
+                                                        <input type="number" name="sizes[{{ $idproduk }}][xl]" class="form-control size-input size-xl p-1 text-center" value="{{ old('sizes.' . $idproduk . '.xl', 0) }}" min="0" readonly style="height: 30px; font-size: 0.85rem;">
+                                                    </div>
+                                                    <div class="col-3 px-1">
+                                                        <label class="mb-1 text-dark" style="font-size: 0.8rem;">Size XXL</label>
+                                                        <input type="number" name="sizes[{{ $idproduk }}][xxl]" class="form-control size-input size-xxl p-1 text-center" value="{{ old('sizes.' . $idproduk . '.xxl', 0) }}" min="0" readonly style="height: 30px; font-size: 0.85rem;">
+                                                    </div>
+                                                </div>
+                                                <small class="product-size-warning text-danger font-weight-bold mt-1" style="display: none;"></small>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="form-group">
+                                        <label>Catatan untuk Penjual (opsional)</label>
+                                        <textarea class="form-control" name="catatan_pembeli" placeholder="Contoh: Pesan Varian Warna Biru"
+                                            id="inputCatatan" readonly style="height: 200px;">{{ old('catatan_pembeli') }}</textarea>
+                                    </div>
                                 </div>
                             </div>
                             <div class="text-right">
@@ -208,16 +266,31 @@
                     </div>
                     <div class="col-md-4">
                         <div class="card mt-5 py-2 px-2">
-                            @foreach (session('keranjang') as $idproduk => $item)
-                                @php
-                                    $produk = DB::table('produk')->where('idproduk', $idproduk)->first();
-                                    $totalharga = $produk->harga * $item['jumlah'];
-                                @endphp
-                                <h3 style="color: black;">{{ $produk->nama }}</h3>
-                                Kota Asal Pengiriman : Kabupaten Wonogiri
-                                <img src="{{ asset('foto/' . $produk->foto) }}" height="250px" alt="">
-                            @break
-                        @endforeach
+                            @php
+                                $firstCartItem = null;
+                                if (session('keranjang') && count(session('keranjang')) > 0) {
+                                    $firstCartItemId = array_key_first(session('keranjang'));
+                                    $firstCartItem = DB::table('produk')->where('idproduk', $firstCartItemId)->first();
+                                }
+                                $firstFoto = 'noimage.png';
+                                if ($firstCartItem && !empty($firstCartItem->foto)) {
+                                    $firstFoto = explode(',', $firstCartItem->foto)[0];
+                                }
+                            @endphp
+
+                            <h3 style="color: black;" id="previewProductTitle">{{ $firstCartItem ? $firstCartItem->nama : 'Detail Pesanan' }}</h3>
+                            
+                            <div id="previewProductContainer">
+                                @if($firstCartItem)
+                                    <img id="previewProductImage" src="{{ asset('foto/' . $firstFoto) }}" height="250px" alt="" style="object-fit: cover; border-radius: 8px; width: 100%;">
+                                @else
+                                    <div class="text-center py-5 bg-light" id="previewProductPlaceholder">
+                                        <span class="text-muted">Foto produk tidak tersedia</span>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <span class="text-muted mt-2 d-block">Kota Asal Pengiriman : Kabupaten Wonogiri</span>
                         {{-- metode pembayaran --}}
 
 
@@ -304,14 +377,18 @@
                                 @php
                                     $produk = DB::table('produk')->where('idproduk', $idproduk)->first();
                                     $totalharga = $produk->harga * $item['jumlah'];
+                                    $firstFoto = 'noimage.png';
+                                    if ($produk && !empty($produk->foto)) {
+                                        $firstFoto = explode(',', $produk->foto)[0];
+                                    }
                                 @endphp
-                                <div class="row">
+                                <div class="row product-row-hover" style="cursor: pointer; padding: 5px 0; margin-bottom: 5px;" data-foto="{{ asset('foto/' . $firstFoto) }}" data-nama="{{ $produk->nama }}">
                                     <div class="col-md-6">
-                                        <p style="color: black;">{{ $produk->nama }} ({{ $item['jumlah'] }} x)</p>
-                                        <p style="color: black;">Rp {{ number_format($produk->harga) }},-</p>
+                                        <p style="color: black; margin-bottom: 0;">{{ $produk->nama }} ({{ $item['jumlah'] }} x)</p>
+                                        <p style="color: black; margin-bottom: 0;">Rp {{ number_format($produk->harga) }},-</p>
                                     </div>
                                     <div class="col-md-6">
-                                        <p style="color: black;font-weight: bold;" class="text-right">Rp
+                                        <p style="color: black;font-weight: bold; margin-bottom: 0;" class="text-right">Rp
                                             {{ number_format($totalharga) }},-</p>
                                     </div>
                                 </div>
@@ -398,6 +475,15 @@
 
 @section('script')
 <script>
+    @php
+        $totalJumlahGlobal = 0;
+        if (session('keranjang')) {
+            foreach (session('keranjang') as $item) {
+                $totalJumlahGlobal += $item['jumlah'];
+            }
+        }
+    @endphp
+    const totalJumlahGlobal = {{ $totalJumlahGlobal }};
     const modalContainer = document.getElementById('modalContainer');
     const totalBelanja = {{ $totalbelanja ?? 0 }};
 
@@ -497,6 +583,32 @@
         alamat: $('#inputAlamat').val(),
         catatan: $('#inputCatatan').val()
     };
+    let originalSizes = {};
+
+    function validateSizes() {
+        let allValid = true;
+        $('.product-size-section').each(function() {
+            const $section = $(this);
+            const targetQty = parseInt($section.data('qty')) || 0;
+            const productName = $section.data('nama');
+            
+            let sectionTotal = 0;
+            $section.find('.size-input').each(function() {
+                sectionTotal += parseInt($(this).val()) || 0;
+            });
+            
+            const $warning = $section.find('.product-size-warning');
+            if (sectionTotal !== targetQty) {
+                $warning.text(`Total rincian ukuran (${sectionTotal}) harus sama dengan kuantitas pesanan (${targetQty}).`).show();
+                allValid = false;
+            } else {
+                $warning.hide();
+            }
+        });
+        return allValid;
+    }
+
+    $(document).on('input change', '.size-input', validateSizes);
 
     $('#btnEdit').click(function() {
         originalValues = {
@@ -506,15 +618,29 @@
             alamat: $('#inputAlamat').val(),
             catatan: $('#inputCatatan').val()
         };
+        originalSizes = {};
+        $('.size-input').each(function() {
+            originalSizes[$(this).attr('name')] = $(this).val();
+        });
 
-        $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan').prop('readonly', false);
+        $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan, .size-input').prop('readonly', false);
 
         $('#btnEdit').hide();
         $('#btnSimpan, #btnBatal').show();
     });
 
     $('#btnSimpan').click(function() {
-        $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan').prop('readonly', true);
+        if (!validateSizes()) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Menyimpan',
+                text: 'Ada rincian ukuran produk yang belum sesuai dengan kuantitas pesanan.',
+                confirmButtonColor: '#ffbf0f'
+            });
+            return false;
+        }
+
+        $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan, .size-input').prop('readonly', true);
 
         $('#btnSimpan, #btnBatal').hide();
         $('#btnEdit').show();
@@ -533,11 +659,16 @@
         $('#inputTelepon').val(originalValues.telepon);
         $('#inputAlamat').val(originalValues.alamat);
         $('#inputCatatan').val(originalValues.catatan);
+        
+        for (let name in originalSizes) {
+            $(`input[name="${name}"]`).val(originalSizes[name]);
+        }
 
-        $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan').prop('readonly', true);
+        $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan, .size-input').prop('readonly', true);
 
         $('#btnSimpan, #btnBatal').hide();
         $('#btnEdit').show();
+        validateSizes();
     });
 
     $('#metodepembayaran').on('change', function() {
@@ -646,6 +777,43 @@
     $(document).ready(function() {
         cekLokasiWonogiri();
         aturMetodePengiriman();
+
+        $('form[action*="docheckout"]').on('submit', function(e) {
+            const alamat = $('#inputAlamat').val().trim();
+            if (!alamat) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Alamat Belum Lengkap',
+                    text: 'Alamat pengiriman wajib diisi. Silakan klik tombol "Edit" di bagian Data Kontak Pesan untuk melengkapi alamat Anda.',
+                    confirmButtonColor: '#ffbf0f'
+                });
+                return false;
+            }
+
+            if (!validateSizes()) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Pemesanan Gagal',
+                    text: 'Jumlah rincian ukuran produk belum sesuai dengan kuantitas pesanan. Silakan periksa kembali rincian ukuran masing-masing produk.',
+                    confirmButtonColor: '#ffbf0f'
+                });
+                return false;
+            }
+        });
+
+        // Hover over products to change the preview image/title
+        $(document).on('mouseenter', '.product-row-hover', function() {
+            const foto = $(this).data('foto');
+            const nama = $(this).data('nama');
+            $('#previewProductTitle').text(nama);
+            if ($('#previewProductImage').length) {
+                $('#previewProductImage').attr('src', foto);
+            } else {
+                $('#previewProductContainer').html(`<img id="previewProductImage" src="${foto}" height="250px" alt="" style="object-fit: cover; border-radius: 8px; width: 100%;">`);
+            }
+        });
     });
 </script>
 @endsection

@@ -54,6 +54,16 @@
                                             @foreach ($dataproduk[$p->idpembelian] as $dp)
                                                 <li>
                                                     {{ $dp->nama }}
+                                                    @if ($dp->size_m > 0 || $dp->size_l > 0 || $dp->size_xl > 0 || $dp->size_xxl > 0)
+                                                        <br>
+                                                        <small class="text-muted">
+                                                            Size: 
+                                                            @if($dp->size_m > 0) M:{{ $dp->size_m }} @endif
+                                                            @if($dp->size_l > 0) L:{{ $dp->size_l }} @endif
+                                                            @if($dp->size_xl > 0) XL:{{ $dp->size_xl }} @endif
+                                                            @if($dp->size_xxl > 0) XXL:{{ $dp->size_xxl }} @endif
+                                                        </small>
+                                                    @endif
                                                 </li>
                                             @endforeach
                                         </ul>

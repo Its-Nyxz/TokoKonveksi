@@ -27,6 +27,17 @@
                                     <td>Total</td>
                                     <td>Rp. {{ number_format($datapembelian->totalbeli) }}</td>
                                 </tr>
+                                @if ($datapembelian->size_m > 0 || $datapembelian->size_l > 0 || $datapembelian->size_xl > 0 || $datapembelian->size_xxl > 0)
+                                <tr>
+                                    <td><strong>Rincian Ukuran</strong></td>
+                                    <td>
+                                        M: {{ $datapembelian->size_m }} | 
+                                        L: {{ $datapembelian->size_l }} | 
+                                        XL: {{ $datapembelian->size_xl }} | 
+                                        XXL: {{ $datapembelian->size_xxl }}
+                                    </td>
+                                </tr>
+                                @endif
                                 <tr>
                                     <td>Metode Pengiriman</td>
                                     <td>
@@ -84,14 +95,75 @@
                             @foreach ($dataproduk as $dp)
                                 @php
                                     $jumlahtotal += $dp->jumlah;
+                                    $isBonus = isset($dp->is_bonus) && $dp->is_bonus == 1;
                                 @endphp
-                                <tr>
+                                <tr class="{{ $isBonus ? 'table-success' : '' }}">
                                     <td><?php echo $nomor; ?></td>
-                                    <td>{{ $dp->nama }}</td>
-                                    <td>Rp. {{ number_format($dp->harga) }}</td>
-                                    <td>{{ $dp->jumlah }}</td>
-                                    <td>Rp. {{ number_format($dp->harga * $dp->jumlah) }}</td>
+                                    <td>
+                                        <span class="font-weight-bold text-dark">{{ $dp->nama }}</span>
+                                        @if($isBonus)
+                                            <span class="badge badge-success ml-1">🎁 BONUS</span>
+                                        @endif
 
+                                        @if ($dp->size_m > 0 || $dp->size_l > 0 || $dp->size_xl > 0 || $dp->size_xxl > 0)
+                                            <br>
+                                            <small class="text-muted">
+                                                Size: 
+                                                @if($dp->size_m > 0) M: {{ $dp->size_m }} @endif
+                                                @if($dp->size_l > 0) L: {{ $dp->size_l }} @endif
+                                                @if($dp->size_xl > 0) XL: {{ $dp->size_xl }} @endif
+                                                @if($dp->size_xxl > 0) XXL: {{ $dp->size_xxl }} @endif
+                                            </small>
+                                        @endif
+
+                                        @if($isBonus)
+                                            @if(!in_array($datapembelian->statusbeli, ['Pesanan Di Tolak', 'Selesai']))
+                                                @php
+                                                    $allocated = (int) $dp->size_m + (int) $dp->size_l + (int) $dp->size_xl + (int) $dp->size_xxl;
+                                                    $isAllocatedCorrectly = ($allocated === (int) $dp->jumlah);
+                                                @endphp
+                                                <div class="mt-2 p-3 border rounded bg-white shadow-sm" style="max-width: 500px;">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <span class="small font-weight-bold text-dark">Alokasi Ukuran Bonus (Wajib: {{ $dp->jumlah }} pcs)</span>
+                                                        @if($isAllocatedCorrectly)
+                                                            <span class="badge badge-success"><i class="fa fa-check-circle"></i> Sesuai</span>
+                                                        @else
+                                                            <span class="badge badge-warning"><i class="fa fa-exclamation-circle"></i> Belum Sesuai</span>
+                                                        @endif
+                                                    </div>
+                                                    <form method="post" action="{{ url('admin/updateukuranbonus/' . $datapembelian->idpembelian . '/' . $dp->idpembelianproduk) }}">
+                                                        @csrf
+                                                        <div class="form-row align-items-center">
+                                                            <div class="col-sm-2 col-3">
+                                                                <label class="small font-weight-bold mb-1 d-block text-center text-dark">M</label>
+                                                                <input type="number" name="size_m" class="form-control form-control-sm text-center" value="{{ $dp->size_m }}" min="0" required>
+                                                            </div>
+                                                            <div class="col-sm-2 col-3">
+                                                                <label class="small font-weight-bold mb-1 d-block text-center text-dark">L</label>
+                                                                <input type="number" name="size_l" class="form-control form-control-sm text-center" value="{{ $dp->size_l }}" min="0" required>
+                                                            </div>
+                                                            <div class="col-sm-2 col-3">
+                                                                <label class="small font-weight-bold mb-1 d-block text-center text-dark">XL</label>
+                                                                <input type="number" name="size_xl" class="form-control form-control-sm text-center" value="{{ $dp->size_xl }}" min="0" required>
+                                                            </div>
+                                                            <div class="col-sm-2 col-3">
+                                                                <label class="small font-weight-bold mb-1 d-block text-center text-dark">XXL</label>
+                                                                <input type="number" name="size_xxl" class="form-control form-control-sm text-center" value="{{ $dp->size_xxl }}" min="0" required>
+                                                            </div>
+                                                            <div class="col-sm-4 col-12 mt-3 mt-sm-0">
+                                                                <button type="submit" class="btn btn-sm btn-primary btn-block font-weight-bold" style="height: 31px; margin-top: 18px;">
+                                                                    <i class="fa fa-save"></i> Simpan
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            @endif
+                                        @endif
+                                    </td>
+                                    <td>{!! $isBonus ? '<span class="text-success font-weight-bold">GRATIS</span>' : 'Rp. ' . number_format($dp->harga) !!}</td>
+                                    <td>{{ $dp->jumlah }}</td>
+                                    <td>{!! $isBonus ? '<span class="text-success">Rp. 0 (Bonus)</span>' : 'Rp. ' . number_format($dp->harga * $dp->jumlah) !!}</td>
                                 </tr>
                                 <?php $nomor++; ?>
                             @endforeach

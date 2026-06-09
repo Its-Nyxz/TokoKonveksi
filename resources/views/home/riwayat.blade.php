@@ -754,12 +754,13 @@
                                 <div class="filter-group">
                                     <label>Urutkan Waktu</label>
                                     <select name="sort_time">
-                                        <option value="">Semua</option>
                                         <option value="time_desc"
-                                            {{ request('sort_time') == 'time_desc' ? 'selected' : '' }}>
-                                            Terbaru</option>
+                                            {{ request('sort_time', 'time_desc') == 'time_desc' ? 'selected' : '' }}>
+                                            Terbaru
+                                        </option>
                                         <option value="time_asc" {{ request('sort_time') == 'time_asc' ? 'selected' : '' }}>
-                                            Terlama</option>
+                                            Terlama
+                                        </option>
                                     </select>
                                 </div>
 

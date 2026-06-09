@@ -2,6 +2,12 @@
 
 @section('page-content')
     <style>
+        .product-row-hover:hover {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+
         /* Container Utama untuk Overlay */
         .modal-overlay {
             position: fixed;
@@ -172,15 +178,52 @@
                         @foreach ($dataproduk as $dp)
                             @php
                                 $totalharga = $dp->harga * $dp->jumlah;
+                                $firstFoto = explode(',', $dp->foto)[0] ?? 'noimage.png';
+                                $isBonus = isset($dp->is_bonus) && $dp->is_bonus == 1;
                             @endphp
-                            <div class="row">
+                            <div class="row product-row-hover {{ $isBonus ? 'bg-light border-left border-success' : '' }}"
+                                style="cursor: pointer; padding: 5px 0; {{ $isBonus ? 'border-left: 3px solid #28a745 !important; padding-left: 8px;' : '' }}"
+                                data-foto="{{ asset('foto/' . $firstFoto) }}" data-nama="{{ $dp->nama }}">
                                 <div class="col-md-8">
-                                    <p style="color: black;">{{ $dp->nama }} ({{ $dp->jumlah }} x) Rp
-                                        {{ number_format($dp->harga) }},-</p>
+                                    <p
+                                        style="color: {{ $isBonus ? '#28a745' : 'black' }}; font-weight: bold; margin-bottom: 0;">
+                                        {{ $dp->nama }}
+                                        @if ($isBonus)
+                                            <span class="badge badge-success ml-1"
+                                                style="font-size:0.7rem; vertical-align: middle;">🎁 BONUS</span>
+                                        @endif
+                                        ({{ $dp->jumlah }} x)
+                                        @if (!$isBonus)
+                                            Rp {{ number_format($dp->harga) }},-
+                                        @else
+                                            <span class="text-success" style="font-size:0.85rem;">GRATIS</span>
+                                        @endif
+                                    </p>
+                                    @if ($dp->size_m > 0 || $dp->size_l > 0 || $dp->size_xl > 0 || $dp->size_xxl > 0)
+                                        <p style="color: #666; font-size: 0.85rem; margin-top: 2px; margin-bottom: 0;">
+                                            Ukuran:
+                                            @if ($dp->size_m > 0)
+                                                M: {{ $dp->size_m }}
+                                            @endif
+                                            @if ($dp->size_l > 0)
+                                                L: {{ $dp->size_l }}
+                                            @endif
+                                            @if ($dp->size_xl > 0)
+                                                XL: {{ $dp->size_xl }}
+                                            @endif
+                                            @if ($dp->size_xxl > 0)
+                                                XXL: {{ $dp->size_xxl }}
+                                            @endif
+                                        </p>
+                                    @endif
                                 </div>
                                 <div class="col-md-4">
-                                    <p style="color: black;font-weight: bold;" class="text-right">Rp
-                                        {{ number_format($totalharga) }},-</p>
+                                    @if ($isBonus)
+                                        <p class="text-right mb-0"><span class="badge badge-success">GRATIS</span></p>
+                                    @else
+                                        <p style="color: black; font-weight: bold; margin-bottom: 0;" class="text-right">Rp
+                                            {{ number_format($totalharga) }},-</p>
+                                    @endif
                                 </div>
                             </div>
                             <?php $totalbelanja += $totalharga; ?>
@@ -255,63 +298,48 @@
                         <a class="btn btn-lg text-white" href="{{ url('home/pembayaran/' . $datapembelian->idpembelian) }}"
                             style="background-color: #ffbf0f">Lanjutkan Pembayaran</a>
                         <?php } else { ?>
-                        <a class="btn btn-lg text-white" href="{{ url('home/invoice/' . $datapembelian->idpembelian) }}"
+                        <a class="btn btn-lg text-white mb-2"
+                            href="{{ url('home/invoice/' . $datapembelian->idpembelian) }}"
                             style="background-color: #ffbf0f">Invoice</a>
                         <?php } ?>
+
+                        @if (in_array($datapembelian->statusbeli, ['Sedang Dikirim', 'Pesanan Sedang Dikirim']))
+                            <div class="card p-3 mt-4 border-warning">
+                                <h5 class="text-black font-weight-bold">Selesaikan Pesanan</h5>
+                                <p class="text-muted small">Silakan unggah bukti foto penerimaan untuk menyelesaikan pesanan
+                                    Anda.</p>
+                                <form action="{{ url('home/selesai') }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <input type="hidden" name="idpembelian" value="{{ $datapembelian->idpembelian }}">
+                                    <div class="form-group">
+                                        <label class="font-weight-bold text-black">Foto Penerimaan</label>
+                                        <input type="file" name="foto_penerimaan" class="form-control" required
+                                            accept="image/*">
+                                    </div>
+                                    <button type="submit" class="btn text-white w-100"
+                                        style="background-color: #28a745; font-weight: bold;">Konfirmasi Pesanan
+                                        Selesai</button>
+                                </form>
+                            </div>
+                        @endif
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="card py-2 px-2">
-                        <p>No Transaksi: <br> <span
-                                style="color: #000; font-weight:bold;">{{ $datapembelian->notransaksi }}</span></p>
-                    </div>
+                    @include('home.partials.order-sidebar')
+
                     @php
-                        $produkUtama = $dataproduk->first();
+                        $fotoPengiriman =
+                            $pembelianFoto->where('status', 'Sedang Dikirim')->first() ??
+                            $pembelianFoto->where('status', 'Pesanan Sedang Dikirim')->first();
                     @endphp
-                    <div class="card mt-3 py-2 px-2">
-                        <h3 style="color: black;">{{ $produkUtama->nama ?? 'Produk sudah dihapus' }}</h3>
 
-                        @if (!empty($produkUtama->foto))
-                            <img src="{{ asset('foto/' . $produkUtama->foto) }}" height="250px" alt="">
-                        @else
-                            <div class="text-center py-5 bg-light">
-                                <span class="text-muted">Foto produk tidak tersedia</span>
-                            </div>
-                        @endif
-                        @php
-                            $alamatLengkap = collect([
-                                $datapembelian->alamat ?? null,
-                                $datapembelian->kec ?? null,
-                                $datapembelian->kota ?? null,
-                                $datapembelian->provinsi ?? null,
-                                $datapembelian->kode_pos ?? null,
-                            ])
-                                ->filter()
-                                ->implode(', ');
-                        @endphp
-
-                        <p style="color: #000;">
-                            {{ $alamatLengkap ?: '-' }}
-                        </p>
-                        <table class="">
-                            <tr>
-                                <td width="150px"><strong>Nama Penerima</strong></td>
-                                <td>: {{ $datapembelian->nama }}</td>
-                            </tr>
-                            <tr>
-                                <td>Tanggal Pemesanan</td>
-                                <td>: {{ tanggal(date('Y-m-d', strtotime($datapembelian->tanggalbeli))) }}</td>
-                            </tr>
-                            <tr>
-                                <td>No Telepon</td>
-                                <td>: {{ $datapembelian->telepon }}</td>
-                            </tr>
-                            <tr>
-                                <td>Status</td>
-                                <td>: {{ $datapembelian->statusbeli }}</td>
-                            </tr>
-                        </table>
-                    </div>
+                    @if ($fotoPengiriman)
+                        <div class="card mt-3 py-2 px-2 bg-light">
+                            <h5 style="color: black; font-weight: bold;">Foto Pengiriman (Kurir)</h5>
+                            <img src="{{ asset('foto/' . $fotoPengiriman->foto) }}" class="img-fluid rounded"
+                                alt="Foto Pengiriman" style="max-height: 300px; object-fit: cover;">
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -373,5 +401,58 @@
                 modalContainer.style.display = 'flex';
             }
         }
+
+        // ============ SLIDESHOW LOGIC ============
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.product-slide');
+        const dots = document.querySelectorAll('.slide-dot');
+        let autoTimer = null;
+
+        function goToSlide(idx) {
+            if (!slides.length) return;
+            slides[currentSlide].style.opacity = '0';
+            if (dots[currentSlide]) dots[currentSlide].style.background = 'rgba(255,255,255,0.6)';
+            currentSlide = (idx + slides.length) % slides.length;
+            slides[currentSlide].style.opacity = '1';
+            if (dots[currentSlide]) dots[currentSlide].style.background = '#ffbf0f';
+            // Update title
+            const nama = slides[currentSlide].dataset.nama;
+            const titleEl = document.getElementById('previewProductTitle');
+            if (titleEl && nama) titleEl.textContent = nama;
+        }
+
+        function slideMove(dir) {
+            goToSlide(currentSlide + dir);
+            resetAutoSlide();
+        }
+
+        function resetAutoSlide() {
+            if (autoTimer) clearInterval(autoTimer);
+            if (slides.length > 1) {
+                autoTimer = setInterval(() => goToSlide(currentSlide + 1), 5000);
+            }
+        }
+
+        // Dot click
+        dots.forEach(d => d.addEventListener('click', function() {
+            goToSlide(parseInt(this.dataset.dot));
+            resetAutoSlide();
+        }));
+
+        // Hover row => jump to that product's first slide
+        $(document).on('mouseenter', '.product-row-hover', function() {
+            const nama = $(this).data('nama');
+            // find first slide matching this product name
+            for (let i = 0; i < slides.length; i++) {
+                if (slides[i].dataset.nama === nama) {
+                    goToSlide(i);
+                    resetAutoSlide();
+                    break;
+                }
+            }
+        });
+
+        // Start auto-slide
+        resetAutoSlide();
     </script>
 @endsection
