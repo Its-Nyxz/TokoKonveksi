@@ -991,4 +991,143 @@ class AdminController extends Controller
             )
             ->get();
     }
+
+    public function promosi()
+    {
+        $promosi = DB::table('promosi')->orderBy('id_promosi', 'desc')->get();
+        
+        foreach ($promosi as $p) {
+            $p->produk = DB::table('promosi_produk')
+                ->join('produk', 'promosi_produk.idproduk', '=', 'produk.idproduk')
+                ->where('promosi_produk.id_promosi', $p->id_promosi)
+                ->get();
+        }
+        
+        return view('admin.promosi.index', compact('promosi'));
+    }
+
+    public function tambahpromosi()
+    {
+        $produk = DB::table('produk')->get();
+        return view('admin.promosi.tambah', compact('produk'));
+    }
+
+    public function simpanpromosi(Request $request)
+    {
+        $request->validate([
+            'nama_promosi' => 'required',
+        ]);
+        
+        $fotoName = '';
+        if ($request->hasFile('foto')) {
+            $file = $request->file('foto');
+            $fotoName = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('foto'), $fotoName);
+        }
+        
+        $id_promosi = DB::table('promosi')->insertGetId([
+            'nama_promosi' => $request->input('nama_promosi'),
+            'deskripsi' => $request->input('deskripsi'),
+            'foto' => $fotoName,
+            'is_active' => $request->has('is_active') ? 1 : 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        
+        if ($request->has('produk_ids')) {
+            $produk_ids = $request->input('produk_ids');
+            $pivotData = [];
+            foreach ($produk_ids as $idproduk) {
+                $pivotData[] = [
+                    'id_promosi' => $id_promosi,
+                    'idproduk' => $idproduk
+                ];
+            }
+            DB::table('promosi_produk')->insert($pivotData);
+        }
+        
+        session()->flash('alert', 'Berhasil menambah promosi!');
+        return redirect('admin/promosi');
+    }
+
+    public function ubahpromosi($id)
+    {
+        $promosi = DB::table('promosi')->where('id_promosi', $id)->first();
+        if (!$promosi) {
+            session()->flash('error', 'Promosi tidak ditemukan');
+            return redirect('admin/promosi');
+        }
+        
+        $produk = DB::table('produk')->get();
+        $selected_produk = DB::table('promosi_produk')
+            ->where('id_promosi', $id)
+            ->pluck('idproduk')
+            ->toArray();
+            
+        return view('admin.promosi.ubah', compact('promosi', 'produk', 'selected_produk'));
+    }
+
+    public function updatepromosi(Request $request, $id)
+    {
+        $request->validate([
+            'nama_promosi' => 'required',
+        ]);
+        
+        $promosi = DB::table('promosi')->where('id_promosi', $id)->first();
+        if (!$promosi) {
+            session()->flash('error', 'Promosi tidak ditemukan');
+            return redirect('admin/promosi');
+        }
+        
+        $data = [
+            'nama_promosi' => $request->input('nama_promosi'),
+            'deskripsi' => $request->input('deskripsi'),
+            'is_active' => $request->has('is_active') ? 1 : 0,
+            'updated_at' => now(),
+        ];
+        
+        if ($request->hasFile('foto')) {
+            if (!empty($promosi->foto) && file_exists(public_path('foto/' . $promosi->foto))) {
+                @unlink(public_path('foto/' . $promosi->foto));
+            }
+            
+            $file = $request->file('foto');
+            $fotoName = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('foto'), $fotoName);
+            $data['foto'] = $fotoName;
+        }
+        
+        DB::table('promosi')->where('id_promosi', $id)->update($data);
+        
+        DB::table('promosi_produk')->where('id_promosi', $id)->delete();
+        
+        if ($request->has('produk_ids')) {
+            $produk_ids = $request->input('produk_ids');
+            $pivotData = [];
+            foreach ($produk_ids as $idproduk) {
+                $pivotData[] = [
+                    'id_promosi' => $id,
+                    'idproduk' => $idproduk
+                ];
+            }
+            DB::table('promosi_produk')->insert($pivotData);
+        }
+        
+        session()->flash('alert', 'Berhasil mengubah promosi!');
+        return redirect('admin/promosi');
+    }
+
+    public function hapuspromosi($id)
+    {
+        $promosi = DB::table('promosi')->where('id_promosi', $id)->first();
+        if ($promosi) {
+            if (!empty($promosi->foto) && file_exists(public_path('foto/' . $promosi->foto))) {
+                @unlink(public_path('foto/' . $promosi->foto));
+            }
+            DB::table('promosi')->where('id_promosi', $id)->delete();
+        }
+        
+        session()->flash('alert', 'Berhasil menghapus promosi!');
+        return redirect('admin/promosi');
+    }
 }

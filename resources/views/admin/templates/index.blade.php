@@ -142,6 +142,12 @@
                 </li>
                 <hr class="sidebar-divider">
                 <li class="nav-item">
+                    <a class="nav-link text-white" href="{{ url('admin/promosi') }}">
+                        <i class="fas fa-fw fa-bullhorn text-white"></i>
+                        <span>Promosi</span></a>
+                </li>
+                <hr class="sidebar-divider">
+                <li class="nav-item">
                     <a class="nav-link text-white" href="{{ url('admin/pembelian') }}">
                         <i class="fas fa-fw fa-home text-white"></i>
                         <span>Transaksi</span></a>

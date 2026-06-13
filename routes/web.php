@@ -82,6 +82,14 @@ Route::middleware(['admin.auth'])->controller(AdminController::class)->group(fun
     Route::post('admin/laporancetak', 'laporancetak');
     Route::get('admin/settings', 'settings');
     Route::post('admin/savesettings', 'savesettings');
+
+    // Promosi Routes
+    Route::get('admin/promosi', 'promosi');
+    Route::get('admin/tambahpromosi', 'tambahpromosi');
+    Route::post('admin/simpanpromosi', 'simpanpromosi');
+    Route::get('admin/ubahpromosi/{id}', 'ubahpromosi');
+    Route::post('admin/updatepromosi/{id}', 'updatepromosi');
+    Route::get('admin/hapuspromosi/{id}', 'hapuspromosi');
 });
 
 Route::controller(HomeController::class)->group(function () {

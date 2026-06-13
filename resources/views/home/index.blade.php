@@ -252,44 +252,97 @@
     </section>
 
     <!-- Modal Promosi -->
-    @if ($promoProduct)
+    @if (isset($activePromotions) && !$activePromotions->isEmpty())
         <div id="promoModal" class="modal-overlay" style="display: none;">
-            <div class="modal-box" style="max-width: 450px; border: 3px solid #ffbf0f;">
+            <div class="modal-box shadow-lg" style="max-width: 500px; border: 3px solid #ffbf0f;">
                 <div class="modal-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
-                    <h5 class="m-0 font-weight-bold text-white"><i class="fas fa-fire text-warning mr-2"></i>Penawaran Populer!</h5>
+                    <h5 class="m-0 font-weight-bold text-white"><i class="fas fa-bullhorn text-warning mr-2"></i>Penawaran Khusus Terpopuler!</h5>
                     <button type="button" class="close text-white" onclick="closePromoModal()" style="border: none; background: transparent; font-size: 1.5rem; cursor: pointer;">&times;</button>
                 </div>
-                <div class="modal-body text-center p-4">
-                    <span class="badge badge-warning mb-2 py-1 px-2 text-uppercase font-weight-bold" style="letter-spacing: 1px;">Rekomendasi Utama</span>
-                    <h3 class="text-black font-weight-bold mb-3">{{ $promoProduct->nama }}</h3>
-                    @php
-                        $promoPhotos = explode(',', $promoProduct->foto);
-                        $promoFirstFoto = $promoPhotos[0] ?? 'noimage.png';
-                    @endphp
-                    <div class="mb-3">
-                        <img src="{{ asset('foto/' . $promoFirstFoto) }}" alt="{{ $promoProduct->nama }}" class="img-fluid rounded shadow-sm" style="max-height: 200px; object-fit: cover;">
-                    </div>
-                    <h4 class="text-danger font-weight-bold mb-4">
-                        @if (!empty($promoProduct->harga_sebelum) && $promoProduct->harga_sebelum > $promoProduct->harga)
-                            <span style="text-decoration: line-through; color: #888; font-size: 0.8em; margin-right: 8px;">Rp {{ number_format($promoProduct->harga_sebelum, 0, ',', '.') }}</span>
+                <div class="modal-body p-1 position-relative">
+                    
+                    <div id="promoCarousel" class="carousel slide" data-ride="carousel" data-interval="5000">
+                        @if ($activePromotions->count() > 1)
+                            <ol class="carousel-indicators" style="bottom: -15px;">
+                                @foreach ($activePromotions as $index => $promo)
+                                    <li data-target="#promoCarousel" data-slide-to="{{ $index }}" class="{{ $index == 0 ? 'active' : '' }}" style="background-color: #ffbf0f; width: 8px; height: 8px; border-radius: 50%;"></li>
+                                @endforeach
+                            </ol>
                         @endif
-                        <span>Rp {{ number_format($promoProduct->harga, 0, ',', '.') }}</span>
-                    </h4>
-                    <div class="row">
-                        <div class="col-6">
-                            <button type="button" class="btn btn-outline-dark btn-block" onclick="closePromoModal()">Nanti Saja</button>
+
+                        <div class="carousel-inner pb-4">
+                            @foreach ($activePromotions as $index => $promo)
+                                <div class="carousel-item {{ $index == 0 ? 'active' : '' }} px-4 pt-3 pb-2">
+                                    <div class="text-center">
+                                        <span class="badge badge-warning mb-2 py-1 px-2 text-uppercase font-weight-bold" style="letter-spacing: 1px; font-size: 0.75rem;">Rekomendasi Utama</span>
+                                        <h3 class="text-black font-weight-bold mb-2">{{ $promo->nama_promosi }}</h3>
+                                        @if (!empty($promo->deskripsi))
+                                            <p class="text-muted small mb-3">{{ $promo->deskripsi }}</p>
+                                        @endif
+                                    </div>
+
+                                    @if (!empty($promo->foto))
+                                        <div class="text-center mb-3">
+                                            <img src="{{ asset('foto/' . $promo->foto) }}" alt="{{ $promo->nama_promosi }}" class="img-fluid rounded shadow-sm" style="max-height: 160px; width: 100%; object-fit: cover;">
+                                        </div>
+                                    @endif
+
+                                    <div class="promo-products-list mt-3 pr-1" style="max-height: 200px; overflow-y: auto;">
+                                        @if ($promo->produk->isEmpty())
+                                            <p class="text-center text-muted small py-2">Semua produk sedang dipromosikan! Kunjungi halaman produk kami.</p>
+                                        @else
+                                            @foreach ($promo->produk as $prod)
+                                                @php
+                                                    $prodPhotos = explode(',', $prod->foto);
+                                                    $prodFirstFoto = $prodPhotos[0] ?? 'noimage.png';
+                                                @endphp
+                                                <div class="mb-2 p-2 border rounded bg-white d-flex align-items-center justify-content-between shadow-sm">
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="{{ asset('foto/' . $prodFirstFoto) }}" alt="{{ $prod->nama }}" class="rounded mr-2" style="width: 45px; height: 45px; object-fit: cover;">
+                                                        <div>
+                                                            <h6 class="text-black font-weight-bold mb-0" style="font-size: 0.85rem; line-height: 1.2;">{{ $prod->nama }}</h6>
+                                                            <small class="text-danger font-weight-bold" style="font-size: 0.8rem;">
+                                                                @if (!empty($prod->harga_sebelum) && $prod->harga_sebelum > $prod->harga)
+                                                                    <span style="text-decoration: line-through; color: #888; font-size: 0.85em; margin-right: 5px;">
+                                                                        Rp {{ number_format($prod->harga_sebelum, 0, ',', '.') }}
+                                                                    </span>
+                                                                @endif
+                                                                <span>Rp {{ number_format($prod->harga, 0, ',', '.') }}</span>
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                    <a href="{{ url('home/detail/' . $prod->idproduk) }}" class="btn btn-sm btn-warning font-weight-bold text-dark px-3 py-1" style="background-color: #ffbf0f; border: none; font-size: 0.75rem; border-radius: 4px;">
+                                                        Pesan <i class="fas fa-arrow-right ml-1"></i>
+                                                    </a>
+                                                </div>
+                                            @endforeach
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
-                        <div class="col-6">
-                            <a href="{{ url('home/detail/' . $promoProduct->idproduk) }}" class="btn btn-warning btn-block text-black font-weight-bold" style="background-color: #ffbf0f; border: none;">Pesan Sekarang</a>
-                        </div>
+
+                        @if ($activePromotions->count() > 1)
+                            <a class="carousel-control-prev" href="#promoCarousel" role="button" data-slide="prev" style="width: 8%;">
+                                <span class="carousel-control-prev-icon bg-dark rounded-circle p-2" aria-hidden="true" style="opacity: 0.6; font-size: 0.8rem;"></span>
+                                <span class="sr-only">Previous</span>
+                            </a>
+                            <a class="carousel-control-next" href="#promoCarousel" role="button" data-slide="next" style="width: 8%;">
+                                <span class="carousel-control-next-icon bg-dark rounded-circle p-2" aria-hidden="true" style="opacity: 0.6; font-size: 0.8rem;"></span>
+                                <span class="sr-only">Next</span>
+                            </a>
+                        @endif
                     </div>
+
+                </div>
+                <div class="modal-footer bg-light p-2 d-flex justify-content-center">
+                    <button type="button" class="btn btn-sm btn-outline-dark px-4 font-weight-bold" onclick="closePromoModal()" style="border-radius: 4px;">Tutup</button>
                 </div>
             </div>
         </div>
 
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                // Check if already closed in this session
                 if (!sessionStorage.getItem('promo_closed')) {
                     setTimeout(function() {
                         const promoModal = document.getElementById('promoModal');

@@ -20,34 +20,22 @@ class HomeController extends Controller
 
         $produk = DB::table('produk')->Join('kategori', 'produk.idkategori', '=', 'kategori.idkategori')->orderBy('idproduk', 'desc')->limit(6)->get();
 
-        // Load settings for promotion
-        $settings = DB::table('settings')->pluck('value', 'key');
-        $promoProduct = null;
+        // Load active promotions
+        $activePromotions = DB::table('promosi')
+            ->where('is_active', 1)
+            ->orderBy('id_promosi', 'desc')
+            ->get();
 
-        if (isset($settings['promosi_tipe']) && $settings['promosi_tipe'] !== 'mati') {
-            $tipe = $settings['promosi_tipe'];
-            if ($tipe === 'terbaru') {
-                $promoProduct = DB::table('produk')->orderBy('idproduk', 'desc')->first();
-            } elseif ($tipe === 'terlaris') {
-                $topProduct = DB::table('pembelianproduk')
-                    ->select('idproduk', DB::raw('SUM(jumlah) as total_sold'))
-                    ->groupBy('idproduk')
-                    ->orderBy('total_sold', 'desc')
-                    ->first();
-
-                if ($topProduct) {
-                    $promoProduct = DB::table('produk')->where('idproduk', $topProduct->idproduk)->first();
-                } else {
-                    $promoProduct = DB::table('produk')->orderBy('idproduk', 'desc')->first();
-                }
-            } elseif ($tipe === 'kustom' && !empty($settings['promosi_produk_id'])) {
-                $promoProduct = DB::table('produk')->where('idproduk', $settings['promosi_produk_id'])->first();
-            }
+        foreach ($activePromotions as $promo) {
+            $promo->produk = DB::table('promosi_produk')
+                ->join('produk', 'promosi_produk.idproduk', '=', 'produk.idproduk')
+                ->where('promosi_produk.id_promosi', $promo->id_promosi)
+                ->get();
         }
 
         $data = [
             'produk' => $produk,
-            'promoProduct' => $promoProduct,
+            'activePromotions' => $activePromotions,
         ];
 
         return view('home/index', $data);
