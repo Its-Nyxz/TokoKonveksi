@@ -791,6 +791,31 @@
                 return false;
             }
 
+            const destination_id = $('#destination_id').val();
+            if (destination_id) {
+                const addressLower = alamat.toLowerCase();
+                const locationParts = destination_id.split(',');
+                const missingParts = [];
+                
+                locationParts.forEach(function(part) {
+                    const trimmedPart = part.trim();
+                    if (trimmedPart && addressLower.indexOf(trimmedPart.toLowerCase()) === -1) {
+                        missingParts.push(trimmedPart);
+                    }
+                });
+                
+                if (missingParts.length > 0) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Alamat Belum Lengkap',
+                        text: 'Alamat pengiriman wajib mencantumkan lokasi tujuan: ' + missingParts.join(', ') + '. Silakan klik tombol "Edit" di bagian Data Kontak Pesan untuk melengkapi alamat Anda.',
+                        confirmButtonColor: '#ffbf0f'
+                    });
+                    return false;
+                }
+            }
+
             if (!validateSizes()) {
                 e.preventDefault();
                 Swal.fire({

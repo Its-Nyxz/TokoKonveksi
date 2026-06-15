@@ -74,6 +74,12 @@
                                     <td>Catatan Pembeli</td>
                                     <td>{{ $datapembelian->catatan_pembeli }}</td>
                                 </tr>
+                                @if(!empty($datapembelian->catatan_selesai))
+                                <tr>
+                                    <td><strong>Catatan Selesai Pemesan</strong></td>
+                                    <td>{{ $datapembelian->catatan_selesai }}</td>
+                                </tr>
+                                @endif
                             </table>
                         </div>
                     </div>
@@ -277,17 +283,16 @@
     </style>
 
     <div class="row">
-        @if ($pembayaran->count() > 0 || strtolower(trim($datapembelian->metodepembayaran ?? '')) == 'cod')
-            @php
-                $dp = $pembayaran->first(function ($item) {
-                    return strtolower(trim($item->tipe ?? '')) == 'dp';
-                });
+        @php
+            $dp = $pembayaran->first(function ($item) {
+                return strtolower(trim($item->tipe ?? '')) == 'dp';
+            });
 
-                $pelunasan = $pembayaran->first(function ($item) {
-                    return strtolower(trim($item->tipe ?? '')) == 'lunas';
-                });
-            @endphp
-            @if (!in_array($datapembelian->statusbeli, ['Pesanan Di Tolak', 'Selesai']))
+            $pelunasan = $pembayaran->first(function ($item) {
+                return strtolower(trim($item->tipe ?? '')) == 'lunas';
+            });
+        @endphp
+        @if (!in_array($datapembelian->statusbeli, ['Pesanan Di Tolak', 'Selesai']))
                 <div class="col-md-6 mb-4 left-column" style="display: flex; flex-direction: column;">
                     <div class="card shadow mb-4 left-card" style="flex: 1; display: flex; flex-direction: column;">
                         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-coklat">
@@ -489,9 +494,13 @@
                 </div>
             @endif
 
-            <!-- Layout khusus untuk status Selesai: Bukti Pembayaran dan Foto Pengiriman bersebelahan -->
-            @if ($datapembelian->statusbeli == 'Selesai')
-                @if (strtolower(trim($datapembelian->metodepembayaran)) == 'transfer')
+            <!-- Layout khusus untuk status Selesai atau Pesanan Di Tolak: Bukti Pembayaran dan Foto Pengiriman bersebelahan -->
+            @if (in_array($datapembelian->statusbeli, ['Selesai', 'Pesanan Di Tolak']))
+                @php
+                    $showBukti = (strtolower(trim($datapembelian->metodepembayaran)) == 'transfer' || $pembayaran->count() > 0);
+                @endphp
+
+                @if ($showBukti)
                     <div class="col-md-6 mb-4">
                         <div class="card shadow mb-4">
                             <div
@@ -499,68 +508,59 @@
                                 <h6 class="m-0 font-weight-bold text-white">Bukti Pembayaran</h6>
                             </div>
                             <div class="card-body" style="max-height: 280px; overflow-y: auto;">
-
                                 @php
-                                    // Find DP and pelunasan entries
-                                    $dp = $pembayaran->firstWhere('tipe', 'DP');
-                                    $pelunasan = $pembayaran->firstWhere('tipe', '!=', 'DP');
+                                    $dp = $pembayaran->first(function ($item) {
+                                        return strtolower(trim($item->tipe ?? '')) == 'dp';
+                                    });
+
+                                    $pelunasan = $pembayaran->first(function ($item) {
+                                        return strtolower(trim($item->tipe ?? '')) == 'lunas';
+                                    });
                                 @endphp
 
-                                <div class="card shadow mb-0" style="flex: 1; display: flex; flex-direction: column;">
-                                    <div
-                                        class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-coklat">
-                                        <h6 class="m-0 font-weight-bold text-white">Bukti Pembayaran</h6>
-                                    </div>
-
-                                    <div class="card-body" style="max-height: 280px; overflow-y: auto; flex: 1;">
-                                        @if (!$dp && !$pelunasan)
-                                            <p class="text-danger">Belum ada bukti pembayaran.</p>
-                                        @else
-                                            <div class="{{ $dp && $pelunasan ? 'proof-split' : 'proof-container' }}">
-                                                @if ($dp)
-                                                    <div class="proof-item {{ !$pelunasan ? 'proof-full' : '' }}">
-                                                        <strong>Down Payment (DP)</strong>
-
-                                                        @if (!empty($dp->bukti))
-                                                            <img src="{{ asset('foto/' . rawurlencode($dp->bukti)) }}"
-                                                                alt="Bukti DP" />
-                                                            <div class="img-overlay">
-                                                                <i class="fa fa-eye"
-                                                                    onclick="openImage('{{ asset('foto/' . rawurlencode($dp->bukti)) }}')"></i>
-                                                            </div>
-                                                        @else
-                                                            <p class="text-danger">File bukti DP belum tersedia.</p>
-                                                        @endif
+                                @if (!$dp && !$pelunasan)
+                                    <p class="text-danger">Belum ada bukti pembayaran.</p>
+                                @else
+                                    <div class="{{ $dp && $pelunasan ? 'proof-split' : 'proof-container' }}">
+                                        @if ($dp)
+                                            <div class="proof-item {{ !$pelunasan ? 'proof-full' : '' }}">
+                                                <strong>Down Payment (DP)</strong>
+                                                @if (!empty($dp->bukti))
+                                                    <img src="{{ asset('foto/' . rawurlencode($dp->bukti)) }}"
+                                                        alt="Bukti DP" style="width: 100%;" />
+                                                    <div class="img-overlay">
+                                                        <i class="fa fa-eye"
+                                                            onclick="openImage('{{ asset('foto/' . rawurlencode($dp->bukti)) }}')"></i>
                                                     </div>
+                                                @else
+                                                    <p class="text-danger">File bukti DP belum tersedia.</p>
                                                 @endif
+                                            </div>
+                                        @endif
 
-                                                @if ($pelunasan)
-                                                    <div class="proof-item {{ !$dp ? 'proof-full' : '' }}">
-                                                        <strong>Pelunasan</strong>
-
-                                                        @if (!empty($pelunasan->bukti))
-                                                            <img src="{{ asset('foto/' . rawurlencode($pelunasan->bukti)) }}"
-                                                                alt="Bukti Pelunasan" />
-                                                            <div class="img-overlay">
-                                                                <i class="fa fa-eye"
-                                                                    onclick="openImage('{{ asset('foto/' . rawurlencode($pelunasan->bukti)) }}')"></i>
-                                                            </div>
-                                                        @else
-                                                            <p class="text-danger">File bukti pelunasan belum tersedia.</p>
-                                                        @endif
+                                        @if ($pelunasan)
+                                            <div class="proof-item {{ !$dp ? 'proof-full' : '' }}">
+                                                <strong>Pelunasan</strong>
+                                                @if (!empty($pelunasan->bukti))
+                                                    <img src="{{ asset('foto/' . rawurlencode($pelunasan->bukti)) }}"
+                                                        alt="Bukti Pelunasan" style="width: 100%;" />
+                                                    <div class="img-overlay">
+                                                        <i class="fa fa-eye"
+                                                            onclick="openImage('{{ asset('foto/' . rawurlencode($pelunasan->bukti)) }}')"></i>
                                                     </div>
+                                                @else
+                                                    <p class="text-danger">File bukti pelunasan belum tersedia.</p>
                                                 @endif
                                             </div>
                                         @endif
                                     </div>
-                                </div>
-
+                                @endif
                             </div>
                         </div>
                     </div>
                 @endif
 
-                <div class="col-md-6 mb-4">
+                <div class="{{ $showBukti ? 'col-md-6' : 'col-md-12' }} mb-4">
                     <div class="card shadow mb-4">
                         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-coklat">
                             <h6 class="m-0 font-weight-bold text-white">Foto Pengiriman</h6>
@@ -600,18 +600,7 @@
                     </div>
                 </div>
             @endif
-        @else
-            <div class="col-md-12 mb-4">
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-coklat">
-                        <h6 class="m-0 font-weight-bold text-white">Status Pembayaran</h6>
-                    </div>
-                    <div class="card-body">
-                        <p>Belum melakukan pembayaran</p>
-                    </div>
-                </div>
-            </div>
-        @endif
+
     </div>
 
     {{-- Modal for viewing images --}}

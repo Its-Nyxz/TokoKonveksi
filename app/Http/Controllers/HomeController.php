@@ -722,12 +722,33 @@ class HomeController extends Controller
         $alamatpengirim = $request->input('alamat');
         $catatanpembeli = $request->input('catatan_pembeli');
 
+        $lokasi = $request->input('destination_id');
+
         if (empty($alamatpengirim) || trim($alamatpengirim) == '') {
             return back()->with([
                 'swal_type'  => 'error',
                 'swal_title' => 'Alamat Kosong',
                 'swal_text'  => 'Alamat pengiriman wajib diisi. Silakan edit dan lengkapi alamat Anda.'
             ])->withInput();
+        }
+
+        if (!empty($lokasi)) {
+            $addressLower = strtolower($alamatpengirim);
+            $lokasiParts = explode(',', $lokasi);
+            $missingParts = [];
+            foreach ($lokasiParts as $part) {
+                $trimmedPart = trim($part);
+                if (!empty($trimmedPart) && strpos($addressLower, strtolower($trimmedPart)) === false) {
+                    $missingParts[] = $trimmedPart;
+                }
+            }
+            if (!empty($missingParts)) {
+                return back()->with([
+                    'swal_type'  => 'error',
+                    'swal_title' => 'Alamat Belum Lengkap',
+                    'swal_text'  => 'Alamat pengiriman harus mencantumkan lokasi tujuan: ' . implode(', ', $missingParts) . '.'
+                ])->withInput();
+            }
         }
 
         // Update alamat di profil pengguna agar tersimpan untuk pemesanan berikutnya
@@ -739,7 +760,6 @@ class HomeController extends Controller
         $penggunaTerupdate = DB::table('pengguna')->where('id', $id)->first();
         session(['pengguna' => $penggunaTerupdate]);
 
-        $lokasi = $request->input('destination_id');
         $tipe = $request->input('tipe'); // DP atau Lunas
         $metode = $request->input('metodepembayaran');
 
@@ -1317,14 +1337,14 @@ class HomeController extends Controller
     {
         $request->validate([
             'idpembelian' => 'required',
-            'foto_penerimaan' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'foto_penerimaan' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ], [
-            'foto_penerimaan.required' => 'Wajib melampirkan foto penerimaan barang untuk menyelesaikan pesanan.',
             'foto_penerimaan.image' => 'File harus berupa gambar.',
             'foto_penerimaan.max' => 'Ukuran gambar maksimal 2MB.',
         ]);
 
         $idpembelian = $request->input('idpembelian');
+        $catatan = $request->input('catatan');
 
         if ($request->hasFile('foto_penerimaan')) {
             $file = $request->file('foto_penerimaan');
@@ -1341,6 +1361,7 @@ class HomeController extends Controller
 
         DB::table('pembelian')->where('idpembelian', $idpembelian)->update([
             'statusbeli' => 'Selesai',
+            'catatan_selesai' => $catatan,
             'updated_at' => now(),
         ]);
 
@@ -1351,7 +1372,7 @@ class HomeController extends Controller
             foreach ($admins as $admin) {
                 DB::table('notifikasi')->insert([
                     'id' => $admin->id,
-                    'pesan' => "Pesanan {$order->notransaksi} telah diselesaikan oleh pelanggan dengan bukti foto.",
+                    'pesan' => "Pesanan {$order->notransaksi} telah diselesaikan oleh pelanggan.",
                     'status' => 'unread',
                     'created_at' => now()
                 ]);

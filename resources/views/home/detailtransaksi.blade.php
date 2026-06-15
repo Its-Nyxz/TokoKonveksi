@@ -306,20 +306,9 @@
                         @if (in_array($datapembelian->statusbeli, ['Sedang Dikirim', 'Pesanan Sedang Dikirim']))
                             <div class="card p-3 mt-4 border-warning">
                                 <h5 class="text-black font-weight-bold">Selesaikan Pesanan</h5>
-                                <p class="text-muted small">Silakan unggah bukti foto penerimaan untuk menyelesaikan pesanan
-                                    Anda.</p>
-                                <form action="{{ url('home/selesai') }}" method="POST" enctype="multipart/form-data">
-                                    @csrf
-                                    <input type="hidden" name="idpembelian" value="{{ $datapembelian->idpembelian }}">
-                                    <div class="form-group">
-                                        <label class="font-weight-bold text-black">Foto Penerimaan</label>
-                                        <input type="file" name="foto_penerimaan" class="form-control" required
-                                            accept="image/*">
-                                    </div>
-                                    <button type="submit" class="btn text-white w-100"
-                                        style="background-color: #28a745; font-weight: bold;">Konfirmasi Pesanan
-                                        Selesai</button>
-                                </form>
+                                <p class="text-muted small font-weight-bold">Status Pesanan Anda Sedang Dikirim. Silakan konfirmasi terima pesanan jika barang sudah diterima.</p>
+                                <button type="button" class="btn text-white w-100 font-weight-bold" onclick="openTerimaPesananModal('{{ $datapembelian->idpembelian }}')"
+                                    style="background-color: #28a745; border-radius: 8px;">Terima Pesanan</button>
                             </div>
                         @endif
                     </div>
@@ -365,7 +354,7 @@
 
                     <section>
                         <h3>Produksi & Custom Order</h3>
-                        <p>Waktu produksi menyesuaikan jumlah dan tingkat kesulitan. Produk bersifat custom, tidak dapat
+                        <p>Waktu produksi menyesuaikan jumlah and tingkat kesulitan. Produk bersifat custom, tidak dapat
                             dibatalkan atau direfund setelah produksi berjalan.</p>
                     </section>
 
@@ -387,12 +376,54 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal Terima Pesanan -->
+        <div id="modalTerimaPesanan" class="modal-overlay" style="display: none;">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <h1 style="font-size: 1.5rem; font-weight: bold; margin: 0; color: #1a1a1a;">Konfirmasi Terima Pesanan</h1>
+                    <i class="fa fa-times close-icon" onclick="toggleTerimaPesananModal()" style="cursor: pointer; font-size: 1.25rem;"></i>
+                </div>
+                <form action="{{ url('home/selesai') }}" method="POST">
+                    @csrf
+                    <div class="modal-content" style="padding: 20px;">
+                        <input type="hidden" name="idpembelian" id="terimaIdPembelian" value="">
+                        
+                        <div class="form-group mb-0">
+                            <label class="font-weight-bold text-black" style="font-size: 0.9rem; color: #333;">Catatan Penerimaan (Opsional)</label>
+                            <textarea class="form-control" name="catatan" placeholder="Masukkan catatan / ulasan tentang pesanan Anda..." rows="3" style="font-size: 0.85rem; border: 1px solid #ced4da; border-radius: 6px; padding: 10px;"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="padding: 15px 24px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 10px; background-color: #fcfcfc;">
+                        <button type="button" class="btn btn-secondary font-weight-bold" onclick="toggleTerimaPesananModal()" style="font-size: 0.85rem; padding: 8px 16px; border-radius: 6px; border: 1px solid #ccc; background-color: #f0f0f0; color: #333; cursor: pointer; transition: background 0.2s;">Batal</button>
+                        <button type="submit" class="btn text-white font-weight-bold" style="font-size: 0.85rem; padding: 8px 16px; border-radius: 6px; background-color: #28a745; border: none; cursor: pointer; transition: background 0.2s;">Konfirmasi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </section>
 @endsection
 @section('script')
     <script>
         const modalContainer = document.getElementById('modalContainer');
         const totalBelanja = {{ $totalbelanja ?? 0 }};
+
+        function openTerimaPesananModal(idpembelian) {
+            document.getElementById('terimaIdPembelian').value = idpembelian;
+            document.getElementById('modalTerimaPesanan').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function toggleTerimaPesananModal() {
+            const modal = document.getElementById('modalTerimaPesanan');
+            if (modal.style.display === 'flex') {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            } else {
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
 
         function buttonModal() {
             if (modalContainer.style.display === 'flex') {

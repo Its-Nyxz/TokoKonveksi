@@ -712,6 +712,79 @@
                 gap: 8px;
             }
         }
+
+        /* Container Utama untuk Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        /* Box Modal */
+        .modal-box {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 600px;
+            max-height: 80vh;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: fade 0.5s ease-in-out;
+        }
+
+        /* Header Modal */
+        .modal-header {
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .modal-header h1 {
+            font-size: 1.7rem;
+            font-weight: 700;
+            margin: 0;
+            color: #1a1a1a;
+        }
+
+        .close-icon {
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s;
+        }
+
+        .close-icon:hover {
+            color: #ff4d4d;
+        }
+
+        /* Konten / Isi Modal */
+        .modal-content {
+            padding: 24px;
+            overflow-y: auto;
+            line-height: 1.6;
+            color: #444;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: flex-end;
+            background-color: #fcfcfc;
+        }
     </style>
 
     <section id="home-section" class="ftco-section">
@@ -953,6 +1026,12 @@
                                                             Lanjutkan Pelunasan
                                                         </a>
                                                     @endif
+
+                                                    @if (in_array($db->statusbeli, ['Sedang Dikirim', 'Pesanan Sedang Dikirim']))
+                                                        <button type="button" class="btn btn-success font-weight-bold" onclick="openTerimaPesananModal('{{ $db->idpembelianreal }}')" style="background-color: #28a745 !important; border-color: #28a745 !important; color: white !important;">
+                                                            Terima Pesanan
+                                                        </button>
+                                                    @endif
                                                 </div>
                                             </td>
                                         </tr>
@@ -987,7 +1066,49 @@
         </div>
     </div>
 
+    <!-- Modal Terima Pesanan -->
+    <div id="modalTerimaPesanan" class="modal-overlay" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h1 style="font-size: 1.5rem; font-weight: bold; margin: 0; color: #1a1a1a;">Konfirmasi Terima Pesanan</h1>
+                <i class="fa fa-times close-icon" onclick="toggleTerimaPesananModal()" style="cursor: pointer; font-size: 1.25rem;"></i>
+            </div>
+            <form action="{{ url('home/selesai') }}" method="POST">
+                @csrf
+                <div class="modal-content" style="padding: 20px;">
+                    <input type="hidden" name="idpembelian" id="terimaIdPembelian" value="">
+                    
+                    <div class="form-group mb-0">
+                        <label class="font-weight-bold text-black" style="font-size: 0.9rem; color: #333;">Catatan Penerimaan (Opsional)</label>
+                        <textarea class="form-control" name="catatan" placeholder="Masukkan catatan / ulasan tentang pesanan Anda..." rows="3" style="font-size: 0.85rem; border: 1px solid #ced4da; border-radius: 6px; padding: 10px;"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding: 15px 24px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 10px; background-color: #fcfcfc;">
+                    <button type="button" class="btn btn-secondary font-weight-bold" onclick="toggleTerimaPesananModal()" style="font-size: 0.85rem; padding: 8px 16px; border-radius: 6px; border: 1px solid #ccc; background-color: #f0f0f0; color: #333; cursor: pointer; transition: background 0.2s;">Batal</button>
+                    <button type="submit" class="btn text-white font-weight-bold" style="font-size: 0.85rem; padding: 8px 16px; border-radius: 6px; background-color: #28a745; border: none; cursor: pointer; transition: background 0.2s;">Konfirmasi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
+        function openTerimaPesananModal(idpembelian) {
+            document.getElementById('terimaIdPembelian').value = idpembelian;
+            document.getElementById('modalTerimaPesanan').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function toggleTerimaPesananModal() {
+            const modal = document.getElementById('modalTerimaPesanan');
+            if (modal.style.display === 'flex') {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            } else {
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
         function toggleFilter() {
             const dropdown = document.getElementById('filterDropdown');
             dropdown.classList.toggle('active');
