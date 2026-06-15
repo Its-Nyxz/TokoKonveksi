@@ -34,12 +34,26 @@ yarn-error.log
 /public/bukti/*
 !/public/bukti/.gitkeep
 
-# Foto transaksi / bukti pembayaran / pengiriman
-/public/foto/bukti/*
-!/public/foto/bukti/.gitkeep
-
-/public/foto/pengiriman/*
-!/public/foto/pengiriman/.gitkeep
-
-/public/foto/penerimaan/*
-!/public/foto/penerimaan/.gitkeep
+# Foto transaksi / bukti pembayaran / pengiriman (ignore all uploads but keep static assets)
+/public/foto/*
+!/public/foto/avatar.png
+!/public/foto/logo.png
+!/public/foto/logo.jpg
+!/public/foto/user.png
+!/public/foto/bg.jpg
+!/public/foto/bge3.webp
+!/public/foto/line.png
+!/public/foto/location.png
+!/public/foto/bayar.webp
+!/public/foto/a.png
+!/public/foto/b.png
+!/public/foto/c.png
+!/public/foto/d.png
+!/public/foto/1a.png
+!/public/foto/1b.png
+!/public/foto/2a.png
+!/public/foto/2b.png
+!/public/foto/3a.png
+!/public/foto/3b.png
+!/public/foto/daftar.png
+!/public/foto/loginn.png
