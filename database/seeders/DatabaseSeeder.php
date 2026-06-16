@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             KategoriSeeder::class,
             PenggunaSeeder::class,
             ProdukSeeder::class,
+            LokasiRajaongkirSeeder::class,
+            OngkirLokalSeeder::class,
             // PembelianSeeder::class,
             // PembelianProdukSeeder::class,
             // PembayaranSeeder::class,

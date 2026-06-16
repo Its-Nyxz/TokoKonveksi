@@ -162,7 +162,7 @@
                     </p>
                 </div>
             </div>
-            <form method="post" action="{{ url('home/docheckout') }}">
+            <form id="checkoutForm" method="post" action="{{ url('home/docheckout') }}">
                 <?php $totalbelanja = 0; ?>
                 @csrf
                 <div class="row">
@@ -181,23 +181,23 @@
                                     <div class="form-group">
                                         <label>Nama Pelanggan</label>
                                         <input type="text" value="{{ old('nama', $pengguna->nama) }}" name="nama" required
-                                            class="form-control" id="inputNama" readonly>
+                                            class="form-control" id="inputNama">
                                     </div>
                                     <div class="form-group">
                                         <label>Alamat Email</label>
                                         <input type="text" value="{{ old('email', $pengguna->email) }}" name="email" required
-                                            class="form-control" id="inputEmail" readonly>
+                                            class="form-control" id="inputEmail">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>No. Telepon</label>
                                         <input type="text" value="{{ old('telepon', $pengguna->telepon) }}" name="telepon" required
-                                            class="form-control" id="inputTelepon" readonly>
+                                            class="form-control" id="inputTelepon">
                                     </div>
                                     <div class="form-group">
                                         <label>Alamat Lengkap</label>
-                                        <textarea class="form-control" name="alamat" placeholder="Masukkan Alamat" required id="inputAlamat" readonly>{{ old('alamat', $pengguna->alamat) }}</textarea>
+                                        <textarea class="form-control" name="alamat" placeholder="Masukkan Alamat" required id="inputAlamat">{{ old('alamat', $pengguna->alamat) }}</textarea>
                                     </div>
                                 </div>
 
@@ -220,19 +220,19 @@
                                                 <div class="row">
                                                     <div class="col-3 px-1">
                                                         <label class="mb-1 text-dark" style="font-size: 0.8rem;">Size M</label>
-                                                        <input type="number" name="sizes[{{ $idproduk }}][m]" class="form-control size-input size-m p-1 text-center" value="{{ old('sizes.' . $idproduk . '.m', 0) }}" min="0" readonly style="height: 30px; font-size: 0.85rem;">
+                                                        <input type="number" name="sizes[{{ $idproduk }}][m]" class="form-control size-input size-m p-1 text-center" value="{{ old('sizes.' . $idproduk . '.m', 0) }}" min="0" style="height: 30px; font-size: 0.85rem;">
                                                     </div>
                                                     <div class="col-3 px-1">
                                                         <label class="mb-1 text-dark" style="font-size: 0.8rem;">Size L</label>
-                                                        <input type="number" name="sizes[{{ $idproduk }}][l]" class="form-control size-input size-l p-1 text-center" value="{{ old('sizes.' . $idproduk . '.l', 0) }}" min="0" readonly style="height: 30px; font-size: 0.85rem;">
+                                                        <input type="number" name="sizes[{{ $idproduk }}][l]" class="form-control size-input size-l p-1 text-center" value="{{ old('sizes.' . $idproduk . '.l', 0) }}" min="0" style="height: 30px; font-size: 0.85rem;">
                                                     </div>
                                                     <div class="col-3 px-1">
                                                         <label class="mb-1 text-dark" style="font-size: 0.8rem;">Size XL</label>
-                                                        <input type="number" name="sizes[{{ $idproduk }}][xl]" class="form-control size-input size-xl p-1 text-center" value="{{ old('sizes.' . $idproduk . '.xl', 0) }}" min="0" readonly style="height: 30px; font-size: 0.85rem;">
+                                                        <input type="number" name="sizes[{{ $idproduk }}][xl]" class="form-control size-input size-xl p-1 text-center" value="{{ old('sizes.' . $idproduk . '.xl', 0) }}" min="0" style="height: 30px; font-size: 0.85rem;">
                                                     </div>
                                                     <div class="col-3 px-1">
                                                         <label class="mb-1 text-dark" style="font-size: 0.8rem;">Size XXL</label>
-                                                        <input type="number" name="sizes[{{ $idproduk }}][xxl]" class="form-control size-input size-xxl p-1 text-center" value="{{ old('sizes.' . $idproduk . '.xxl', 0) }}" min="0" readonly style="height: 30px; font-size: 0.85rem;">
+                                                        <input type="number" name="sizes[{{ $idproduk }}][xxl]" class="form-control size-input size-xxl p-1 text-center" value="{{ old('sizes.' . $idproduk . '.xxl', 0) }}" min="0" style="height: 30px; font-size: 0.85rem;">
                                                     </div>
                                                 </div>
                                                 <small class="product-size-warning text-danger font-weight-bold mt-1" style="display: none;"></small>
@@ -244,17 +244,9 @@
                                     <div class="form-group">
                                         <label>Catatan untuk Penjual (opsional)</label>
                                         <textarea class="form-control" name="catatan_pembeli" placeholder="Contoh: Pesan Varian Warna Biru"
-                                            id="inputCatatan" readonly style="height: 200px;">{{ old('catatan_pembeli') }}</textarea>
+                                            id="inputCatatan" style="height: 200px;">{{ old('catatan_pembeli', session('catatan_pembeli')) }}</textarea>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="text-right">
-                                <button type="button" id="btnEdit" class="btn btn-sm text-white"
-                                    style="background-color: #ffbf0f;">Edit</button>
-                                <button type="button" id="btnSimpan" class="btn btn-sm text-white"
-                                    style="background-color: #ffbf0f; display: none;">Simpan</button>
-                                <button type="button" id="btnBatal" class="btn btn-sm text-white"
-                                    style="background-color: #d33; display: none;">Batal</button>
                             </div>
                         </div>
                         <div class="card py-2 px-2 text-justify mt-5">
@@ -575,16 +567,6 @@
         }
     }
 
-    // Simpan nilai awal untuk fitur batal
-    let originalValues = {
-        nama: $('#inputNama').val(),
-        email: $('#inputEmail').val(),
-        telepon: $('#inputTelepon').val(),
-        alamat: $('#inputAlamat').val(),
-        catatan: $('#inputCatatan').val()
-    };
-    let originalSizes = {};
-
     function validateSizes() {
         let allValid = true;
         $('.product-size-section').each(function() {
@@ -610,65 +592,92 @@
 
     $(document).on('input change', '.size-input', validateSizes);
 
-    $('#btnEdit').click(function() {
-        originalValues = {
-            nama: $('#inputNama').val(),
-            email: $('#inputEmail').val(),
-            telepon: $('#inputTelepon').val(),
-            alamat: $('#inputAlamat').val(),
-            catatan: $('#inputCatatan').val()
-        };
-        originalSizes = {};
-        $('.size-input').each(function() {
-            originalSizes[$(this).attr('name')] = $(this).val();
-        });
 
-        $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan, .size-input').prop('readonly', false);
 
-        $('#btnEdit').hide();
-        $('#btnSimpan, #btnBatal').show();
+    // Auto-save contact details with debounce
+    let autoSaveTimers = {};
+    const AUTO_SAVE_DELAY = 1500; // 1.5 detik
+
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
     });
 
-    $('#btnSimpan').click(function() {
-        if (!validateSizes()) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal Menyimpan',
-                text: 'Ada rincian ukuran produk yang belum sesuai dengan kuantitas pesanan.',
-                confirmButtonColor: '#ffbf0f'
+    function triggerAutoSave(fieldName, value) {
+        if (autoSaveTimers[fieldName]) {
+            clearTimeout(autoSaveTimers[fieldName]);
+        }
+
+        autoSaveTimers[fieldName] = setTimeout(function() {
+            $.ajax({
+                url: '{{ url('home/update-profil-ajax') }}',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    field: fieldName,
+                    value: value
+                },
+                success: function(response) {
+                    if (response.success) {
+                        const fieldLabels = {
+                            'nama': 'Nama',
+                            'email': 'Email',
+                            'telepon': 'No. Telepon',
+                            'alamat': 'Alamat',
+                            'catatan_pembeli': 'Catatan'
+                        };
+                        const label = fieldLabels[fieldName] || fieldName;
+                        Toast.fire({
+                            icon: 'success',
+                            title: 'Pembaruan Otomatis',
+                            text: `${label} berhasil diperbarui.`
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    const fieldLabels = {
+                        'nama': 'Nama',
+                        'email': 'Email',
+                        'telepon': 'No. Telepon',
+                        'alamat': 'Alamat',
+                        'catatan_pembeli': 'Catatan'
+                    };
+                    const label = fieldLabels[fieldName] || fieldName;
+                    let errorMsg = `Gagal menyimpan perubahan ${label.toLowerCase()} secara otomatis.`;
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Gagal Menyimpan',
+                        text: errorMsg
+                    });
+                }
             });
-            return false;
-        }
+        }, AUTO_SAVE_DELAY);
+    }
 
-        $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan, .size-input').prop('readonly', true);
-
-        $('#btnSimpan, #btnBatal').hide();
-        $('#btnEdit').show();
-
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil',
-            text: 'Berhasil menyimpan perubahan',
-            confirmButtonColor: '#ffbf0f'
-        });
+    // Bind events
+    $('#inputNama').on('input', function() {
+        triggerAutoSave('nama', $(this).val());
     });
-
-    $('#btnBatal').click(function() {
-        $('#inputNama').val(originalValues.nama);
-        $('#inputEmail').val(originalValues.email);
-        $('#inputTelepon').val(originalValues.telepon);
-        $('#inputAlamat').val(originalValues.alamat);
-        $('#inputCatatan').val(originalValues.catatan);
-        
-        for (let name in originalSizes) {
-            $(`input[name="${name}"]`).val(originalSizes[name]);
+    $('#inputEmail').on('input', function() {
+        triggerAutoSave('email', $(this).val());
+    });
+    $('#inputTelepon').on('input', function() {
+        triggerAutoSave('telepon', $(this).val());
+    });
+    $('#inputAlamat').on('input', function() {
+        const val = $(this).val();
+        if (val.trim().length >= 10) {
+            triggerAutoSave('alamat', val);
         }
-
-        $('#inputNama, #inputEmail, #inputTelepon, #inputAlamat, #inputCatatan, .size-input').prop('readonly', true);
-
-        $('#btnSimpan, #btnBatal').hide();
-        $('#btnEdit').show();
-        validateSizes();
+    });
+    $('#inputCatatan').on('input', function() {
+        triggerAutoSave('catatan_pembeli', $(this).val());
     });
 
     $('#metodepembayaran').on('change', function() {
@@ -778,38 +787,120 @@
         cekLokasiWonogiri();
         aturMetodePengiriman();
 
-        $('form[action*="docheckout"]').on('submit', function(e) {
+        $('#checkoutForm').on('submit', function(e) {
             const alamat = $('#inputAlamat').val().trim();
-            if (!alamat) {
+            if (!alamat || alamat.length < 15) {
                 e.preventDefault();
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Alamat Belum Lengkap',
-                    text: 'Alamat pengiriman wajib diisi. Silakan klik tombol "Edit" di bagian Data Kontak Pesan untuk melengkapi alamat Anda.',
+                    title: 'Alamat Kurang Lengkap',
+                    text: 'Silakan isi Alamat Lengkap pengiriman dengan benar (minimal 15 karakter).',
                     confirmButtonColor: '#ffbf0f'
                 });
                 return false;
             }
 
             const destination_id = $('#destination_id').val();
-            if (destination_id) {
-                const addressLower = alamat.toLowerCase();
-                const locationParts = destination_id.split(',');
-                const missingParts = [];
-                
-                locationParts.forEach(function(part) {
-                    const trimmedPart = part.trim();
-                    if (trimmedPart && addressLower.indexOf(trimmedPart.toLowerCase()) === -1) {
-                        missingParts.push(trimmedPart);
-                    }
+            if (!destination_id) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Lokasi Belum Dipilih',
+                    text: 'Silakan cari dan pilih lokasi tujuan pengiriman Anda.',
+                    confirmButtonColor: '#ffbf0f'
                 });
+                return false;
+            }
+
+            const detailLower = alamat.toLowerCase();
+            const lokasiSelect = document.getElementById('destination_id');
+            const selectedOption = lokasiSelect ? lokasiSelect.options[lokasiSelect.selectedIndex] : null;
+            const lokasiTeks = selectedOption && lokasiSelect.value ? selectedOption.text.toLowerCase() : '';
+
+            // 1. Validasi Kelengkapan Alamat Spesifik (Jalan, RT/RW, No Rumah, Blok, Lantai)
+            const hasStreet = /jl|jalan|gang|gg|blok|dusun|desa|kp|kampung|perum|perumahan|ruko|gedung|residence|cluster|apartemen|apartment|menara|tower|lantai/i.test(detailLower);
+            const hasRtRw = /rt\s*\d+|rw\s*\d+|rt\/\s*rw|rt\s*-\s*rw/i.test(detailLower);
+            const hasNumberOrFloor = /no|nomor|blok|km|lantai|lt|fl|floor|no\.\d+|\d+/.test(detailLower);
+
+            if (!hasStreet || (!hasRtRw && !hasNumberOrFloor)) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Alamat Detail Kurang Lengkap',
+                    text: 'Alamat lengkap pengiriman harus menyertakan detail spesifik (seperti nama jalan/kampung/dusun, dan nomor rumah/RT/RW/lantai/apartemen) agar kurir dapat menemukan lokasi Anda.',
+                    confirmButtonColor: '#ffbf0f'
+                });
+                return false;
+            }
+
+            // 2. Validasi Ketidakcocokan Kota (City Mismatch)
+            const majorCities = [
+                'wonogiri', 'solo', 'surakarta', 'yogyakarta', 'jogja', 'karanganyar', 
+                'sukoharjo', 'boyolali', 'klaten', 'sragen', 'semarang', 'salatiga', 
+                'jakarta', 'bandung', 'surabaya', 'malang', 'sidoarjo', 'gresik', 
+                'pasuruan', 'mojokerto', 'kediri', 'madiun', 'magelang', 'purwokerto', 
+                'cilacap', 'kebumen', 'tegal', 'pekalongan', 'kudus', 'pati', 
+                'jepara', 'rembang', 'blora', 'grobogan', 'temanggung', 'wonosobo', 
+                'purworejo', 'brebes', 'pemalang', 'batang', 'kendal', 'demak', 
+                'purbalingga', 'banjarnegara', 'depok', 'bekasi', 'bogor', 'tangerang', 
+                'serang', 'cilegon', 'karawang', 'cirebon', 'tasikmalaya', 'sukabumi', 
+                'cimahi', 'sumedang', 'garut', 'cianjur', 'purwakarta', 'subang', 
+                'indramayu', 'majalengka', 'kuningan', 'ciamis', 'banjar', 'sleman', 
+                'bantul', 'kulon progo', 'gunung kidul', 'banyuwangi', 'jember', 
+                'probolinggo', 'lumajang', 'bondowoso', 'situbondo', 'blitar', 
+                'tulungagung', 'trenggalek', 'ponorogo', 'pacitan', 'ngawi', 
+                'magetan', 'nganjuk', 'jombang', 'lamongan', 'tuban', 'bojonegoro', 
+                'bangkalan', 'sampang', 'pamekasan', 'sumenep', 'medan', 'palembang', 
+                'makassar', 'denpasar', 'bali', 'balikpapan', 'pontianak', 'banjarmasin', 
+                'samarinda', 'pekanbaru', 'padang', 'lampung', 'jambi', 'bengkulu', 
+                'manado', 'ambon', 'jayapura', 'kupang', 'mataram'
+            ];
+
+            let cityMismatch = null;
+            for (let city of majorCities) {
+                if (detailLower.includes(city) && !lokasiTeks.includes(city)) {
+                    cityMismatch = city;
+                    break;
+                }
+            }
+
+            if (cityMismatch) {
+                e.preventDefault();
+                const capitalCity = cityMismatch.charAt(0).toUpperCase() + cityMismatch.slice(1);
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Kota Tidak Sesuai',
+                    text: `Alamat Lengkap Anda mencantumkan kota "${capitalCity}", tetapi Anda memilih lokasi tujuan yang berbeda di dropdown. Harap sesuaikan alamat dan lokasi tujuan agar tidak terjadi kesalahan tarif ongkir atau pengiriman.`,
+                    confirmButtonColor: '#ffbf0f'
+                });
+                return false;
+            }
+
+            // 3. Validasi Penulisan Alamat Ganda (Overlap)
+
+
+            // 4. Validasi Kesesuaian Alamat Lengkap dengan Lokasi Tujuan
+            if (lokasiTeks) {
+                const words = lokasiTeks.split(/[\s,]+/).filter(w => w.length > 3 && !['jawa', 'tengah', 'timur', 'barat', 'utara', 'selatan', 'kota', 'kabupaten'].includes(w));
                 
-                if (missingParts.length > 0) {
+                let isMatch = false;
+                if (words.length === 0) {
+                    isMatch = true;
+                } else {
+                    for (let word of words) {
+                        if (detailLower.includes(word)) {
+                            isMatch = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!isMatch) {
                     e.preventDefault();
                     Swal.fire({
                         icon: 'warning',
-                        title: 'Alamat Belum Lengkap',
-                        text: 'Alamat pengiriman wajib mencantumkan lokasi tujuan: ' + missingParts.join(', ') + '. Silakan klik tombol "Edit" di bagian Data Kontak Pesan untuk melengkapi alamat Anda.',
+                        title: 'Alamat Tidak Sesuai',
+                        text: `Lokasi tujuan pengiriman yang Anda pilih tidak sesuai dengan alamat lengkap anda.  Silakan tambahkan lokasi ${selectedOption.text} pada alamat lengkap anda`,
                         confirmButtonColor: '#ffbf0f'
                     });
                     return false;

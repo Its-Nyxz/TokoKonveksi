@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="{{ asset('assets/home/css/style.css') }}">
     {{-- <link rel="icon" type="image/x-icon" href="{{ asset('foto/logonya.jpeg') }}"> --}}
     <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -248,25 +248,30 @@
         $(document).ready(function() {
             var $whatsappIcon = $('.whatsapp-icon');
             var $heroSection = $('.hero-wrap');
-            var heroBottom = $heroSection.offset().top + $heroSection.outerHeight();
+            
+            if ($heroSection.length) {
+                var heroBottom = $heroSection.offset().top + $heroSection.outerHeight();
 
-            $(window).scroll(function() {
-                var scrollTop = $(this).scrollTop();
-                if (scrollTop > heroBottom) {
-                    if (!$whatsappIcon.is(':visible')) {
-                        $whatsappIcon
-                            .removeClass('slideOut')
-                            .fadeIn()
-                            .css('animation', 'slideIn 0.5s forwards');
+                $(window).scroll(function() {
+                    var scrollTop = $(this).scrollTop();
+                    if (scrollTop > heroBottom) {
+                        if (!$whatsappIcon.is(':visible')) {
+                            $whatsappIcon
+                                .removeClass('slideOut')
+                                .fadeIn()
+                                .css('animation', 'slideIn 0.5s forwards');
+                        }
+                    } else {
+                        if ($whatsappIcon.is(':visible')) {
+                            $whatsappIcon
+                                .css('animation', 'slideOut 0.5s forwards')
+                                .fadeOut();
+                        }
                     }
-                } else {
-                    if ($whatsappIcon.is(':visible')) {
-                        $whatsappIcon
-                            .css('animation', 'slideOut 0.5s forwards')
-                            .fadeOut();
-                    }
-                }
-            });
+                });
+            } else {
+                $whatsappIcon.fadeIn();
+            }
 
             // Product hover switching images
             $(document).on('mouseenter', '.product-img-hover', function() {

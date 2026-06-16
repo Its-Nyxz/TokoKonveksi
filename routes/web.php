@@ -144,4 +144,5 @@ Route::controller(HomeController::class)->group(function () {
     Route::get('home/pelunasan/{id}', 'pelunasan');
     Route::post('home/pelunasansimpan', 'pelunasansimpan');
     Route::post('home/selesai', 'selesai');
+    Route::post('home/update-profil-ajax', 'updateProfilAjax');
 });

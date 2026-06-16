@@ -656,23 +656,42 @@ class HomeController extends Controller
     {
         $keyword = $request->keyword;
 
-        $response = Http::withHeaders([
-            'key' => '7ff8406f12c653758df1a5fa6d6bf474',
-        ])->get('https://rajaongkir.komerce.id/api/v1/destination/domestic-destination', [
-            'search' => $keyword,
-            'limit' => 100,
-            'offset' => 0,
-        ]);
+        try {
+            $response = Http::timeout(3)->withHeaders([
+                'key' => '7ff8406f12c653758df1a5fa6d6bf474',
+            ])->get('https://rajaongkir.komerce.id/api/v1/destination/domestic-destination', [
+                'search' => $keyword,
+                'limit' => 100,
+                'offset' => 0,
+            ]);
 
-        if ($response->successful()) {
-            return response()->json($response['data']);
-        } else {
-            return response()->json([
-                'message' => 'Gagal mencari lokasi',
-                'status' => $response->status(),
-                'error' => $response->body()
-            ], $response->status());
+            if ($response->successful() && isset($response['data']) && count($response['data']) > 0) {
+                return response()->json($response['data']);
+            }
+        } catch (\Exception $e) {
+            // Fallback ke database lokal
         }
+
+        $query = DB::table('lokasi_rajaongkir');
+        $words = explode(' ', $keyword);
+        foreach ($words as $word) {
+            $word = trim($word);
+            if ($word !== '') {
+                $query->where('label', 'like', '%' . $word . '%');
+            }
+        }
+
+        // Cek apakah ada kecocokan tingkat kota/kabupaten (id < 1000)
+        $cityQuery = clone $query;
+        $cityMatches = $cityQuery->where('id', '<', 1000)->get();
+
+        if ($cityMatches->count() > 0) {
+            return response()->json($cityMatches);
+        }
+
+        $lokasiLokal = $query->limit(200)->get();
+
+        return response()->json($lokasiLokal);
     }
 
     // GET SERVICE / ONGKIR
@@ -684,26 +703,44 @@ class HomeController extends Controller
         $courier = $request->courier;
         $price = 'lowest';
 
-        $response = Http::asForm()->withHeaders([
-            'key' => '7ff8406f12c653758df1a5fa6d6bf474',
-            'Content-Type' => 'application/x-www-form-urlencoded',
-        ])->post('https://rajaongkir.komerce.id/api/v1/calculate/domestic-cost', [
-            'origin' => $origin,
-            'destination' => $destination,
-            'weight' => $weight,
-            'courier' => $courier,
-            'price' => $price,
-        ]);
-
-        if ($response->successful()) {
-            return response()->json($response->json('data'));
-        } else {
-            return response()->json([
-                'message' => 'Gagal mengambil layanan ongkir',
-                'status' => $response->status(),
-                'error' => $response->body(),
-            ], $response->status());
+        if (!is_numeric($destination)) {
+            $localLoc = DB::table('lokasi_rajaongkir')
+                ->where('label', $destination)
+                ->first();
+            if ($localLoc) {
+                $destination = $localLoc->id;
+            }
         }
+
+        try {
+            $response = Http::timeout(3)->asForm()->withHeaders([
+                'key' => '7ff8406f12c653758df1a5fa6d6bf474',
+                'Content-Type' => 'application/x-www-form-urlencoded',
+            ])->post('https://rajaongkir.komerce.id/api/v1/calculate/domestic-cost', [
+                'origin' => $origin,
+                'destination' => $destination,
+                'weight' => $weight,
+                'courier' => $courier,
+                'price' => $price,
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json('data');
+                if (!empty($data)) {
+                    return response()->json($data);
+                }
+            }
+        } catch (\Exception $e) {
+            // Fallback ke database lokal
+        }
+
+        $ongkirLokal = DB::table('ongkir_lokal')
+            ->where('destination_id', $destination)
+            ->where('courier', $courier)
+            ->select('courier as code', 'service', 'description', 'cost', 'etd')
+            ->get();
+
+        return response()->json($ongkirLokal);
     }
 
     public function docheckout(Request $request)
@@ -724,30 +761,82 @@ class HomeController extends Controller
 
         $lokasi = $request->input('destination_id');
 
-        if (empty($alamatpengirim) || trim($alamatpengirim) == '') {
+        $alamatLower = strtolower(trim($alamatpengirim));
+        $hasStreet = (bool) preg_match('/jl|jalan|gang|gg|blok|dusun|desa|kp|kampung|perum|perumahan|ruko|gedung|residence|cluster|apartemen|apartment|menara|tower|lantai/i', $alamatLower);
+        $hasRtRw = (bool) preg_match('/rt\s*\d+|rw\s*\d+|rt\/\s*rw|rt\s*-\s*rw/i', $alamatLower);
+        $hasNumberOrFloor = (bool) preg_match('/no|nomor|blok|km|lantai|lt|fl|floor|no\.\d+|\d+/i', $alamatLower);
+
+        if (empty($alamatpengirim) || strlen(trim($alamatpengirim)) < 15 || !$hasStreet || (!$hasRtRw && !$hasNumberOrFloor)) {
             return back()->with([
                 'swal_type'  => 'error',
-                'swal_title' => 'Alamat Kosong',
-                'swal_text'  => 'Alamat pengiriman wajib diisi. Silakan edit dan lengkapi alamat Anda.'
+                'swal_title' => 'Alamat Detail Kurang Lengkap',
+                'swal_text'  => 'Alamat lengkap pengiriman harus menyertakan detail spesifik (seperti nama jalan/kampung/dusun, nomor rumah/RT/RW/lantai) dengan minimal 15 karakter.'
             ])->withInput();
         }
 
         if (!empty($lokasi)) {
-            $addressLower = strtolower($alamatpengirim);
-            $lokasiParts = explode(',', $lokasi);
-            $missingParts = [];
-            foreach ($lokasiParts as $part) {
-                $trimmedPart = trim($part);
-                if (!empty($trimmedPart) && strpos($addressLower, strtolower($trimmedPart)) === false) {
-                    $missingParts[] = $trimmedPart;
+            $lokasiLower = strtolower($lokasi);
+            // Split lokasi into components
+            $lokasiWords = array_filter(
+                preg_split('/[\s,]+/', $lokasiLower),
+                function($w) {
+                    return strlen($w) > 3 && !in_array($w, ['jawa', 'tengah', 'timur', 'barat', 'utara', 'selatan', 'kota', 'kabupaten']);
+                }
+            );
+
+            // City Mismatch Validation
+            $majorCities = [
+                'wonogiri', 'solo', 'surakarta', 'yogyakarta', 'jogja', 'karanganyar', 
+                'sukoharjo', 'boyolali', 'klaten', 'sragen', 'semarang', 'salatiga', 
+                'jakarta', 'bandung', 'surabaya', 'malang', 'sidoarjo', 'gresik', 
+                'pasuruan', 'mojokerto', 'kediri', 'madiun', 'magelang', 'purwokerto', 
+                'cilacap', 'kebumen', 'tegal', 'pekalongan', 'kudus', 'pati', 
+                'jepara', 'rembang', 'blora', 'grobogan', 'temanggung', 'wonosobo', 
+                'purworejo', 'brebes', 'pemalang', 'batang', 'kendal', 'demak', 
+                'purbalingga', 'banjarnegara', 'depok', 'bekasi', 'bogor', 'tangerang', 
+                'serang', 'cilegon', 'karawang', 'cirebon', 'tasikmalaya', 'sukabumi', 
+                'cimahi', 'sumedang', 'garut', 'cianjur', 'purwakarta', 'subang', 
+                'indramayu', 'majalengka', 'kuningan', 'ciamis', 'banjar', 'sleman', 
+                'bantul', 'kulon progo', 'gunung kidul', 'banyuwangi', 'jember', 
+                'probolinggo', 'lumajang', 'bondowoso', 'situbondo', 'blitar', 
+                'tulungagung', 'trenggalek', 'ponorogo', 'pacitan', 'ngawi', 
+                'magetan', 'nganjuk', 'jombang', 'lamongan', 'tuban', 'bojonegoro', 
+                'bangkalan', 'sampang', 'pamekasan', 'sumenep', 'medan', 'palembang', 
+                'makassar', 'denpasar', 'bali', 'balikpapan', 'pontianak', 'banjarmasin', 
+                'samarinda', 'pekanbaru', 'padang', 'lampung', 'jambi', 'bengkulu', 
+                'manado', 'ambon', 'jayapura', 'kupang', 'mataram'
+            ];
+
+            foreach ($majorCities as $city) {
+                if (strpos($alamatLower, $city) !== false && strpos($lokasiLower, $city) === false) {
+                    $capitalCity = ucfirst($city);
+                    return back()->with([
+                        'swal_type'  => 'error',
+                        'swal_title' => 'Kota Tidak Sesuai',
+                        'swal_text'  => "Alamat Lengkap Anda mencantumkan kota '{$capitalCity}', tetapi Anda memilih lokasi tujuan yang berbeda. Harap sesuaikan agar tarif pengiriman benar."
+                    ])->withInput();
                 }
             }
-            if (!empty($missingParts)) {
-                return back()->with([
-                    'swal_type'  => 'error',
-                    'swal_title' => 'Alamat Belum Lengkap',
-                    'swal_text'  => 'Alamat pengiriman harus mencantumkan lokasi tujuan: ' . implode(', ', $missingParts) . '.'
-                ])->withInput();
+
+
+
+            // Validasi Kesesuaian Alamat Lengkap dengan Lokasi Tujuan
+            if (!empty($lokasiWords)) {
+                $isMatch = false;
+                foreach ($lokasiWords as $word) {
+                    if (strpos($alamatLower, $word) !== false) {
+                        $isMatch = true;
+                        break;
+                    }
+                }
+
+                if (!$isMatch) {
+                    return back()->with([
+                        'swal_type'  => 'error',
+                        'swal_title' => 'Alamat Tidak Sesuai',
+                        'swal_text'  => "Lokasi tujuan pengiriman yang Anda pilih {$lokasi} tidak sesuai dengan alamat lengkap anda.  Silakan tambahkan lokasi {$lokasi} pada alamat lengkap anda"
+                    ])->withInput();
+                }
             }
         }
 
@@ -913,8 +1002,9 @@ class HomeController extends Controller
             ]);
         }
 
-        // Bersihkan keranjang
+        // Bersihkan keranjang & catatan pembeli
         session()->forget('keranjang');
+        session()->forget('catatan_pembeli');
 
         return redirect('home/riwayat')->with([
             'swal_type'  => 'success',
@@ -1384,6 +1474,57 @@ class HomeController extends Controller
             'swal_title' => 'Pesanan Selesai',
             'swal_text' => 'Terima kasih, pesanan Anda telah diselesaikan.'
         ]);
+    }
+
+    public function updateProfilAjax(Request $request)
+    {
+        if (!session('pengguna')) {
+            return response()->json(['success' => false, 'message' => 'Sesi habis, silakan login kembali.'], 401);
+        }
+
+        $id = session('pengguna')->id;
+        $field = $request->input('field');
+        $value = trim($request->input('value'));
+
+        if (!in_array($field, ['nama', 'email', 'telepon', 'alamat', 'catatan_pembeli'])) {
+            return response()->json(['success' => false, 'message' => 'Kolom tidak valid.'], 400);
+        }
+
+        if ($field === 'catatan_pembeli') {
+            session(['catatan_pembeli' => $value]);
+            return response()->json(['success' => true]);
+        }
+
+        if (!in_array($field, ['alamat', 'catatan_pembeli']) && empty($value)) {
+            return response()->json(['success' => false, 'message' => ucfirst($field) . ' tidak boleh kosong.'], 400);
+        }
+
+        if ($field === 'alamat' && strlen($value) < 10) {
+            return response()->json(['success' => false, 'message' => 'Alamat terlalu singkat (minimal 10 karakter).'], 400);
+        }
+
+        if ($field === 'email') {
+            if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                return response()->json(['success' => false, 'message' => 'Format email tidak valid.'], 400);
+            }
+            $exists = DB::table('pengguna')
+                ->where('email', $value)
+                ->where('id', '!=', $id)
+                ->exists();
+            if ($exists) {
+                return response()->json(['success' => false, 'message' => 'Email sudah terdaftar.'], 400);
+            }
+        }
+
+        DB::table('pengguna')->where('id', $id)->update([
+            $field => $value
+        ]);
+
+        // Perbarui session
+        $penggunaTerupdate = DB::table('pengguna')->where('id', $id)->first();
+        session(['pengguna' => $penggunaTerupdate]);
+
+        return response()->json(['success' => true]);
     }
 
     private function getProdukTransaksi($idpembelian)
