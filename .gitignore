@@ -36,6 +36,7 @@ yarn-error.log
 
 # Foto transaksi / bukti pembayaran / pengiriman (ignore all uploads but keep static assets)
 /public/foto/*
+/public/qr/*
 !/public/foto/avatar.png
 !/public/foto/logo.png
 !/public/foto/logo.jpg
