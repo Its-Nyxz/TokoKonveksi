@@ -655,6 +655,13 @@ class HomeController extends Controller
     public function getlokasi(Request $request)
     {
         $keyword = $request->keyword;
+        $keywordClean = trim(strtolower($keyword));
+
+        if ($keywordClean === '') {
+            return response()->json([]);
+        }
+
+        $data = [];
 
         try {
             $response = Http::timeout(3)->withHeaders([
@@ -666,32 +673,110 @@ class HomeController extends Controller
             ]);
 
             if ($response->successful() && isset($response['data']) && count($response['data']) > 0) {
-                return response()->json($response['data']);
+                foreach ($response['data'] as $item) {
+                    $data[] = (array) $item;
+                }
             }
         } catch (\Exception $e) {
             // Fallback ke database lokal
         }
 
-        $query = DB::table('lokasi_rajaongkir');
-        $words = explode(' ', $keyword);
-        foreach ($words as $word) {
-            $word = trim($word);
-            if ($word !== '') {
-                $query->where('label', 'like', '%' . $word . '%');
+        if (empty($data)) {
+            $query = DB::table('lokasi_rajaongkir');
+            $words = explode(' ', $keyword);
+            foreach ($words as $word) {
+                $word = trim($word);
+                if ($word !== '') {
+                    $query->where('label', 'like', '%' . $word . '%');
+                }
+            }
+            $lokasiLokal = $query->limit(300)->get();
+            foreach ($lokasiLokal as $item) {
+                $data[] = (array) $item;
             }
         }
 
-        // Cek apakah ada kecocokan tingkat kota/kabupaten (id < 1000)
-        $cityQuery = clone $query;
-        $cityMatches = $cityQuery->where('id', '<', 1000)->get();
+        // Filter pintar berdasarkan bagian label
+        $cityMatches = [];
+        $kecamatanMatches = [];
+        $kelurahanMatches = [];
+        $provinceMatches = [];
+        $zipcodeMatches = [];
 
-        if ($cityMatches->count() > 0) {
-            return response()->json($cityMatches);
+        foreach ($data as $item) {
+            $label = $item['label'] ?? '';
+            $parts = explode(',', $label);
+            $partsCount = count($parts);
+
+            $kelurahan = '';
+            $kecamatan = '';
+            $city = '';
+            $province = '';
+            $zipcode = '';
+
+            if ($partsCount >= 5) {
+                // Kelurahan, Kecamatan, Kota/Kabupaten, Provinsi, Kode Pos
+                $kelurahan = trim($parts[0]);
+                $kecamatan = trim($parts[1]);
+                $city = trim($parts[2]);
+                $province = trim($parts[3]);
+                $zipcode = trim($parts[4]);
+            } elseif ($partsCount === 4) {
+                // Kecamatan, Kota/Kabupaten, Provinsi, Kode Pos
+                $kecamatan = trim($parts[0]);
+                $city = trim($parts[1]);
+                $province = trim($parts[2]);
+                $zipcode = trim($parts[3]);
+            } elseif ($partsCount === 3) {
+                // Kecamatan, Kota/Kabupaten, Provinsi
+                $kecamatan = trim($parts[0]);
+                $city = trim($parts[1]);
+                $province = trim($parts[2]);
+            } else {
+                $city = isset($parts[0]) ? trim($parts[0]) : '';
+            }
+
+            $kelurahanLower = strtolower($kelurahan);
+            $kecamatanLower = strtolower($kecamatan);
+            $cityLower = strtolower($city);
+            $provinceLower = strtolower($province);
+            $zipcodeLower = strtolower($zipcode);
+
+            if ($zipcodeLower !== '' && strpos($zipcodeLower, $keywordClean) !== false) {
+                $zipcodeMatches[] = $item;
+            }
+            if ($cityLower !== '' && (strpos($cityLower, $keywordClean) !== false || strpos($keywordClean, $cityLower) !== false)) {
+                $cityMatches[] = $item;
+            }
+            if ($kecamatanLower !== '' && (strpos($kecamatanLower, $keywordClean) !== false || strpos($keywordClean, $kecamatanLower) !== false)) {
+                $kecamatanMatches[] = $item;
+            }
+            if ($kelurahanLower !== '' && (strpos($kelurahanLower, $keywordClean) !== false || strpos($keywordClean, $kelurahanLower) !== false)) {
+                $kelurahanMatches[] = $item;
+            }
+            if ($provinceLower !== '' && (strpos($provinceLower, $keywordClean) !== false || strpos($keywordClean, $provinceLower) !== false)) {
+                $provinceMatches[] = $item;
+            }
         }
 
-        $lokasiLokal = $query->limit(200)->get();
+        // Prioritas Pengembalian Hasil:
+        if (is_numeric($keywordClean) && count($zipcodeMatches) > 0) {
+            return response()->json($zipcodeMatches);
+        }
+        if (count($cityMatches) > 0) {
+            return response()->json($cityMatches);
+        }
+        if (count($kecamatanMatches) > 0) {
+            return response()->json($kecamatanMatches);
+        }
+        if (count($kelurahanMatches) > 0) {
+            return response()->json($kelurahanMatches);
+        }
+        if (count($provinceMatches) > 0) {
+            return response()->json($provinceMatches);
+        }
 
-        return response()->json($lokasiLokal);
+        return response()->json($data);
     }
 
     // GET SERVICE / ONGKIR
