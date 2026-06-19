@@ -846,20 +846,54 @@ class HomeController extends Controller
 
         $lokasi = $request->input('destination_id');
 
+        $metode = $request->input('metodepembayaran');
         $alamatLower = strtolower(trim($alamatpengirim));
-        $hasStreet = (bool) preg_match('/jl|jalan|gang|gg|blok|dusun|desa|kp|kampung|perum|perumahan|ruko|gedung|residence|cluster|apartemen|apartment|menara|tower|lantai/i', $alamatLower);
-        $hasRtRw = (bool) preg_match('/rt\s*\d+|rw\s*\d+|rt\/\s*rw|rt\s*-\s*rw/i', $alamatLower);
-        $hasNumberOrFloor = (bool) preg_match('/no|nomor|blok|km|lantai|lt|fl|floor|no\.\d+|\d+/i', $alamatLower);
 
-        if (empty($alamatpengirim) || strlen(trim($alamatpengirim)) < 15 || !$hasStreet || (!$hasRtRw && !$hasNumberOrFloor)) {
+        // Validasi format alamat (minimal 5 bagian dipisah koma)
+        $parts = array_map('trim', explode(',', $alamatpengirim));
+        if (count($parts) < 5 || in_array('', $parts)) {
             return back()->with([
                 'swal_type'  => 'error',
-                'swal_title' => 'Alamat Detail Kurang Lengkap',
-                'swal_text'  => 'Alamat lengkap pengiriman harus menyertakan detail spesifik (seperti nama jalan/kampung/dusun, nomor rumah/RT/RW/lantai) dengan minimal 15 karakter.'
+                'swal_title' => 'Format Alamat Salah',
+                'swal_text'  => 'Format alamat lengkap harus: "nama jalan sudah termasuk rt/rw, kelurahan/dusun/desa, kecamatan, kabupaten/kota, provinsi" (dipisahkan dengan koma).'
             ])->withInput();
         }
 
-        if (!empty($lokasi)) {
+        // Validasi bagian nama jalan & RT/RW
+        $streetPart = strtolower($parts[0]);
+        $hasStreet = (bool) preg_match('/jl|jalan|gang|gg|blok|dusun|desa|kp|kampung|perum|perumahan|ruko|gedung|residence|cluster|apartemen|apartment|menara|tower|lantai/i', $streetPart);
+        $hasRtRw = (bool) preg_match('/rt\s*\d+|rw\s*\d+|rt\/\s*rw|rt\s*-\s*rw/i', $streetPart);
+        $hasNumberOrFloor = (bool) preg_match('/no|nomor|blok|km|lantai|lt|fl|floor|no\.\d+|\d+/i', $streetPart);
+
+        if (!$hasStreet || (!$hasRtRw && !$hasNumberOrFloor)) {
+            return back()->with([
+                'swal_type'  => 'error',
+                'swal_title' => 'Alamat Detail Kurang Lengkap',
+                'swal_text'  => 'Bagian pertama alamat (nama jalan) harus menyertakan detail spesifik (seperti nama jalan/kampung/dusun, nomor rumah/RT/RW/lantai) dengan minimal 15 karakter.'
+            ])->withInput();
+        }
+
+        // Validasi metode pengiriman & lokasi
+        if ($metode === 'COD') {
+            if (strpos($alamatLower, 'wonogiri') === false) {
+                return back()->with([
+                    'swal_type'  => 'error',
+                    'swal_title' => 'Metode Pengiriman Tidak Valid',
+                    'swal_text'  => 'Metode pengiriman "Tanpa Kurir" hanya tersedia untuk wilayah Wonogiri.'
+                ])->withInput();
+            }
+            $ongkir = 0;
+        }
+
+        if ($metode === 'Transfer') {
+            if (empty($lokasi)) {
+                return back()->with([
+                    'swal_type'  => 'error',
+                    'swal_title' => 'Lokasi Tidak Terdeteksi',
+                    'swal_text'  => 'Lokasi tujuan pengiriman tidak teridentifikasi dari alamat Anda. Harap pastikan nama kecamatan dan kabupaten ditulis dengan benar.'
+                ])->withInput();
+            }
+
             $lokasiLower = strtolower($lokasi);
             // Split lokasi into components
             $lokasiWords = array_filter(
@@ -868,42 +902,6 @@ class HomeController extends Controller
                     return strlen($w) > 3 && !in_array($w, ['jawa', 'tengah', 'timur', 'barat', 'utara', 'selatan', 'kota', 'kabupaten']);
                 }
             );
-
-            // City Mismatch Validation
-            $majorCities = [
-                'wonogiri', 'solo', 'surakarta', 'yogyakarta', 'jogja', 'karanganyar', 
-                'sukoharjo', 'boyolali', 'klaten', 'sragen', 'semarang', 'salatiga', 
-                'jakarta', 'bandung', 'surabaya', 'malang', 'sidoarjo', 'gresik', 
-                'pasuruan', 'mojokerto', 'kediri', 'madiun', 'magelang', 'purwokerto', 
-                'cilacap', 'kebumen', 'tegal', 'pekalongan', 'kudus', 'pati', 
-                'jepara', 'rembang', 'blora', 'grobogan', 'temanggung', 'wonosobo', 
-                'purworejo', 'brebes', 'pemalang', 'batang', 'kendal', 'demak', 
-                'purbalingga', 'banjarnegara', 'depok', 'bekasi', 'bogor', 'tangerang', 
-                'serang', 'cilegon', 'karawang', 'cirebon', 'tasikmalaya', 'sukabumi', 
-                'cimahi', 'sumedang', 'garut', 'cianjur', 'purwakarta', 'subang', 
-                'indramayu', 'majalengka', 'kuningan', 'ciamis', 'banjar', 'sleman', 
-                'bantul', 'kulon progo', 'gunung kidul', 'banyuwangi', 'jember', 
-                'probolinggo', 'lumajang', 'bondowoso', 'situbondo', 'blitar', 
-                'tulungagung', 'trenggalek', 'ponorogo', 'pacitan', 'ngawi', 
-                'magetan', 'nganjuk', 'jombang', 'lamongan', 'tuban', 'bojonegoro', 
-                'bangkalan', 'sampang', 'pamekasan', 'sumenep', 'medan', 'palembang', 
-                'makassar', 'denpasar', 'bali', 'balikpapan', 'pontianak', 'banjarmasin', 
-                'samarinda', 'pekanbaru', 'padang', 'lampung', 'jambi', 'bengkulu', 
-                'manado', 'ambon', 'jayapura', 'kupang', 'mataram'
-            ];
-
-            foreach ($majorCities as $city) {
-                if (strpos($alamatLower, $city) !== false && strpos($lokasiLower, $city) === false) {
-                    $capitalCity = ucfirst($city);
-                    return back()->with([
-                        'swal_type'  => 'error',
-                        'swal_title' => 'Kota Tidak Sesuai',
-                        'swal_text'  => "Alamat Lengkap Anda mencantumkan kota '{$capitalCity}', tetapi Anda memilih lokasi tujuan yang berbeda. Harap sesuaikan agar tarif pengiriman benar."
-                    ])->withInput();
-                }
-            }
-
-
 
             // Validasi Kesesuaian Alamat Lengkap dengan Lokasi Tujuan
             if (!empty($lokasiWords)) {
@@ -919,9 +917,17 @@ class HomeController extends Controller
                     return back()->with([
                         'swal_type'  => 'error',
                         'swal_title' => 'Alamat Tidak Sesuai',
-                        'swal_text'  => "Lokasi tujuan pengiriman yang Anda pilih {$lokasi} tidak sesuai dengan alamat lengkap anda.  Silakan tambahkan lokasi {$lokasi} pada alamat lengkap anda"
+                        'swal_text'  => "Lokasi tujuan pengiriman {$lokasi} tidak sesuai dengan alamat lengkap anda."
                     ])->withInput();
                 }
+            }
+
+            if ($ongkir <= 0) {
+                return back()->with([
+                    'swal_type'  => 'error',
+                    'swal_title' => 'Ongkir Tidak Valid',
+                    'swal_text'  => 'Silakan pilih ekspedisi dan jenis pengiriman yang valid.'
+                ])->withInput();
             }
         }
 

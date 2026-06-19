@@ -196,8 +196,12 @@
                                             class="form-control" id="inputTelepon">
                                     </div>
                                     <div class="form-group">
-                                        <label>Alamat Lengkap</label>
-                                        <textarea class="form-control" name="alamat" placeholder="Masukkan Alamat" required id="inputAlamat">{{ old('alamat', $pengguna->alamat) }}</textarea>
+                                         <label>Alamat Lengkap</label>
+                                         <textarea class="form-control" name="alamat" placeholder="Masukkan Alamat" required id="inputAlamat">{{ old('alamat', $pengguna->alamat) }}</textarea>
+                                         <small class="form-text text-muted mt-1 address-helper" style="font-size: 0.8rem; line-height: 1.3; display: none;">
+                                             Format: nama jalan sudah termasuk rt/rw, kelurahan/dusun/desa, kecamatan, kabupaten/kota, provinsi.<br>
+                                             <strong>Contoh:</strong> Jl. Mawar RT 01/RW 02, Piji, Manyaran, Wonogiri, Jawa Tengah
+                                         </small>
                                     </div>
                                 </div>
 
@@ -286,24 +290,26 @@
                         {{-- metode pembayaran --}}
 
 
-                        <p style="color: #ffbf0f; font-weight:600"><img src="{{ asset('foto/location.png') }}"
-                                alt=""> Input Lokasi Pengiriman Anda</p>
-                        <div class="form-group">
-                            <label for="lokasi">Nama Lokasi Tujuan</label>
-                            <div class="input-group">
-                                <input type="text" id="lokasi" class="form-control"
-                                    placeholder="Contoh: Purwokerto">
-                                <div class="input-group-append">
-                                    <button type="button" id="btnCariLokasi" class="btn btn-success">Cari</button>
+                        <div style="display: none;">
+                            <p style="color: #ffbf0f; font-weight:600"><img src="{{ asset('foto/location.png') }}"
+                                    alt=""> Input Lokasi Pengiriman Anda</p>
+                            <div class="form-group">
+                                <label for="lokasi">Nama Lokasi Tujuan</label>
+                                <div class="input-group">
+                                    <input type="text" id="lokasi" class="form-control"
+                                        placeholder="Contoh: Purwokerto">
+                                    <div class="input-group-append">
+                                        <button type="button" id="btnCariLokasi" class="btn btn-success">Cari</button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="form-group mt-3">
-                            <label for="destination_id">Pilih Lokasi Tujuan</label>
-                            <select name="destination_id" id="destination_id" class="form-control" required>
-                                <option value="">Pilih Lokasi</option>
-                            </select>
+                            <div class="form-group mt-3">
+                                <label for="destination_id">Pilih Lokasi Tujuan</label>
+                                <select name="destination_id" id="destination_id" class="form-control">
+                                    <option value="">Pilih Lokasi</option>
+                                </select>
+                            </div>
                         </div>
 
                         <p style="color: #ffbf0f; font-weight:600">Metode Pengiriman</p>
@@ -497,33 +503,12 @@
             return;
         }
 
-        const selectedOption = lokasiSelect.options[lokasiSelect.selectedIndex];
-        const teksLokasi = selectedOption ? selectedOption.text.toLowerCase() : '';
+        const alamat = $('#inputAlamat').val().toLowerCase();
+        const isWonogiri = alamat.includes('wonogiri');
 
-        if (!lokasiSelect.value) {
-            metodeSelect.disabled = true;
-            metodeSelect.value = '';
-            metodeSelect.options[0].text = 'Pilih lokasi terlebih dahulu';
-            optionTanpaKurir.disabled = true;
-
-            if (infoMetode) {
-                infoMetode.textContent = '';
-            }
-
-            $('.pengiriman').show();
-            $('#courier').val('');
-            $('#service').empty().append('<option value="">Pilih Jenis Pengiriman</option>');
-            $('#etd-info').text('');
-            $('input[name="ongkir"]').val('');
-            updateTotal(0);
-
-            return;
-        }
-
-        metodeSelect.disabled = false;
-        metodeSelect.options[0].text = 'Pilih Metode Pengiriman';
-
-        if (teksLokasi.includes('wonogiri')) {
+        if (isWonogiri) {
+            metodeSelect.disabled = false;
+            metodeSelect.options[0].text = 'Pilih Metode Pengiriman';
             optionTanpaKurir.disabled = false;
 
             if (infoMetode) {
@@ -534,15 +519,99 @@
 
             if (metodeSelect.value === 'COD') {
                 metodeSelect.value = '';
+                aturMetodePengiriman();
             }
 
             if (infoMetode) {
                 infoMetode.textContent = 'Tanpa Kurir hanya tersedia untuk wilayah Wonogiri.';
             }
 
-            $('.pengiriman').show();
-            $('input[name="ongkir"]').val('');
-            updateTotal(0);
+            if (!lokasiSelect.value) {
+                metodeSelect.disabled = true;
+                metodeSelect.value = '';
+                metodeSelect.options[0].text = 'Pilih lokasi terlebih dahulu';
+
+                $('.pengiriman').show();
+                $('#courier').val('');
+                $('#service').empty().append('<option value="">Pilih Jenis Pengiriman</option>');
+                $('#etd-info').text('');
+                $('input[name="ongkir"]').val('');
+                updateTotal(0);
+                return;
+            } else {
+                metodeSelect.disabled = false;
+                metodeSelect.options[0].text = 'Pilih Metode Pengiriman';
+            }
+        }
+    }
+
+    let lastResolvedKeyword = '';
+    function resolveAddress() {
+        const alamat = $('#inputAlamat').val().trim();
+        const parts = alamat.split(',').map(p => p.trim());
+        
+        const lokasiSelect = document.getElementById('destination_id');
+        const metodeSelect = document.getElementById('metodepembayaran');
+        const optionTanpaKurir = document.getElementById('optionTanpaKurir');
+        const infoMetode = document.getElementById('infoMetodePengiriman');
+
+        if (parts.length >= 5) {
+            const kecamatan = parts[2];
+            const kabupaten = parts[3];
+            const keyword = `${kecamatan} ${kabupaten}`;
+
+            if (keyword.trim().length > 3 && lastResolvedKeyword !== keyword) {
+                lastResolvedKeyword = keyword;
+                
+                $.ajax({
+                    url: '{{ url('home/getlokasi') }}',
+                    method: 'GET',
+                    data: {
+                        keyword: keyword
+                    },
+                    success: function(res) {
+                        $('#destination_id').empty().append('<option value="">Pilih Lokasi</option>');
+
+                        res.forEach(function(lokasi) {
+                            $('#destination_id').append(
+                                `<option value="${lokasi.label}" data-id="${lokasi.id}">${lokasi.label}</option>`
+                            );
+                        });
+
+                        if (res.length > 0) {
+                            $('#destination_id').val(res[0].label);
+                        } else {
+                            $.ajax({
+                                url: '{{ url('home/getlokasi') }}',
+                                method: 'GET',
+                                data: {
+                                    keyword: kabupaten
+                                },
+                                success: function(res2) {
+                                    res2.forEach(function(lokasi) {
+                                        $('#destination_id').append(
+                                            `<option value="${lokasi.label}" data-id="${lokasi.id}">${lokasi.label}</option>`
+                                        );
+                                    });
+                                    if (res2.length > 0) {
+                                        $('#destination_id').val(res2[0].label);
+                                    }
+                                    $('#destination_id').trigger('change');
+                                }
+                            });
+                            return;
+                        }
+
+                        $('#destination_id').trigger('change');
+                    }
+                });
+            } else {
+                cekLokasiWonogiri();
+            }
+        } else {
+            $('#destination_id').empty().append('<option value="">Pilih Lokasi</option>');
+            $('#destination_id').val('');
+            $('#destination_id').trigger('change');
         }
     }
 
@@ -670,11 +739,20 @@
     $('#inputTelepon').on('input', function() {
         triggerAutoSave('telepon', $(this).val());
     });
+    let resolveAddressTimer = null;
     $('#inputAlamat').on('input', function() {
         const val = $(this).val();
         if (val.trim().length >= 10) {
             triggerAutoSave('alamat', val);
         }
+        if (resolveAddressTimer) {
+            clearTimeout(resolveAddressTimer);
+        }
+        resolveAddressTimer = setTimeout(resolveAddress, 800);
+    }).on('focus', function() {
+        $('.address-helper').slideDown(200);
+    }).on('blur', function() {
+        $('.address-helper').slideUp(200);
     });
     $('#inputCatatan').on('input', function() {
         triggerAutoSave('catatan_pembeli', $(this).val());
@@ -784,8 +862,7 @@
     }
 
     $(document).ready(function() {
-        cekLokasiWonogiri();
-        aturMetodePengiriman();
+        resolveAddress();
 
         $('#checkoutForm').on('submit', function(e) {
             const alamat = $('#inputAlamat').val().trim();
@@ -800,107 +877,92 @@
                 return false;
             }
 
-            const destination_id = $('#destination_id').val();
-            if (!destination_id) {
+            const parts = alamat.split(',').map(p => p.trim());
+            if (parts.length < 5 || parts.some(p => p === "")) {
                 e.preventDefault();
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Lokasi Belum Dipilih',
-                    text: 'Silakan cari dan pilih lokasi tujuan pengiriman Anda.',
+                    title: 'Format Alamat Salah',
+                    text: 'Format alamat lengkap harus: "nama jalan sudah termasuk rt/rw, kelurahan/dusun/desa, kecamatan, kabupaten/kota, provinsi" (dipisahkan dengan tanda koma). Contoh: Jl. Mawar RT 01/RW 02, Piji, Manyaran, Wonogiri, Jawa Tengah',
                     confirmButtonColor: '#ffbf0f'
                 });
                 return false;
             }
 
-            const detailLower = alamat.toLowerCase();
-            const lokasiSelect = document.getElementById('destination_id');
-            const selectedOption = lokasiSelect ? lokasiSelect.options[lokasiSelect.selectedIndex] : null;
-            const lokasiTeks = selectedOption && lokasiSelect.value ? selectedOption.text.toLowerCase() : '';
-
-            // 1. Validasi Kelengkapan Alamat Spesifik (Jalan, RT/RW, No Rumah, Blok, Lantai)
-            const hasStreet = /jl|jalan|gang|gg|blok|dusun|desa|kp|kampung|perum|perumahan|ruko|gedung|residence|cluster|apartemen|apartment|menara|tower|lantai/i.test(detailLower);
-            const hasRtRw = /rt\s*\d+|rw\s*\d+|rt\/\s*rw|rt\s*-\s*rw/i.test(detailLower);
-            const hasNumberOrFloor = /no|nomor|blok|km|lantai|lt|fl|floor|no\.\d+|\d+/.test(detailLower);
+            const streetPart = parts[0].toLowerCase();
+            const hasStreet = /jl|jalan|gang|gg|blok|dusun|desa|kp|kampung|perum|perumahan|ruko|gedung|residence|cluster|apartemen|apartment|menara|tower|lantai/i.test(streetPart);
+            const hasRtRw = /rt\s*\d+|rw\s*\d+|rt\/\s*rw|rt\s*-\s*rw/i.test(streetPart);
+            const hasNumberOrFloor = /no|nomor|blok|km|lantai|lt|fl|floor|no\.\d+|\d+/.test(streetPart);
 
             if (!hasStreet || (!hasRtRw && !hasNumberOrFloor)) {
                 e.preventDefault();
                 Swal.fire({
                     icon: 'warning',
                     title: 'Alamat Detail Kurang Lengkap',
-                    text: 'Alamat lengkap pengiriman harus menyertakan detail spesifik (seperti nama jalan/kampung/dusun, dan nomor rumah/RT/RW/lantai/apartemen) agar kurir dapat menemukan lokasi Anda.',
+                    text: 'Bagian pertama alamat (nama jalan) harus menyertakan detail spesifik (seperti nama jalan/kampung/dusun, dan nomor rumah/RT/RW/lantai) agar kurir dapat menemukan lokasi Anda.',
                     confirmButtonColor: '#ffbf0f'
                 });
                 return false;
             }
 
-            // 2. Validasi Ketidakcocokan Kota (City Mismatch)
-            const majorCities = [
-                'wonogiri', 'solo', 'surakarta', 'yogyakarta', 'jogja', 'karanganyar', 
-                'sukoharjo', 'boyolali', 'klaten', 'sragen', 'semarang', 'salatiga', 
-                'jakarta', 'bandung', 'surabaya', 'malang', 'sidoarjo', 'gresik', 
-                'pasuruan', 'mojokerto', 'kediri', 'madiun', 'magelang', 'purwokerto', 
-                'cilacap', 'kebumen', 'tegal', 'pekalongan', 'kudus', 'pati', 
-                'jepara', 'rembang', 'blora', 'grobogan', 'temanggung', 'wonosobo', 
-                'purworejo', 'brebes', 'pemalang', 'batang', 'kendal', 'demak', 
-                'purbalingga', 'banjarnegara', 'depok', 'bekasi', 'bogor', 'tangerang', 
-                'serang', 'cilegon', 'karawang', 'cirebon', 'tasikmalaya', 'sukabumi', 
-                'cimahi', 'sumedang', 'garut', 'cianjur', 'purwakarta', 'subang', 
-                'indramayu', 'majalengka', 'kuningan', 'ciamis', 'banjar', 'sleman', 
-                'bantul', 'kulon progo', 'gunung kidul', 'banyuwangi', 'jember', 
-                'probolinggo', 'lumajang', 'bondowoso', 'situbondo', 'blitar', 
-                'tulungagung', 'trenggalek', 'ponorogo', 'pacitan', 'ngawi', 
-                'magetan', 'nganjuk', 'jombang', 'lamongan', 'tuban', 'bojonegoro', 
-                'bangkalan', 'sampang', 'pamekasan', 'sumenep', 'medan', 'palembang', 
-                'makassar', 'denpasar', 'bali', 'balikpapan', 'pontianak', 'banjarmasin', 
-                'samarinda', 'pekanbaru', 'padang', 'lampung', 'jambi', 'bengkulu', 
-                'manado', 'ambon', 'jayapura', 'kupang', 'mataram'
-            ];
-
-            let cityMismatch = null;
-            for (let city of majorCities) {
-                if (detailLower.includes(city) && !lokasiTeks.includes(city)) {
-                    cityMismatch = city;
-                    break;
-                }
-            }
-
-            if (cityMismatch) {
+            const metode = $('#metodepembayaran').val();
+            if (!metode) {
                 e.preventDefault();
-                const capitalCity = cityMismatch.charAt(0).toUpperCase() + cityMismatch.slice(1);
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Kota Tidak Sesuai',
-                    text: `Alamat Lengkap Anda mencantumkan kota "${capitalCity}", tetapi Anda memilih lokasi tujuan yang berbeda di dropdown. Harap sesuaikan alamat dan lokasi tujuan agar tidak terjadi kesalahan tarif ongkir atau pengiriman.`,
+                    title: 'Metode Pengiriman Belum Dipilih',
+                    text: 'Silakan pilih metode pengiriman terlebih dahulu.',
                     confirmButtonColor: '#ffbf0f'
                 });
                 return false;
             }
 
-            // 3. Validasi Penulisan Alamat Ganda (Overlap)
-
-
-            // 4. Validasi Kesesuaian Alamat Lengkap dengan Lokasi Tujuan
-            if (lokasiTeks) {
-                const words = lokasiTeks.split(/[\s,]+/).filter(w => w.length > 3 && !['jawa', 'tengah', 'timur', 'barat', 'utara', 'selatan', 'kota', 'kabupaten'].includes(w));
-                
-                let isMatch = false;
-                if (words.length === 0) {
-                    isMatch = true;
-                } else {
-                    for (let word of words) {
-                        if (detailLower.includes(word)) {
-                            isMatch = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!isMatch) {
+            if (metode === 'COD') {
+                const detailLower = alamat.toLowerCase();
+                if (!detailLower.includes('wonogiri')) {
                     e.preventDefault();
                     Swal.fire({
                         icon: 'warning',
-                        title: 'Alamat Tidak Sesuai',
-                        text: `Lokasi tujuan pengiriman yang Anda pilih tidak sesuai dengan alamat lengkap anda.  Silakan tambahkan lokasi ${selectedOption.text} pada alamat lengkap anda`,
+                        title: 'Metode Pengiriman Tidak Valid',
+                        text: 'Metode pengiriman "Tanpa Kurir" hanya tersedia untuk wilayah Wonogiri.',
+                        confirmButtonColor: '#ffbf0f'
+                    });
+                    return false;
+                }
+            }
+
+            if (metode === 'Transfer') {
+                const destination_id = $('#destination_id').val();
+                if (!destination_id) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Lokasi Tidak Dikenali',
+                        text: 'Format alamat kecamatan atau kabupaten Anda tidak dikenali oleh sistem ekspedisi. Harap periksa penulisan kecamatan dan kabupaten Anda.',
+                        confirmButtonColor: '#ffbf0f'
+                    });
+                    return false;
+                }
+
+                const courier = $('#courier').val();
+                if (!courier) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Ekspedisi Belum Dipilih',
+                        text: 'Silakan pilih ekspedisi pengiriman.',
+                        confirmButtonColor: '#ffbf0f'
+                    });
+                    return false;
+                }
+
+                const service = $('#service').val();
+                if (!service) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Jenis Pengiriman Belum Dipilih',
+                        text: 'Silakan pilih jenis pengiriman.',
                         confirmButtonColor: '#ffbf0f'
                     });
                     return false;
