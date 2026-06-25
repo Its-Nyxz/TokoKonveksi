@@ -34,6 +34,14 @@ return new class extends Migration
             'layanan_4_isi' => 'Transaksi fleksibel dan dapat dilakukan melalui berbagai metode pembayaran.',
             'promosi_tipe' => 'mati',
             'promosi_produk_id' => '',
+            'footer_nama_toko' => 'Oldshine Konveksi',
+            'footer_alamat' => 'Piji, Pijiharjo, Manyaran, Wonogiri',
+            'footer_telepon' => '0852-2924-7413',
+            'footer_wa_link' => 'https://wa.me/6285229247413',
+            'footer_jam_hari' => 'Setiap Hari',
+            'footer_jam_waktu' => '08.00 - 16.00 WIB',
+            'footer_maps' => 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1661.7125436207446!2d110.82212371797154!3d-7.869856493083081!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a33ee9783edb5%3A0x8802aec1ac11570f!2sPiji%2C%20Pijiharjo%2C%20Kec.%20Manyaran%2C%20Kabupaten%20Wonogiri%2C%20Jawa%20Tengah!5e0!3m2!1sid!2sid!4v1763090164142!5m2!1sid!2sid',
+            'footer_copyright' => 'Copyright © 2023 Oldshine Konveksi | All Rights Reserved',
         ];
 
         foreach ($defaults as $key => $val) {

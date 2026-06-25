@@ -145,6 +145,59 @@
                             </div>
                         </div>
 
+                        <!-- Card Section: Pengaturan Footer Website -->
+                        <div class="card mb-4 border-left-danger shadow-sm">
+                            <div class="card-body">
+                                <h5 class="text-black font-weight-bold mb-3"><i class="fas fa-map-marked-alt mr-2"></i>Bagian "Footer Website"</h5>
+                                <div class="form-group">
+                                    <label class="text-black font-weight-bold">Nama Toko / Judul Footer</label>
+                                    <input type="text" class="form-control" name="footer_nama_toko" value="{{ $settings['footer_nama_toko'] ?? 'Oldshine Konveksi' }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="text-black font-weight-bold">Alamat Kantor Offline</label>
+                                    <input type="text" class="form-control" name="footer_alamat" value="{{ $settings['footer_alamat'] ?? 'Piji, Pijiharjo, Manyaran, Wonogiri' }}" required>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="text-black font-weight-bold">Nomor Telepon (Tampilan)</label>
+                                            <input type="text" class="form-control" name="footer_telepon" value="{{ $settings['footer_telepon'] ?? '0852-2924-7413' }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="text-black font-weight-bold">Link WhatsApp (Aksi Klik & Ikon)</label>
+                                            <input type="text" class="form-control" name="footer_wa_link" value="{{ $settings['footer_wa_link'] ?? 'https://wa.me/6285229247413' }}" required>
+                                            <small class="text-muted">Masukkan URL chat WhatsApp lengkap (misal: https://wa.me/6285229247413).</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="text-black font-weight-bold">Jam Kerja (Hari)</label>
+                                            <input type="text" class="form-control" name="footer_jam_hari" value="{{ $settings['footer_jam_hari'] ?? 'Setiap Hari' }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="text-black font-weight-bold">Jam Kerja (Waktu)</label>
+                                            <input type="text" class="form-control" name="footer_jam_waktu" value="{{ $settings['footer_jam_waktu'] ?? '08.00 - 16.00 WIB' }}" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="text-black font-weight-bold">Link Iframe Google Maps (src)</label>
+                                    <textarea class="form-control" name="footer_maps" rows="3" required>{{ $settings['footer_maps'] ?? 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1661.7125436207446!2d110.82212371797154!3d-7.869856493083081!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a33ee9783edb5%3A0x8802aec1ac11570f!2sPiji%2C%20Pijiharjo%2C%20Kec.%20Manyaran%2C%20Kabupaten%20Wonogiri%2C%20Jawa%20Tengah!5e0!3m2!1sid!2sid!4v1763090164142!5m2!1sid!2sid' }}</textarea>
+                                    <small class="text-muted">Salin dan masukkan hanya isi atribut <code>src="..."</code> dari kode sematan Google Maps.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label class="text-black font-weight-bold">Teks Copyright</label>
+                                    <input type="text" class="form-control" name="footer_copyright" value="{{ $settings['footer_copyright'] ?? 'Copyright © 2023 Oldshine Konveksi | All Rights Reserved' }}" required>
+                                </div>
+                            </div>
+                        </div>
+
                         <button type="submit" class="btn btn-secondary btn-lg btn-block font-weight-bold text-white"><i class="fas fa-save mr-2"></i>Simpan Seluruh Pengaturan</button>
                     </form>
                 </div>

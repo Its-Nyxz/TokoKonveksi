@@ -1,3 +1,6 @@
+@php
+    $settings = DB::table('settings')->pluck('value', 'key');
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 
@@ -144,28 +147,34 @@
                 <div class="col-md-2">
                     <div class="ftco-footer-widget mb-4">
                         {{-- <img src="{{ asset('foto/logonya.jpeg') }}" alt="" width="100%"> --}}
-                        <h3>Oldshine Konveksi</h3>
+                        <h3>{{ $settings['footer_nama_toko'] ?? 'Oldshine Konveksi' }}</h3>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="ftco-footer-widget mb-4">
                         <h2 class="ftco-heading-2" style="color:#ffbf0f;"> OFFLINE OFFICE</h2>
                         <p style="margin-top: -20px">Alamat :</p>
-                        <p style="margin-top: -20px">Piji, Pijiharjo, Manyaran, Wonogiri</p>
+                        <p style="margin-top: -20px">{{ $settings['footer_alamat'] ?? 'Piji, Pijiharjo, Manyaran, Wonogiri' }}</p>
                         <p>Telepon : </p>
-                        <p style="margin-top: -20px"> 0852-2924-7413 (Whatsapp)</p>
+                        <p style="margin-top: -20px">
+                            @if (!empty($settings['footer_wa_link']))
+                                <a href="{{ $settings['footer_wa_link'] }}" target="_blank" style="color: rgba(255, 255, 255, 0.7);">{{ $settings['footer_telepon'] ?? '0852-2924-7413' }} (Whatsapp)</a>
+                            @else
+                                {{ $settings['footer_telepon'] ?? '0852-2924-7413' }} (Whatsapp)
+                            @endif
+                        </p>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="ftco-footer-widget mb-4">
                         <h2 class="ftco-heading-2" style="color:#ffbf0f;">JAM OPERASIONAL :</h2>
-                        <p>Setiap Hari</p>
-                        <p style="margin-top: -20px">08.00 - 16.00 WIB</p>
+                        <p>{{ $settings['footer_jam_hari'] ?? 'Setiap Hari' }}</p>
+                        <p style="margin-top: -20px">{{ $settings['footer_jam_waktu'] ?? '08.00 - 16.00 WIB' }}</p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <iframe
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1661.7125436207446!2d110.82212371797154!3d-7.869856493083081!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a33ee9783edb5%3A0x8802aec1ac11570f!2sPiji%2C%20Pijiharjo%2C%20Kec.%20Manyaran%2C%20Kabupaten%20Wonogiri%2C%20Jawa%20Tengah!5e0!3m2!1sid!2sid!4v1763090164142!5m2!1sid!2sid"
+                        src="{{ $settings['footer_maps'] ?? 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1661.7125436207446!2d110.82212371797154!3d-7.869856493083081!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a33ee9783edb5%3A0x8802aec1ac11570f!2sPiji%2C%20Pijiharjo%2C%20Kec.%20Manyaran%2C%20Kabupaten%20Wonogiri%2C%20Jawa%20Tengah!5e0!3m2!1sid!2sid!4v1763090164142!5m2!1sid!2sid' }}"
                         width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy"
                         referrerpolicy="no-referrer-when-downgrade"></iframe>
 
@@ -177,7 +186,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-12 text-center mt-3" style="color: #000">
-                    <p>Copyright © 2023 Oldshine Konveksi | All Rights Reserved</p>
+                    <p>{{ $settings['footer_copyright'] ?? 'Copyright © 2023 Oldshine Konveksi | All Rights Reserved' }}</p>
                 </div>
             </div>
         </div>
@@ -227,7 +236,7 @@
         }
     </style>
 
-    <a href="https://wa.me/6285229247413" class="whatsapp-icon" target="_blank">
+    <a href="{{ $settings['footer_wa_link'] ?? 'https://wa.me/6285229247413' }}" class="whatsapp-icon" target="_blank">
         <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
     </a>
 

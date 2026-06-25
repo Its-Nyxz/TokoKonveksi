@@ -774,12 +774,22 @@ class AdminController extends Controller
             'layanan_4_isi',
             'promosi_tipe',
             'promosi_produk_id',
+            'footer_nama_toko',
+            'footer_alamat',
+            'footer_telepon',
+            'footer_wa_link',
+            'footer_jam_hari',
+            'footer_jam_waktu',
+            'footer_maps',
+            'footer_copyright',
         ];
 
         foreach ($keys as $key) {
             DB::table('settings')
-                ->where('key', $key)
-                ->update(['value' => $request->input($key)]);
+                ->updateOrInsert(
+                    ['key' => $key],
+                    ['value' => $request->input($key)]
+                );
         }
 
         if ($request->hasFile('tentang_kami_foto')) {
@@ -788,8 +798,10 @@ class AdminController extends Controller
             $file->move(public_path('foto'), $filename);
 
             DB::table('settings')
-                ->where('key', 'tentang_kami_foto')
-                ->update(['value' => $filename]);
+                ->updateOrInsert(
+                    ['key' => 'tentang_kami_foto'],
+                    ['value' => $filename]
+                );
         }
 
         return redirect('admin/settings')->with('success', 'Pengaturan berhasil disimpan!');
