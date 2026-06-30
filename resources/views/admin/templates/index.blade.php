@@ -68,6 +68,13 @@
             padding: 10px 15px;
             background-color: var(--oldshine-yellow);
             text-align: center;
+            color: #000000 !important;
+        }
+
+        .oldshine-sidebar-brand:hover,
+        .oldshine-sidebar-brand:focus,
+        .oldshine-sidebar-brand:active {
+            color: #000000 !important;
         }
 
         .oldshine-sidebar-logo {
