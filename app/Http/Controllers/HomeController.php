@@ -144,6 +144,39 @@ class HomeController extends Controller
                 break;
         }
 
+        // Bangun daftar produk gabungan (combine) untuk kolom kanan
+        $combinedProducts = collect();
+
+        // 1. Produk dari kampanye promosi aktif
+        foreach ($activePromotions as $promo) {
+            if (isset($promo->products)) {
+                foreach ($promo->products as $prod) {
+                    $p = clone $prod;
+                    $p->promo_label = 'Produk Promo';
+                    $p->promo_label_class = 'badge-warning text-dark';
+                    $combinedProducts->push($p);
+                }
+            }
+        }
+
+        // 2. Produk dari pengaturan promosi
+        $settingsLabel = 'Produk Pilihan';
+        if ($promosiTipe === 'terbaru') {
+            $settingsLabel = 'Produk Terbaru';
+        } elseif ($promosiTipe === 'terlaris') {
+            $settingsLabel = 'Produk Terlaris';
+        }
+
+        foreach ($promoProducts as $prod) {
+            $p = clone $prod;
+            $p->promo_label = $settingsLabel;
+            $p->promo_label_class = 'badge-secondary text-white';
+            $combinedProducts->push($p);
+        }
+
+        // Unik berdasarkan idproduk (mengutamakan Produk Promo karena dipush duluan)
+        $combinedProducts = $combinedProducts->unique('idproduk')->values();
+
         /*
     |--------------------------------------------------------------------------
     | Signature popup
@@ -154,7 +187,7 @@ class HomeController extends Controller
         $promoSignature = md5(
             $promosiTipe . '|' .
                 $activePromotions->pluck('id_promosi')->implode(',') . '|' .
-                $promoProducts->pluck('idproduk')->implode(',')
+                $combinedProducts->pluck('idproduk')->implode(',')
         );
 
         $data = [
@@ -166,6 +199,7 @@ class HomeController extends Controller
             'promoSignature'    => $promoSignature,
             'activePromo'       => $activePromo,
             'activePromotions'  => $activePromotions,
+            'combinedProducts'  => $combinedProducts,
         ];
 
         return view('home.index', $data);

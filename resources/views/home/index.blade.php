@@ -419,32 +419,12 @@
                                 </div>
                             </div>
 
-                            <!-- Kolom Kanan: Daftar Produk Slider -->
+                            <!-- Kolom Kanan: Daftar Produk Slider (Combine Promo & Settings) -->
                             <div class="col-md-6 p-3 d-flex flex-column justify-content-between">
                                 <div id="productCarousel" class="carousel slide w-100" data-ride="carousel" data-interval="5000">
                                     @php
-                                        $displayProducts = collect();
-                                        if ($promosiTipe === 'kustom') {
-                                            foreach ($activePromotions as $promo) {
-                                                $displayProducts = $displayProducts->concat($promo->products);
-                                            }
-                                            $displayProducts = $displayProducts->unique('idproduk');
-                                        } else {
-                                            $displayProducts = $promoProducts;
-                                        }
+                                        $displayProducts = $combinedProducts ?? collect();
                                     @endphp
-
-                                    <div class="text-center mb-2">
-                                        <span class="badge badge-dark py-1 px-2 text-uppercase font-weight-bold" style="font-size: 0.65rem; background-color: #343a40;">
-                                            @if ($promosiTipe === 'terbaru')
-                                                Produk Terbaru
-                                            @elseif ($promosiTipe === 'terlaris')
-                                                Produk Terlaris
-                                            @else
-                                                Produk Pilihan
-                                            @endif
-                                        </span>
-                                    </div>
 
                                     @if ($displayProducts->count() > 1)
                                         <ol class="carousel-indicators" style="bottom: -15px;">
@@ -464,10 +444,17 @@
                                                 $prodPhoto = !empty($prodPhotos[0]) ? $prodPhotos[0] : 'noimage.png';
                                             @endphp
                                             <div class="carousel-item {{ $index === 0 ? 'active' : '' }} px-3">
+                                                <!-- Dynamic Label based on source type -->
+                                                <div class="text-center mb-2">
+                                                    <span class="badge {{ $prod->promo_label_class ?? 'badge-dark' }} py-1 px-2 text-uppercase font-weight-bold" style="font-size: 0.65rem;">
+                                                        {{ $prod->promo_label ?? 'Produk' }}
+                                                    </span>
+                                                </div>
+
                                                 <div class="text-center mb-2">
                                                     <img src="{{ asset('foto/' . $prodPhoto) }}" alt="{{ $prod->nama }}"
                                                         class="img-fluid rounded shadow-sm"
-                                                        style="max-height: 150px; width: 100%; object-fit: cover; cursor: zoom-in;"
+                                                        style="max-height: 140px; width: 100%; object-fit: cover; cursor: zoom-in;"
                                                         onclick="openPromoImagePreview('{{ asset('foto/' . $prodPhoto) }}', '{{ $prod->nama }}')">
                                                 </div>
                                                 <div class="text-center px-1">
