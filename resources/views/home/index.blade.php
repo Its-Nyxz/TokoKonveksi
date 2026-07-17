@@ -135,6 +135,67 @@
                 transform: scale(1);
             }
         }
+
+        /* Promo Image Preview Styles */
+        .promo-preview-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000000;
+            cursor: zoom-out;
+            animation: promoFadeIn 0.25s ease-out;
+        }
+
+        .promo-preview-content {
+            max-width: 90%;
+            max-height: 80vh;
+            border-radius: 8px;
+            border: 3px solid #ffbf0f;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            object-fit: contain;
+            cursor: default;
+            animation: promoZoomIn 0.25s ease-out;
+        }
+
+        .promo-preview-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .promo-preview-close:hover {
+            color: #ffbf0f;
+        }
+
+        .promo-preview-caption {
+            margin-top: 15px;
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        @keyframes promoFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes promoZoomIn {
+            from { transform: scale(0.9); }
+            to { transform: scale(1); }
+        }
     </style>
 
     <div class="hero-wrap" style="background-image: url('{{ asset('foto/bg.jpg') }}');" data-stellar-background-ratio="0.5">
@@ -275,13 +336,13 @@
     <!-- Modal Promosi Dinamis -->
     @if (isset($promosiTipe, $promoProducts) && $promosiTipe !== 'mati' && $promoProducts->isNotEmpty())
         <div id="promoModal" class="modal-overlay" style="display: none;">
-            <div class="modal-box shadow-lg" style="max-width: 500px; border: 3px solid #ffbf0f;">
+            <div class="modal-box shadow-lg" style="max-width: 800px; width: 95%; border: 3px solid #ffbf0f; border-radius: 16px;">
 
                 <!-- Header -->
                 <div class="modal-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
                     <h5 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-bullhorn text-warning mr-2"></i>
-                        {{ $promoTitle ?? 'Penawaran Khusus' }}
+                        {{ $activePromotions->isNotEmpty() ? 'Promo Spesial Untuk Anda' : ($promoTitle ?? 'Penawaran Khusus') }}
                     </h5>
 
                     <button type="button" class="close text-white" onclick="closePromoModal()"
@@ -295,163 +356,322 @@
                     </button>
                 </div>
 
-                <!-- Banner Kampanye Aktif -->
-                @if (isset($activePromo) && !empty($activePromo->foto))
-                    <div class="text-center p-2 bg-light border-bottom">
-                        <img src="{{ asset('foto/' . $activePromo->foto) }}" alt="{{ $activePromo->nama_promosi }}"
-                            class="img-fluid rounded shadow-sm"
-                            style="
-                            max-height: 150px;
-                            width: 100%;
-                            object-fit: cover;
-                        ">
-                        @if(!empty($activePromo->deskripsi))
-                            <p class="text-muted small mb-0 mt-1 px-2 text-center" style="font-size: 0.85rem; line-height: 1.3;">
-                                {{ $activePromo->deskripsi }}
-                            </p>
-                        @endif
-                    </div>
-                @endif
+                @if (isset($activePromotions) && $activePromotions->isNotEmpty())
+                    <!-- Body: Kiri-Kanan (Kampanye & Produk) -->
+                    <div class="modal-body p-0 position-relative">
+                        <div class="row no-gutters flex-column flex-md-row">
+                            
+                            <!-- Kolom Kiri: Kampanye Promosi -->
+                            <div class="col-md-6 bg-light p-3 d-flex flex-column justify-content-center" style="border-right: 1px solid #dee2e6;">
+                                <div id="campaignCarousel" class="carousel slide w-100" data-ride="carousel" data-interval="8000">
+                                    @if ($activePromotions->count() > 1)
+                                        <ol class="carousel-indicators" style="bottom: -15px;">
+                                            @foreach ($activePromotions as $index => $promo)
+                                                <li data-target="#campaignCarousel" data-slide-to="{{ $index }}"
+                                                    class="{{ $index === 0 ? 'active' : '' }}"
+                                                    style="background-color: #ffbf0f; width: 6px; height: 6px; border-radius: 50%;">
+                                                </li>
+                                            @endforeach
+                                        </ol>
+                                    @endif
 
-                <!-- Body -->
-                <div class="modal-body p-1 position-relative">
-                    <div id="promoCarousel" class="carousel slide" data-ride="carousel" data-interval="5000">
-                        @if ($promoProducts->count() > 1)
-                            <ol class="carousel-indicators" style="bottom: -15px;">
-                                @foreach ($promoProducts as $index => $promoProduct)
-                                    <li data-target="#promoCarousel" data-slide-to="{{ $index }}"
-                                        class="{{ $index === 0 ? 'active' : '' }}"
-                                        style="
-                                        background-color: #ffbf0f;
-                                        width: 8px;
-                                        height: 8px;
-                                        border-radius: 50%;
-                                    ">
-                                    </li>
-                                @endforeach
-                            </ol>
-                        @endif
+                                    <div class="carousel-inner pb-3">
+                                        @foreach ($activePromotions as $index => $promo)
+                                            <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
+                                                <!-- Banner Promosi -->
+                                                @if (!empty($promo->foto))
+                                                    <div class="text-center mb-2">
+                                                        <img src="{{ asset('foto/' . $promo->foto) }}" alt="{{ $promo->nama_promosi }}"
+                                                            class="img-fluid rounded shadow-sm"
+                                                            style="max-height: 180px; width: 100%; object-fit: cover; cursor: zoom-in;"
+                                                            onclick="openPromoImagePreview('{{ asset('foto/' . $promo->foto) }}', '{{ $promo->nama_promosi }}')">
+                                                    </div>
+                                                @endif
 
-                        <div class="carousel-inner pb-4">
-                            @foreach ($promoProducts as $index => $promoProduct)
-                                @php
-                                    $promoPhotos = explode(',', $promoProduct->foto ?? '');
-                                    $promoPhoto = !empty($promoPhotos[0]) ? $promoPhotos[0] : 'noimage.png';
-                                @endphp
-
-                                <div class="carousel-item {{ $index === 0 ? 'active' : '' }} px-4 pt-3 pb-2">
-
-                                    <!-- Label tipe promo -->
-                                    <div class="text-center">
-                                        <span class="badge badge-warning mb-2 py-1 px-2 text-uppercase font-weight-bold"
-                                            style="
-                                            letter-spacing: 1px;
-                                            font-size: 0.75rem;
-                                        ">
-                                            @switch($promosiTipe)
-                                                @case('terbaru')
-                                                    Produk Terbaru
-                                                @break
-
-                                                @case('terlaris')
-                                                    Produk Terlaris
-                                                @break
-
-                                                @case('kustom')
-                                                    Produk Pilihan
-                                                @break
-
-                                                @default
-                                                    Penawaran Khusus
-                                            @endswitch
-                                        </span>
-
-                                        <h3 class="text-black font-weight-bold mb-3">
-                                            {{ $promoProduct->nama }}
-                                        </h3>
-                                    </div>
-
-                                    <!-- Foto produk -->
-                                    <div class="text-center mb-3">
-                                        <img src="{{ asset('foto/' . $promoPhoto) }}" alt="{{ $promoProduct->nama }}"
-                                            class="img-fluid rounded shadow-sm"
-                                            style="
-                                            max-height: 170px;
-                                            width: 100%;
-                                            object-fit: cover;
-                                        ">
-                                    </div>
-
-                                    <!-- Informasi produk -->
-                                    <div class="p-3 border rounded bg-white shadow-sm">
-                                        <div class="d-flex align-items-center justify-content-between">
-
-                                            <div>
-                                                <small class="text-muted d-block">
-                                                    Harga Produk
-                                                </small>
-
-                                                <div class="font-weight-bold text-danger">
-                                                    @if (!empty($promoProduct->harga_sebelum) && $promoProduct->harga_sebelum > $promoProduct->harga)
-                                                        <span
-                                                            style="
-                                                            text-decoration: line-through;
-                                                            color: #888;
-                                                            font-size: 0.85em;
-                                                            margin-right: 5px;
-                                                        ">
-                                                            Rp
-                                                            {{ number_format($promoProduct->harga_sebelum, 0, ',', '.') }}
-                                                        </span>
-                                                    @endif
-
-                                                    <span>
-                                                        Rp
-                                                        {{ number_format($promoProduct->harga, 0, ',', '.') }}
+                                                <!-- Detail Promosi -->
+                                                <div class="text-center px-2">
+                                                    <span class="badge badge-warning mb-1 py-1 px-2 text-uppercase font-weight-bold" style="font-size: 0.65rem;">
+                                                        KAMPANYE PROMO
                                                     </span>
+                                                    <h5 class="text-black font-weight-bold mb-1" style="font-size: 1.05rem;">
+                                                        {{ $promo->nama_promosi }}
+                                                    </h5>
+                                                    @if (!empty($promo->deskripsi))
+                                                        <p class="text-muted small mb-0" style="line-height: 1.3; font-size: 0.75rem;">
+                                                            {{ $promo->deskripsi }}
+                                                        </p>
+                                                    @endif
                                                 </div>
                                             </div>
+                                        @endforeach
+                                    </div>
 
-                                            <a href="{{ url('home/detail/' . $promoProduct->idproduk) }}"
-                                                class="btn btn-sm btn-warning font-weight-bold text-dark px-3 py-2"
+                                    @if ($activePromotions->count() > 1)
+                                        <a class="carousel-control-prev" href="#campaignCarousel" role="button" data-slide="prev" style="width: 8%;">
+                                            <span class="carousel-control-prev-icon bg-dark rounded-circle p-1" aria-hidden="true" style="opacity: 0.6; width: 16px; height: 16px;"></span>
+                                            <span class="sr-only">Sebelumnya</span>
+                                        </a>
+                                        <a class="carousel-control-next" href="#campaignCarousel" role="button" data-slide="next" style="width: 8%;">
+                                            <span class="carousel-control-next-icon bg-dark rounded-circle p-1" aria-hidden="true" style="opacity: 0.6; width: 16px; height: 16px;"></span>
+                                            <span class="sr-only">Berikutnya</span>
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Kolom Kanan: Daftar Produk Slider -->
+                            <div class="col-md-6 p-3 d-flex flex-column justify-content-between">
+                                <div id="productCarousel" class="carousel slide w-100" data-ride="carousel" data-interval="5000">
+                                    @php
+                                        $displayProducts = collect();
+                                        if ($promosiTipe === 'kustom') {
+                                            foreach ($activePromotions as $promo) {
+                                                $displayProducts = $displayProducts->concat($promo->products);
+                                            }
+                                            $displayProducts = $displayProducts->unique('idproduk');
+                                        } else {
+                                            $displayProducts = $promoProducts;
+                                        }
+                                    @endphp
+
+                                    <div class="text-center mb-2">
+                                        <span class="badge badge-dark py-1 px-2 text-uppercase font-weight-bold" style="font-size: 0.65rem; background-color: #343a40;">
+                                            @if ($promosiTipe === 'terbaru')
+                                                Produk Terbaru
+                                            @elseif ($promosiTipe === 'terlaris')
+                                                Produk Terlaris
+                                            @else
+                                                Produk Pilihan
+                                            @endif
+                                        </span>
+                                    </div>
+
+                                    @if ($displayProducts->count() > 1)
+                                        <ol class="carousel-indicators" style="bottom: -15px;">
+                                            @foreach ($displayProducts as $index => $prod)
+                                                <li data-target="#productCarousel" data-slide-to="{{ $index }}"
+                                                    class="{{ $index === 0 ? 'active' : '' }}"
+                                                    style="background-color: #ffbf0f; width: 6px; height: 6px; border-radius: 50%;">
+                                                </li>
+                                            @endforeach
+                                        </ol>
+                                    @endif
+
+                                    <div class="carousel-inner pb-3">
+                                        @foreach ($displayProducts as $index => $prod)
+                                            @php
+                                                $prodPhotos = explode(',', $prod->foto ?? '');
+                                                $prodPhoto = !empty($prodPhotos[0]) ? $prodPhotos[0] : 'noimage.png';
+                                            @endphp
+                                            <div class="carousel-item {{ $index === 0 ? 'active' : '' }} px-3">
+                                                <div class="text-center mb-2">
+                                                    <img src="{{ asset('foto/' . $prodPhoto) }}" alt="{{ $prod->nama }}"
+                                                        class="img-fluid rounded shadow-sm"
+                                                        style="max-height: 150px; width: 100%; object-fit: cover; cursor: zoom-in;"
+                                                        onclick="openPromoImagePreview('{{ asset('foto/' . $prodPhoto) }}', '{{ $prod->nama }}')">
+                                                </div>
+                                                <div class="text-center px-1">
+                                                    <h6 class="text-dark font-weight-bold text-truncate mb-1" title="{{ $prod->nama }}" style="font-size: 0.95rem;">
+                                                        {{ $prod->nama }}
+                                                    </h6>
+                                                    <div class="font-weight-bold text-danger mb-2" style="font-size: 0.9rem;">
+                                                        @if (!empty($prod->harga_sebelum) && $prod->harga_sebelum > $prod->harga)
+                                                            <span style="text-decoration: line-through; color: #888; font-size: 0.8em; margin-right: 5px;">
+                                                                Rp {{ number_format($prod->harga_sebelum, 0, ',', '.') }}
+                                                            </span>
+                                                        @endif
+                                                        <span>
+                                                            Rp {{ number_format($prod->harga, 0, ',', '.') }}
+                                                        </span>
+                                                    </div>
+                                                    <a href="{{ url('home/detail/' . $prod->idproduk) }}"
+                                                        class="btn btn-sm btn-warning font-weight-bold text-dark w-100 py-2"
+                                                        style="background-color: #ffbf0f; border: none; border-radius: 6px; font-size: 0.8rem;">
+                                                        Lihat Detail <i class="fas fa-chevron-right ml-1" style="font-size: 0.75rem;"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+
+                                    @if ($displayProducts->count() > 1)
+                                        <a class="carousel-control-prev" href="#productCarousel" role="button" data-slide="prev" style="width: 8%;">
+                                            <span class="carousel-control-prev-icon bg-dark rounded-circle p-1" aria-hidden="true" style="opacity: 0.6; width: 16px; height: 16px;"></span>
+                                            <span class="sr-only">Sebelumnya</span>
+                                        </a>
+                                        <a class="carousel-control-next" href="#productCarousel" role="button" data-slide="next" style="width: 8%;">
+                                            <span class="carousel-control-next-icon bg-dark rounded-circle p-1" aria-hidden="true" style="opacity: 0.6; width: 16px; height: 16px;"></span>
+                                            <span class="sr-only">Berikutnya</span>
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <!-- Fallback: Banner Tunggal & Carousel Produk Tradisional -->
+                    <!-- Banner Kampanye Aktif -->
+                    @if (isset($activePromo) && !empty($activePromo->foto))
+                        <div class="text-center p-2 bg-light border-bottom">
+                            <img src="{{ asset('foto/' . $activePromo->foto) }}" alt="{{ $activePromo->nama_promosi }}"
+                                class="img-fluid rounded shadow-sm"
+                                style="
+                                max-height: 150px;
+                                width: 100%;
+                                object-fit: cover;
+                                cursor: zoom-in;
+                            "
+                            onclick="openPromoImagePreview('{{ asset('foto/' . $activePromo->foto) }}', '{{ $activePromo->nama_promosi }}')">
+                            @if(!empty($activePromo->deskripsi))
+                                <p class="text-muted small mb-0 mt-1 px-2 text-center" style="font-size: 0.85rem; line-height: 1.3;">
+                                    {{ $activePromo->deskripsi }}
+                                </p>
+                            @endif
+                        </div>
+                    @endif
+
+                    <!-- Body -->
+                    <div class="modal-body p-1 position-relative">
+                        <div id="promoCarousel" class="carousel slide" data-ride="carousel" data-interval="5000">
+                            @if ($promoProducts->count() > 1)
+                                <ol class="carousel-indicators" style="bottom: -15px;">
+                                    @foreach ($promoProducts as $index => $promoProduct)
+                                        <li data-target="#promoCarousel" data-slide-to="{{ $index }}"
+                                            class="{{ $index === 0 ? 'active' : '' }}"
+                                            style="
+                                            background-color: #ffbf0f;
+                                            width: 8px;
+                                            height: 8px;
+                                            border-radius: 50%;
+                                        ">
+                                        </li>
+                                    @endforeach
+                                </ol>
+                            @endif
+
+                            <div class="carousel-inner pb-4">
+                                @foreach ($promoProducts as $index => $promoProduct)
+                                    @php
+                                        $promoPhotos = explode(',', $promoProduct->foto ?? '');
+                                        $promoPhoto = !empty($promoPhotos[0]) ? $promoPhotos[0] : 'noimage.png';
+                                    @endphp
+
+                                    <div class="carousel-item {{ $index === 0 ? 'active' : '' }} px-4 pt-3 pb-2">
+
+                                        <!-- Label tipe promo -->
+                                        <div class="text-center">
+                                            <span class="badge badge-warning mb-2 py-1 px-2 text-uppercase font-weight-bold"
                                                 style="
-                                                background-color: #ffbf0f;
-                                                border: none;
-                                                border-radius: 4px;
+                                                letter-spacing: 1px;
+                                                font-size: 0.75rem;
                                             ">
-                                                Lihat Produk
-                                                <i class="fas fa-arrow-right ml-1"></i>
-                                            </a>
+                                                @switch($promosiTipe)
+                                                    @case('terbaru')
+                                                        Produk Terbaru
+                                                    @break
+
+                                                    @case('terlaris')
+                                                        Produk Terlaris
+                                                    @break
+
+                                                    @case('kustom')
+                                                        Produk Pilihan
+                                                    @break
+
+                                                    @default
+                                                        Penawaran Khusus
+                                                @endswitch
+                                            </span>
+
+                                            <h3 class="text-black font-weight-bold mb-3">
+                                                {{ $promoProduct->nama }}
+                                            </h3>
+                                        </div>
+
+                                        <!-- Foto produk -->
+                                        <div class="text-center mb-3">
+                                            <img src="{{ asset('foto/' . $promoPhoto) }}" alt="{{ $promoProduct->nama }}"
+                                                class="img-fluid rounded shadow-sm"
+                                                style="
+                                                max-height: 170px;
+                                                width: 100%;
+                                                object-fit: cover;
+                                                cursor: zoom-in;
+                                            "
+                                            onclick="openPromoImagePreview('{{ asset('foto/' . $promoPhoto) }}', '{{ $promoProduct->nama }}')">
+                                        </div>
+
+                                        <!-- Informasi produk -->
+                                        <div class="p-3 border rounded bg-white shadow-sm">
+                                            <div class="d-flex align-items-center justify-content-between">
+
+                                                <div>
+                                                    <small class="text-muted d-block">
+                                                        Harga Produk
+                                                    </small>
+
+                                                    <div class="font-weight-bold text-danger">
+                                                        @if (!empty($promoProduct->harga_sebelum) && $promoProduct->harga_sebelum > $promoProduct->harga)
+                                                            <span
+                                                                style="
+                                                                text-decoration: line-through;
+                                                                color: #888;
+                                                                font-size: 0.85em;
+                                                                margin-right: 5px;
+                                                            ">
+                                                                Rp
+                                                                {{ number_format($promoProduct->harga_sebelum, 0, ',', '.') }}
+                                                            </span>
+                                                        @endif
+
+                                                        <span>
+                                                            Rp
+                                                            {{ number_format($promoProduct->harga, 0, ',', '.') }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <a href="{{ url('home/detail/' . $promoProduct->idproduk) }}"
+                                                    class="btn btn-sm btn-warning font-weight-bold text-dark px-3 py-2"
+                                                    style="
+                                                    background-color: #ffbf0f;
+                                                    border: none;
+                                                    border-radius: 4px;
+                                                ">
+                                                    Lihat Produk
+                                                    <i class="fas fa-arrow-right ml-1"></i>
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            @endforeach
+                                @endforeach
+                            </div>
+
+                            <!-- Navigasi carousel -->
+                            @if ($promoProducts->count() > 1)
+                                <a class="carousel-control-prev" href="#promoCarousel" role="button" data-slide="prev"
+                                    style="width: 8%;">
+                                    <span class="carousel-control-prev-icon bg-dark rounded-circle p-2" aria-hidden="true"
+                                        style="opacity: 0.6;"></span>
+
+                                    <span class="sr-only">
+                                        Sebelumnya
+                                    </span>
+                                </a>
+
+                                <a class="carousel-control-next" href="#promoCarousel" role="button" data-slide="next"
+                                    style="width: 8%;">
+                                    <span class="carousel-control-next-icon bg-dark rounded-circle p-2" aria-hidden="true"
+                                        style="opacity: 0.6;"></span>
+
+                                    <span class="sr-only">
+                                        Berikutnya
+                                    </span>
+                                </a>
+                            @endif
                         </div>
-
-                        <!-- Navigasi carousel -->
-                        @if ($promoProducts->count() > 1)
-                            <a class="carousel-control-prev" href="#promoCarousel" role="button" data-slide="prev"
-                                style="width: 8%;">
-                                <span class="carousel-control-prev-icon bg-dark rounded-circle p-2" aria-hidden="true"
-                                    style="opacity: 0.6;"></span>
-
-                                <span class="sr-only">
-                                    Sebelumnya
-                                </span>
-                            </a>
-
-                            <a class="carousel-control-next" href="#promoCarousel" role="button" data-slide="next"
-                                style="width: 8%;">
-                                <span class="carousel-control-next-icon bg-dark rounded-circle p-2" aria-hidden="true"
-                                    style="opacity: 0.6;"></span>
-
-                                <span class="sr-only">
-                                    Berikutnya
-                                </span>
-                            </a>
-                        @endif
                     </div>
-                </div>
+                @endif
 
                 <!-- Footer -->
                 <div class="modal-footer bg-light p-2 d-flex justify-content-center">
@@ -491,7 +711,12 @@
 
             document.addEventListener('keydown', function(event) {
                 if (event.key === 'Escape') {
-                    closePromoModal();
+                    const overlay = document.getElementById('promoImagePreviewOverlay');
+                    if (overlay && overlay.style.display === 'flex') {
+                        closePromoImagePreview();
+                    } else {
+                        closePromoModal();
+                    }
                 }
             });
 
@@ -505,7 +730,33 @@
                     closePromoModal();
                 }
             });
+
+            function openPromoImagePreview(src, caption) {
+                const overlay = document.getElementById('promoImagePreviewOverlay');
+                const img = document.getElementById('promoPreviewImg');
+                const captionDiv = document.getElementById('promoPreviewCaption');
+                
+                if (overlay && img) {
+                    img.src = src;
+                    captionDiv.innerText = caption || '';
+                    overlay.style.display = 'flex';
+                }
+            }
+
+            function closePromoImagePreview() {
+                const overlay = document.getElementById('promoImagePreviewOverlay');
+                if (overlay) {
+                    overlay.style.display = 'none';
+                }
+            }
         </script>
+
+        <!-- Image Preview Overlay untuk Popup -->
+        <div id="promoImagePreviewOverlay" class="promo-preview-overlay" onclick="closePromoImagePreview()">
+            <span class="promo-preview-close" onclick="closePromoImagePreview()">&times;</span>
+            <img class="promo-preview-content" id="promoPreviewImg" onclick="event.stopPropagation();">
+            <div id="promoPreviewCaption" class="promo-preview-caption"></div>
+        </div>
     @endif
 
 @endsection

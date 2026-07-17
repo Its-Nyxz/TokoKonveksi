@@ -46,11 +46,22 @@ class HomeController extends Controller
         $promosiTipe = $settings->get('promosi_tipe', 'mati');
         $promosiProdukId = $settings->get('promosi_produk_id');
 
-        // Ambil kampanye promosi aktif
-        $activePromo = DB::table('promosi')
+        // Ambil seluruh kampanye promosi aktif beserta produknya
+        $activePromotions = DB::table('promosi')
             ->where('is_active', 1)
             ->orderBy('id_promosi', 'desc')
-            ->first();
+            ->get();
+
+        foreach ($activePromotions as $promo) {
+            $promo->products = DB::table('promosi_produk')
+                ->join('produk', 'promosi_produk.idproduk', '=', 'produk.idproduk')
+                ->where('promosi_produk.id_promosi', $promo->id_promosi)
+                ->select('produk.*')
+                ->get();
+        }
+
+        // Simpan promo pertama sebagai fallback activePromo
+        $activePromo = $activePromotions->first();
 
         $promoProducts = collect();
         $promoTitle = null;
@@ -142,7 +153,7 @@ class HomeController extends Controller
     */
         $promoSignature = md5(
             $promosiTipe . '|' .
-                ($activePromo->id_promosi ?? 0) . '|' .
+                $activePromotions->pluck('id_promosi')->implode(',') . '|' .
                 $promoProducts->pluck('idproduk')->implode(',')
         );
 
@@ -154,6 +165,7 @@ class HomeController extends Controller
             'promoTitle'        => $promoTitle,
             'promoSignature'    => $promoSignature,
             'activePromo'       => $activePromo,
+            'activePromotions'  => $activePromotions,
         ];
 
         return view('home.index', $data);
