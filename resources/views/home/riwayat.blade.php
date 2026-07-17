@@ -1011,6 +1011,13 @@
                                                 @else
                                                     <span class="status-badge">{{ $db->statusbeli }}</span>
                                                 @endif
+
+                                                @if (!empty($db->catatan))
+                                                    <div class="mt-2 text-left" style="white-space: normal; min-width: 140px; font-size: 0.8rem; background: #fffcf0; border: 1px solid #ffeeba; padding: 6px 8px; border-radius: 6px;">
+                                                        <strong style="color: #856404; display: block; margin-bottom: 2px;"><i class="fas fa-shipping-fast mr-1"></i>Catatan Toko:</strong>
+                                                        <span style="color: #444;">{{ $db->catatan }}</span>
+                                                    </div>
+                                                @endif
                                             </td>
 
                                             <td class="text-center">

@@ -127,12 +127,18 @@
                                         <option value="mati" {{ ($settings['promosi_tipe'] ?? '') == 'mati' ? 'selected' : '' }}>Nonaktifkan Promosi (Mati)</option>
                                         <option value="terbaru" {{ ($settings['promosi_tipe'] ?? '') == 'terbaru' ? 'selected' : '' }}>Tampilkan Produk Terbaru otomatis</option>
                                         <option value="terlaris" {{ ($settings['promosi_tipe'] ?? '') == 'terlaris' ? 'selected' : '' }}>Tampilkan Produk Terlaris otomatis</option>
-                                        <option value="kustom" {{ ($settings['promosi_tipe'] ?? '') == 'kustom' ? 'selected' : '' }}>Tampilkan Produk Kustom (Pilih Produk di bawah)</option>
+                                        <option value="kustom" {{ ($settings['promosi_tipe'] ?? '') == 'kustom' ? 'selected' : '' }}>Tampilkan Produk dari Kampanye Promosi Aktif (Kustom)</option>
                                     </select>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Jika ada kampanye promosi yang berstatus <strong>Aktif</strong> di menu <a href="{{ url('admin/promosi') }}" target="_blank">Data Promosi</a>, gambar banner dan deskripsi kampanye tersebut akan otomatis muncul sebagai header popup di halaman utama.
+                                        <br>
+                                        Pilihan <strong>"Kampanye Promosi Aktif (Kustom)"</strong> akan menampilkan semua produk yang Anda hubungkan dengan kampanye aktif tersebut di Menu Promosi. Jika tidak ada kampanye aktif, sistem akan menampilkan produk pilihan manual di bawah.
+                                    </small>
                                 </div>
 
                                 <div class="form-group" id="kustom_produk_div" style="display: none;">
-                                    <label class="text-black font-weight-bold">Pilih Produk untuk Promosi</label>
+                                    <label class="text-black font-weight-bold">Pilih Produk Fallback (Jika Tidak Ada Kampanye Aktif)</label>
                                     <select class="form-control" name="promosi_produk_id" id="promosi_produk_id">
                                         <option value="">Pilih Produk</option>
                                         @foreach ($produk as $p)

@@ -8,6 +8,15 @@
                     <h6 class="m-0 font-weight-bold text-white">Tambah Produk</h6>
                 </div>
                 <div class="card-body">
+                    @if ($errors->any())
+                        <div class="alert alert-danger shadow-sm">
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                     <form method="post" enctype="multipart/form-data" action="{{ url('admin/simpanproduk') }}">
                         @csrf
                         <div class="form-group">

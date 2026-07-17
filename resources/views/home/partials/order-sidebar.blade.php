@@ -245,5 +245,13 @@
                 </span>
             </div>
         </div>
+
+        @if (!empty($datapembelian->catatan))
+            <div class="customer-detail-row" style="background-color: #fffcf0 !important; border-top: 1px solid #ffeeba;">
+                <div class="customer-detail-label" style="color: #856404;"><i class="fas fa-shipping-fast mr-1"></i>Catatan Toko</div>
+                <div class="customer-detail-separator" style="color: #856404;">:</div>
+                <div class="customer-detail-value text-dark font-weight-bold">{{ $datapembelian->catatan }}</div>
+            </div>
+        @endif
     </div>
 </div>

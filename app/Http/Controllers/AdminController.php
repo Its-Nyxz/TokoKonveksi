@@ -243,6 +243,19 @@ class AdminController extends Controller
 
     public function simpanproduk(Request $request)
     {
+        $request->validate([
+            'nama' => 'required',
+            'idkategori' => 'required',
+            'harga' => 'required|numeric',
+            'deskripsi' => 'required',
+        ], [
+            'nama.required' => 'Nama produk wajib diisi.',
+            'idkategori.required' => 'Kategori produk wajib diisi.',
+            'harga.required' => 'Harga produk wajib diisi.',
+            'harga.numeric' => 'Harga produk harus berupa angka.',
+            'deskripsi.required' => 'Deskripsi produk wajib diisi.',
+        ]);
+
         $fotoNames = [];
         if ($request->hasFile('foto')) {
             foreach ($request->file('foto') as $file) {
@@ -277,6 +290,19 @@ class AdminController extends Controller
 
     public function updateproduk(Request $request, $id)
     {
+        $request->validate([
+            'nama' => 'required',
+            'idkategori' => 'required',
+            'harga' => 'required|numeric',
+            'deskripsi' => 'required',
+        ], [
+            'nama.required' => 'Nama produk wajib diisi.',
+            'idkategori.required' => 'Kategori produk wajib diisi.',
+            'harga.required' => 'Harga produk wajib diisi.',
+            'harga.numeric' => 'Harga produk harus berupa angka.',
+            'deskripsi.required' => 'Deskripsi produk wajib diisi.',
+        ]);
+
         $data = [
             'nama' => $request->input('nama'),
             'idkategori' => $request->input('idkategori'),

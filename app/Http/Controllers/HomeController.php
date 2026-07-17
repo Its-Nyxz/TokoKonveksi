@@ -18,27 +18,145 @@ class HomeController extends Controller
         $this->checkExpiredOrders();
         $this->checkDeliveryNotification();
 
-        $produk = DB::table('produk')->Join('kategori', 'produk.idkategori', '=', 'kategori.idkategori')->orderBy('idproduk', 'desc')->limit(6)->get();
-
-        // Load active promotions
-        $activePromotions = DB::table('promosi')
-            ->where('is_active', 1)
-            ->orderBy('id_promosi', 'desc')
+        /*
+    |--------------------------------------------------------------------------
+    | Produk utama halaman Home
+    |--------------------------------------------------------------------------
+    */
+        $produk = DB::table('produk')
+            ->join(
+                'kategori',
+                'produk.idkategori',
+                '=',
+                'kategori.idkategori'
+            )
+            ->select('produk.*', 'kategori.*')
+            ->orderByDesc('produk.idproduk')
+            ->limit(6)
             ->get();
 
-        foreach ($activePromotions as $promo) {
-            $promo->produk = DB::table('promosi_produk')
-                ->join('produk', 'promosi_produk.idproduk', '=', 'produk.idproduk')
-                ->where('promosi_produk.id_promosi', $promo->id_promosi)
-                ->get();
+        /*
+    |--------------------------------------------------------------------------
+    | Ambil seluruh pengaturan website
+    |--------------------------------------------------------------------------
+    */
+        $settings = DB::table('settings')
+            ->pluck('value', 'key');
+
+        $promosiTipe = $settings->get('promosi_tipe', 'mati');
+        $promosiProdukId = $settings->get('promosi_produk_id');
+
+        // Ambil kampanye promosi aktif
+        $activePromo = DB::table('promosi')
+            ->where('is_active', 1)
+            ->orderBy('id_promosi', 'desc')
+            ->first();
+
+        $promoProducts = collect();
+        $promoTitle = null;
+
+        /*
+    |--------------------------------------------------------------------------
+    | Tentukan produk yang tampil pada popup
+    |--------------------------------------------------------------------------
+    */
+        switch ($promosiTipe) {
+            case 'terbaru':
+                $promoTitle = $activePromo ? $activePromo->nama_promosi : 'Produk Terbaru';
+
+                $promoProducts = DB::table('produk')
+                    ->orderByDesc('idproduk')
+                    ->limit(5)
+                    ->get();
+                break;
+
+            case 'terlaris':
+                $promoTitle = $activePromo ? $activePromo->nama_promosi : 'Produk Terlaris';
+
+                /*
+             * Sistem akan memakai kolom penjualan yang ditemukan
+             * pada tabel produk.
+             */
+                if (Schema::hasColumn('produk', 'terjual')) {
+                    $promoProducts = DB::table('produk')
+                        ->orderByDesc('terjual')
+                        ->orderByDesc('idproduk')
+                        ->limit(5)
+                        ->get();
+                } elseif (Schema::hasColumn('produk', 'jumlah_terjual')) {
+                    $promoProducts = DB::table('produk')
+                        ->orderByDesc('jumlah_terjual')
+                        ->orderByDesc('idproduk')
+                        ->limit(5)
+                        ->get();
+                } elseif (Schema::hasColumn('produk', 'total_terjual')) {
+                    $promoProducts = DB::table('produk')
+                        ->orderByDesc('total_terjual')
+                        ->orderByDesc('idproduk')
+                        ->limit(5)
+                        ->get();
+                } else {
+                    /*
+                 * Fallback sementara jika belum ada kolom penjualan.
+                 * Produk terbaru akan ditampilkan agar popup tidak error.
+                 */
+                    $promoProducts = DB::table('produk')
+                        ->orderByDesc('idproduk')
+                        ->limit(5)
+                        ->get();
+                }
+                break;
+
+            case 'kustom':
+                if ($activePromo) {
+                    $promoTitle = $activePromo->nama_promosi;
+                    $promoProducts = DB::table('promosi_produk')
+                        ->join('produk', 'promosi_produk.idproduk', '=', 'produk.idproduk')
+                        ->where('promosi_produk.id_promosi', $activePromo->id_promosi)
+                        ->select('produk.*')
+                        ->get();
+                } else {
+                    $promoTitle = 'Produk Pilihan';
+                    if (!empty($promosiProdukId)) {
+                        $promoProducts = DB::table('produk')
+                            ->where('idproduk', $promosiProdukId)
+                            ->get();
+                    }
+                }
+                break;
+
+            case 'mati':
+            default:
+                $promosiTipe = 'mati';
+                $promoTitle = null;
+                $promoProducts = collect();
+                break;
         }
 
+        /*
+    |--------------------------------------------------------------------------
+    | Signature popup
+    |--------------------------------------------------------------------------
+    | Popup akan muncul lagi ketika admin mengganti tipe atau produk promo,
+    | meskipun popup sebelumnya pernah ditutup.
+    */
+        $promoSignature = md5(
+            $promosiTipe . '|' .
+                ($activePromo->id_promosi ?? 0) . '|' .
+                $promoProducts->pluck('idproduk')->implode(',')
+        );
+
         $data = [
-            'produk' => $produk,
-            'activePromotions' => $activePromotions,
+            'produk'            => $produk,
+            'settings'          => $settings,
+            'promosiTipe'       => $promosiTipe,
+            'promoProducts'     => $promoProducts,
+            'promoTitle'        => $promoTitle,
+            'promoSignature'    => $promoSignature,
+            'activePromo'       => $activePromo,
         ];
 
-        return view('home/index', $data);
+        return view('home.index', $data);
     }
 
     public function deletenotification($id)
@@ -898,7 +1016,7 @@ class HomeController extends Controller
             // Split lokasi into components
             $lokasiWords = array_filter(
                 preg_split('/[\s,]+/', $lokasiLower),
-                function($w) {
+                function ($w) {
                     return strlen($w) > 3 && !in_array($w, ['jawa', 'tengah', 'timur', 'barat', 'utara', 'selatan', 'kota', 'kabupaten']);
                 }
             );
