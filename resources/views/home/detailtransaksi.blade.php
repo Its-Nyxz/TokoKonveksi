@@ -166,8 +166,8 @@
                         </ul>
                         <p class="text-center">Rekening Oldshine Konveksi</p>
                         <div class="card text-center" style="background-color: #000;">
-                            <p style="color: #fff;" class="m-auto py-3">BANK BRI <br> <span
-                                    style="color: #43A86B; font-weight:bold; font-size:25px">034101000743001</span></p>
+                            <p style="color: #fff;" class="m-auto py-3">BANK BRI an ARYO WIRANJOYO<br> <span
+                                    style="color: #43A86B; font-weight:bold; font-size:25px">015801049100509</span></p>
                         </div>
                     </div>
                     <?php } ?>
